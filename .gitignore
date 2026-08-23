@@ -1,5 +1,6 @@
 # Gradle
 .gradle/
+.gradle-dist/
 build/
 **/build/
 
@@ -19,6 +20,7 @@ usercache.json
 usernamecache.json
 
 # Java / JVM
+.jdk17/
 *.class
 *.jar
 *.war
