@@ -1,0 +1,86 @@
+# Gradle
+.gradle/
+build/
+**/build/
+
+# Minecraft / Forge development runtime
+run/
+runs/
+logs/
+crash-reports/
+saves/
+screenshots/
+resourcepacks/
+shaderpacks/
+options.txt
+optionsof.txt
+servers.dat
+usercache.json
+usernamecache.json
+
+# Java / JVM
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*
+
+# IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.metadata/
+.vscode/
+.factorypath
+
+# Generated / temporary files
+out/
+target/
+bin/
+tmp/
+temp/
+*.tmp
+*.temp
+*.log
+*.cache
+*.bak
+*.swp
+*.swo
+*~
+
+# Local environment
+.env
+.env.*
+!.env.example
+*.local
+
+# OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.directory
+.Trash-*
+
+# Local packaged builds / archives
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+
+# Keep a Gradle Wrapper tracked if one is added later
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+!gradlew
+!gradlew.bat
