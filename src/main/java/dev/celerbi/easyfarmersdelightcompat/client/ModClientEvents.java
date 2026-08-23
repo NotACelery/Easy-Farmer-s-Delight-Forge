@@ -27,6 +27,7 @@ public final class ModClientEvents {
         event.registerBlockEntityRenderer(ModBlockEntities.COMPAT_FARMER.get(), CompatFarmerBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.CUTTER.get(), CutterBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.VILLAGER_NOISE_SWITCH.get(), VillagerNoiseSwitchBlockEntityRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.IRON_FARM_NOISE_SWITCH.get(), IronFarmNoiseSwitchBlockEntityRenderer::new);
     }
 
 

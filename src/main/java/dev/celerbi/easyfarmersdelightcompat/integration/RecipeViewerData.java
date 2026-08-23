@@ -1,13 +1,16 @@
 package dev.celerbi.easyfarmersdelightcompat.integration;
 
 import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
+import dev.celerbi.easyfarmersdelightcompat.registry.ModBlockEntities;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlocks;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -243,6 +246,29 @@ public final class RecipeViewerData {
                             input(ingredient("easy_villagers", "villager"), "easyfarmersdelightcompat.viewer.label.villager")
                     ),
                     lines("easyfarmersdelightcompat.viewer.guide.noise_switch", 7)
+            ),
+            new BlockGuideInfo(
+                    id("block_guide/iron_farm_noise_switch"),
+                    Component.translatable("easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch.title"),
+                    List.of(
+                            catalystPreview(
+                                    Ingredient.of(ModBlocks.IRON_FARM_NOISE_SWITCH_ITEM.get()),
+                                    emptyIronFarmNoiseSwitch(),
+                                    "easyfarmersdelightcompat.viewer.label.machine"
+                            ),
+                            inputPreview(
+                                    Ingredient.of(Items.IRON_BLOCK),
+                                    new ItemStack(Items.IRON_BLOCK, 4),
+                                    "easyfarmersdelightcompat.viewer.label.iron_block"
+                            ),
+                            input(Ingredient.of(Items.CARVED_PUMPKIN), "easyfarmersdelightcompat.viewer.label.carved_pumpkin"),
+                            outputPreview(
+                                    Ingredient.of(ModBlocks.IRON_FARM_NOISE_SWITCH_ITEM.get()),
+                                    completedIronFarmNoiseSwitch(),
+                                    Component.translatable("easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch.completed")
+                            )
+                    ),
+                    lines("easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch", 3)
             )
     );
 
@@ -319,6 +345,31 @@ public final class RecipeViewerData {
         if (stack.is(ItemTags.LOGS)) return true;
         String path = id.getPath();
         return path.contains("log") || path.contains("wood") || path.contains("stem") || path.contains("hyphae");
+    }
+
+    private static ItemStack emptyIronFarmNoiseSwitch() {
+        return new ItemStack(ModBlocks.IRON_FARM_NOISE_SWITCH_ITEM.get());
+    }
+
+    private static ItemStack completedIronFarmNoiseSwitch() {
+        ItemStack stack = emptyIronFarmNoiseSwitch();
+        CompoundTag data = new CompoundTag();
+        data.putInt("AssemblyStage", 4);
+        data.putBoolean("HasGolem", true);
+        BlockItem.setBlockEntityData(stack, ModBlockEntities.IRON_FARM_NOISE_SWITCH.get(), data);
+        return stack;
+    }
+
+    private static GuideIngredient inputPreview(Ingredient ingredient, ItemStack displayStack, String labelKey) {
+        return new GuideIngredient(ingredient, GuideIngredient.Role.INPUT, Component.translatable(labelKey), displayStack);
+    }
+
+    private static GuideIngredient outputPreview(Ingredient ingredient, ItemStack displayStack, Component label) {
+        return new GuideIngredient(ingredient, GuideIngredient.Role.OUTPUT, label, displayStack);
+    }
+
+    private static GuideIngredient catalystPreview(Ingredient ingredient, ItemStack displayStack, String labelKey) {
+        return new GuideIngredient(ingredient, GuideIngredient.Role.CATALYST, Component.translatable(labelKey), displayStack);
     }
 
     private static GuideIngredient input(Ingredient ingredient, String labelKey) {

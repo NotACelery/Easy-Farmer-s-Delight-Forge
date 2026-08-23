@@ -157,5 +157,22 @@
   "easyfarmersdelightcompat.viewer.rich_farmer_harvest.tomato": "Introduce semillas de tomate. Puedes agregar hasta dos cuerdas para tener secciones extra de tomate. La Tierra fértil acelera el crecimiento compatible y la azada es opcional para Fortuna.",
   "easyfarmersdelightcompat.viewer.rich_farmer_harvest.mushrooms": "Introduce un hongo rojo o marrón. El Rich Farmer hace crecer la colonia correspondiente. Cuando madura espera un cuchillo, cosecha 3 hongos del mismo tipo y vuelve a crecer. El cuchillo no se daña.",
   "easyfarmersdelightcompat.viewer.rich_farmer_harvest.melon": "Introduce semillas de sandía. La Tierra fértil acelera el tallo. Cuando la sandía está lista espera un hacha; Fortuna y Toque de Seda funcionan normalmente y sólo se gasta durabilidad al cosechar con éxito.",
-  "easyfarmersdelightcompat.viewer.rich_farmer_harvest.pumpkin": "Introduce semillas de calabaza. La Tierra fértil acelera el tallo. Cuando la calabaza está lista espera un hacha; sus encantamientos funcionan normalmente y sólo se gasta durabilidad al cosechar con éxito."
+  "easyfarmersdelightcompat.viewer.rich_farmer_harvest.pumpkin": "Introduce semillas de calabaza. La Tierra fértil acelera el tallo. Cuando la calabaza está lista espera un hacha; sus encantamientos funcionan normalmente y sólo se gasta durabilidad al cosechar con éxito.",
+  "block.easyfarmersdelightcompat.iron_farm_noise_switch": "Interruptor de Ruido de Granja de Hierro",
+  "message.easyfarmersdelightcompat.iron_farm_noise_switch.iron_required": "Bloques de hierro: %s/%s — inserta un bloque de hierro",
+  "message.easyfarmersdelightcompat.iron_farm_noise_switch.pumpkin_required": "Agrega una calabaza tallada para completar el gólem de hierro",
+  "message.easyfarmersdelightcompat.iron_farm_noise_switch.muted": "Sonidos de las granjas de hierro de Easy Villagers silenciados",
+  "message.easyfarmersdelightcompat.iron_farm_noise_switch.enabled": "Sonidos de las granjas de hierro de Easy Villagers activados",
+  "jade.easyfarmersdelightcompat.iron_farm_noise_switch.assembly": "Armado del gólem: %s/%s bloques de hierro",
+  "jade.easyfarmersdelightcompat.iron_farm_noise_switch.add_iron": "Clic derecho con un bloque de hierro",
+  "jade.easyfarmersdelightcompat.iron_farm_noise_switch.add_pumpkin": "Clic derecho con una calabaza tallada para terminar",
+  "jade.easyfarmersdelightcompat.iron_farm_noise_switch.muted": "Sonidos de Iron Farm: Silenciados",
+  "jade.easyfarmersdelightcompat.iron_farm_noise_switch.enabled": "Sonidos de Iron Farm: Activados",
+  "easyfarmersdelightcompat.viewer.label.carved_pumpkin": "Calabaza tallada",
+  "easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch.title": "Iron Farm Noise Switch",
+  "easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch.line1": "Construye el Golem con 4 bloques de hierro + una calabaza tallada. El Golem queda permanente.",
+  "easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch.line2": "Clic derecho en el switch completo silencia o activa zombis e Iron Golems de las Iron Farms de Easy Villagers.",
+  "easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch.line3": "Es personal y client-side. Los mobs normales nunca se silencian. Ambos Noise Switch son no stackeables.",
+  "easyfarmersdelightcompat.viewer.label.iron_block": "Bloque de hierro — 4 en total",
+  "easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch.completed": "Switch completado"
 }

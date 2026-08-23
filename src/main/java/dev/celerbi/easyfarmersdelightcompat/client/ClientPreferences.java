@@ -21,8 +21,10 @@ import net.minecraftforge.fml.loading.FMLPaths;
 public final class ClientPreferences {
     private static final String FILE_NAME = "easyfarmersdelightcompat-client.properties";
     private static final String KEY_VILLAGERS_MUTED = "villagersMuted";
+    private static final String KEY_IRON_FARM_SOUNDS_MUTED = "ironFarmSoundsMuted";
     private static boolean loaded;
     private static boolean villagersMuted;
+    private static boolean ironFarmSoundsMuted;
 
     private ClientPreferences() {
     }
@@ -43,18 +45,39 @@ public final class ClientPreferences {
         save();
     }
 
+
+
+    public static synchronized boolean ironFarmSoundsMuted() {
+        ensureLoaded();
+        return ironFarmSoundsMuted;
+    }
+
+    public static synchronized boolean toggleIronFarmSoundsMuted() {
+        setIronFarmSoundsMuted(!ironFarmSoundsMuted());
+        return ironFarmSoundsMuted;
+    }
+
+    public static synchronized void setIronFarmSoundsMuted(boolean muted) {
+        ensureLoaded();
+        ironFarmSoundsMuted = muted;
+        save();
+    }
+
     private static void ensureLoaded() {
         if (loaded) return;
         loaded = true;
         villagersMuted = false;
+        ironFarmSoundsMuted = false;
         Path path = configPath();
         if (!Files.isRegularFile(path)) return;
         Properties properties = new Properties();
         try (InputStream in = Files.newInputStream(path)) {
             properties.load(in);
             villagersMuted = Boolean.parseBoolean(properties.getProperty(KEY_VILLAGERS_MUTED, "false"));
+            ironFarmSoundsMuted = Boolean.parseBoolean(properties.getProperty(KEY_IRON_FARM_SOUNDS_MUTED, "false"));
         } catch (IOException e) {
             villagersMuted = false;
+            ironFarmSoundsMuted = false;
             System.err.println("[Easy Farmer's Delight Compat] Failed to load client preferences: " + e.getMessage());
         }
     }
@@ -65,6 +88,7 @@ public final class ClientPreferences {
         Path temp = target.resolveSibling(target.getFileName() + ".tmp");
         Properties properties = new Properties();
         properties.setProperty(KEY_VILLAGERS_MUTED, Boolean.toString(villagersMuted));
+        properties.setProperty(KEY_IRON_FARM_SOUNDS_MUTED, Boolean.toString(ironFarmSoundsMuted));
         try {
             if (parent != null) Files.createDirectories(parent);
             try (OutputStream out = Files.newOutputStream(temp)) {

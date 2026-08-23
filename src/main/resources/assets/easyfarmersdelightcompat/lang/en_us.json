@@ -157,5 +157,22 @@
   "easyfarmersdelightcompat.viewer.rich_farmer_harvest.tomato": "Insert Tomato Seeds. You can add up to two Ropes to grow extra Tomato sections. Rich Soil speeds supported growth, and a Hoe is optional for Fortune.",
   "easyfarmersdelightcompat.viewer.rich_farmer_harvest.mushrooms": "Insert a Red or Brown Mushroom. Rich Farmer grows the matching Mushroom Colony. When it matures, it waits for a Knife, harvests 3 matching mushrooms, then starts growing again. The Knife is not damaged.",
   "easyfarmersdelightcompat.viewer.rich_farmer_harvest.melon": "Insert Melon Seeds. Rich Soil speeds stem growth. When a Melon is ready it waits for an Axe; Fortune and Silk Touch work normally, and durability is used only after a successful harvest.",
-  "easyfarmersdelightcompat.viewer.rich_farmer_harvest.pumpkin": "Insert Pumpkin Seeds. Rich Soil speeds stem growth. When a Pumpkin is ready it waits for an Axe; Axe enchantments work normally, and durability is used only after a successful harvest."
+  "easyfarmersdelightcompat.viewer.rich_farmer_harvest.pumpkin": "Insert Pumpkin Seeds. Rich Soil speeds stem growth. When a Pumpkin is ready it waits for an Axe; Axe enchantments work normally, and durability is used only after a successful harvest.",
+  "block.easyfarmersdelightcompat.iron_farm_noise_switch": "Iron Farm Noise Switch",
+  "message.easyfarmersdelightcompat.iron_farm_noise_switch.iron_required": "Iron Blocks: %s/%s — insert an Iron Block",
+  "message.easyfarmersdelightcompat.iron_farm_noise_switch.pumpkin_required": "Add a Carved Pumpkin to complete the Iron Golem",
+  "message.easyfarmersdelightcompat.iron_farm_noise_switch.muted": "Easy Villagers Iron Farm sounds muted",
+  "message.easyfarmersdelightcompat.iron_farm_noise_switch.enabled": "Easy Villagers Iron Farm sounds enabled",
+  "jade.easyfarmersdelightcompat.iron_farm_noise_switch.assembly": "Iron Golem assembly: %s/%s Iron Blocks",
+  "jade.easyfarmersdelightcompat.iron_farm_noise_switch.add_iron": "Right-click with an Iron Block",
+  "jade.easyfarmersdelightcompat.iron_farm_noise_switch.add_pumpkin": "Right-click with a Carved Pumpkin to finish",
+  "jade.easyfarmersdelightcompat.iron_farm_noise_switch.muted": "Iron Farm sounds: Muted",
+  "jade.easyfarmersdelightcompat.iron_farm_noise_switch.enabled": "Iron Farm sounds: Enabled",
+  "easyfarmersdelightcompat.viewer.label.carved_pumpkin": "Carved Pumpkin",
+  "easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch.title": "Iron Farm Noise Switch",
+  "easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch.line1": "Build the Golem with 4 Iron Blocks + a Carved Pumpkin. The Golem is permanent.",
+  "easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch.line2": "Right-click the completed switch to mute or enable Zombie and Iron Golem sounds from Easy Villagers Iron Farms.",
+  "easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch.line3": "Client-side and per-player. Normal world mobs are never muted. Both Noise Switches are non-stackable.",
+  "easyfarmersdelightcompat.viewer.label.iron_block": "Iron Block — 4 total",
+  "easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch.completed": "Completed switch"
 }

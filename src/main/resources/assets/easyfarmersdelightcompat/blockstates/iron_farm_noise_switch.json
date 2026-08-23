@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "easyfarmersdelightcompat:block/iron_farm_noise_switch"
+    },
+    "facing=south": {
+      "model": "easyfarmersdelightcompat:block/iron_farm_noise_switch",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "easyfarmersdelightcompat:block/iron_farm_noise_switch",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "easyfarmersdelightcompat:block/iron_farm_noise_switch",
+      "y": 90
+    }
+  }
+}

@@ -16,8 +16,10 @@ public final class ModBlocks {
  public static final RegistryObject<CompatFarmerBlock> RICH_PADDY_FARMER=BLOCKS.register("rich_paddy_farmer",()->new CompatFarmerBlock(props(),FarmerVariant.RICH_PADDY));
  public static final RegistryObject<CutterBlock> CUTTER=BLOCKS.register("cutter",()->new CutterBlock(props()));
  public static final RegistryObject<VillagerNoiseSwitchBlock> VILLAGER_NOISE_SWITCH=BLOCKS.register("villager_noise_switch",()->new VillagerNoiseSwitchBlock(props()));
+ public static final RegistryObject<IronFarmNoiseSwitchBlock> IRON_FARM_NOISE_SWITCH=BLOCKS.register("iron_farm_noise_switch",()->new IronFarmNoiseSwitchBlock(props()));
  public static final RegistryObject<CutterItem> CUTTER_ITEM=ITEMS.register("cutter",()->new CutterItem(CUTTER.get(),new Item.Properties()));
- public static final RegistryObject<VillagerNoiseSwitchItem> VILLAGER_NOISE_SWITCH_ITEM=ITEMS.register("villager_noise_switch",()->new VillagerNoiseSwitchItem(VILLAGER_NOISE_SWITCH.get(),new Item.Properties()));
+ public static final RegistryObject<VillagerNoiseSwitchItem> VILLAGER_NOISE_SWITCH_ITEM=ITEMS.register("villager_noise_switch",()->new VillagerNoiseSwitchItem(VILLAGER_NOISE_SWITCH.get(),new Item.Properties().stacksTo(1)));
+ public static final RegistryObject<IronFarmNoiseSwitchItem> IRON_FARM_NOISE_SWITCH_ITEM=ITEMS.register("iron_farm_noise_switch",()->new IronFarmNoiseSwitchItem(IRON_FARM_NOISE_SWITCH.get(),new Item.Properties().stacksTo(1)));
  public static final RegistryObject<CompatFarmerItem> PADDY_FARMER_ITEM=ITEMS.register("paddy_farmer",()->new CompatFarmerItem(PADDY_FARMER.get(),new Item.Properties()));
  public static final RegistryObject<CompatFarmerItem> RICH_FARMER_ITEM=ITEMS.register("rich_farmer",()->new CompatFarmerItem(RICH_FARMER.get(),new Item.Properties()));
  public static final RegistryObject<CompatFarmerItem> RICH_PADDY_FARMER_ITEM=ITEMS.register("rich_paddy_farmer",()->new CompatFarmerItem(RICH_PADDY_FARMER.get(),new Item.Properties()));

@@ -4,9 +4,11 @@ import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
 import dev.celerbi.easyfarmersdelightcompat.block.CompatFarmerBlock;
 import dev.celerbi.easyfarmersdelightcompat.block.CutterBlock;
 import dev.celerbi.easyfarmersdelightcompat.block.VillagerNoiseSwitchBlock;
+import dev.celerbi.easyfarmersdelightcompat.block.IronFarmNoiseSwitchBlock;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.CompatFarmerBlockEntity;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.CutterBlockEntity;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.VillagerNoiseSwitchBlockEntity;
+import dev.celerbi.easyfarmersdelightcompat.blockentity.IronFarmNoiseSwitchBlockEntity;
 import dev.celerbi.easyfarmersdelightcompat.integration.ToolRequirement;
 import java.util.Optional;
 import net.minecraft.ChatFormatting;
@@ -71,6 +73,7 @@ public final class EfdcJadePlugin implements IWailaPlugin {
         registration.registerBlockDataProvider(FarmerHarvestToolJadeProvider.INSTANCE, CompatFarmerBlockEntity.class);
         registration.registerBlockDataProvider(CutterJadeProvider.INSTANCE, CutterBlockEntity.class);
         registration.registerBlockDataProvider(NoiseSwitchJadeProvider.INSTANCE, VillagerNoiseSwitchBlockEntity.class);
+        registration.registerBlockDataProvider(IronFarmNoiseSwitchJadeProvider.INSTANCE, IronFarmNoiseSwitchBlockEntity.class);
     }
 
     @Override
@@ -79,6 +82,7 @@ public final class EfdcJadePlugin implements IWailaPlugin {
         registration.registerBlockComponent(FarmerHarvestToolJadeProvider.INSTANCE, CompatFarmerBlock.class);
         registration.registerBlockComponent(CutterJadeProvider.INSTANCE, CutterBlock.class);
         registration.registerBlockComponent(NoiseSwitchJadeProvider.INSTANCE, VillagerNoiseSwitchBlock.class);
+        registration.registerBlockComponent(IronFarmNoiseSwitchJadeProvider.INSTANCE, IronFarmNoiseSwitchBlock.class);
     }
 
     private enum ServerDataProvider implements IServerDataProvider<BlockAccessor> {

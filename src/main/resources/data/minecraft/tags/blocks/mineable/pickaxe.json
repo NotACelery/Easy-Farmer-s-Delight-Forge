@@ -5,6 +5,7 @@
     "easyfarmersdelightcompat:rich_farmer",
     "easyfarmersdelightcompat:rich_paddy_farmer",
     "easyfarmersdelightcompat:cutter",
-    "easyfarmersdelightcompat:villager_noise_switch"
+    "easyfarmersdelightcompat:villager_noise_switch",
+    "easyfarmersdelightcompat:iron_farm_noise_switch"
   ]
 }

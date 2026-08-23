@@ -11,17 +11,17 @@
     "R": {
       "item": "minecraft:redstone_block"
     },
-    "E": {
-      "item": "minecraft:emerald_block"
+    "I": {
+      "item": "minecraft:iron_block"
     }
   },
   "pattern": [
     "GGG",
     "GLG",
-    "RER"
+    "RIR"
   ],
   "result": {
     "count": 1,
-    "item": "easyfarmersdelightcompat:villager_noise_switch"
+    "item": "easyfarmersdelightcompat:iron_farm_noise_switch"
   }
 }

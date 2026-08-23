@@ -81,14 +81,19 @@ public final class BlockGuideEmiRecipe implements EmiRecipe {
     @Override
     public void addWidgets(WidgetHolder widgets) {
         int count = info.ingredients().size();
+        boolean ironFarmAssembly = isIronFarmAssembly();
         int totalWidth = count <= 0 ? 0 : 16 + (count - 1) * SLOT_STEP;
         int startX = Math.max(4, (WIDTH - totalWidth) / 2);
+        int[] assemblyX = {8, 58, 94, 150};
 
         for (int i = 0; i < count; i++) {
             GuideIngredient ingredient = info.ingredients().get(i);
+            EmiIngredient display = ingredient.displayStack().isEmpty()
+                    ? EmiIngredient.of(ingredient.ingredient())
+                    : EmiStack.of(ingredient.displayStack());
             SlotWidget slot = widgets.addSlot(
-                    EmiIngredient.of(ingredient.ingredient()),
-                    startX + i * SLOT_STEP,
+                    display,
+                    ironFarmAssembly ? assemblyX[i] : startX + i * SLOT_STEP,
                     4
             );
             if (ingredient.role() == GuideIngredient.Role.CATALYST
@@ -100,8 +105,17 @@ public final class BlockGuideEmiRecipe implements EmiRecipe {
             }
         }
 
+        if (ironFarmAssembly) {
+            widgets.addText(net.minecraft.network.chat.Component.literal("+"), 82, 9, 0x555555, false);
+            widgets.addText(net.minecraft.network.chat.Component.literal("→"), 126, 9, 0x555555, false);
+        }
+
         widgets.addText(info.title(), 4, 30, 0x404040, false);
         EmiTextUtil.addWrappedParagraphs(widgets, info.lines(), 4, 45, WIDTH - 8, 0x555555);
+    }
+
+    private boolean isIronFarmAssembly() {
+        return "block_guide/iron_farm_noise_switch".equals(info.id().getPath());
     }
 
     @Override

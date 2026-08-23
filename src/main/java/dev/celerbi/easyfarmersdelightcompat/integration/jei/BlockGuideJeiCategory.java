@@ -61,8 +61,10 @@ public final class BlockGuideJeiCategory implements IRecipeCategory<BlockGuideIn
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, BlockGuideInfo recipe, IFocusGroup focuses) {
         int count = recipe.ingredients().size();
+        boolean ironFarmAssembly = isIronFarmAssembly(recipe);
         int totalWidth = count <= 0 ? 0 : 16 + (count - 1) * SLOT_STEP;
         int startX = Math.max(4, (WIDTH - totalWidth) / 2);
+        int[] assemblyX = {8, 58, 94, 150};
 
         for (int i = 0; i < count; i++) {
             GuideIngredient guideIngredient = recipe.ingredients().get(i);
@@ -72,9 +74,13 @@ public final class BlockGuideJeiCategory implements IRecipeCategory<BlockGuideIn
                 case TOOL, CATALYST -> RecipeIngredientRole.CATALYST;
             };
 
-            builder.addSlot(role, startX + i * SLOT_STEP, 6)
-                    .addIngredients(guideIngredient.ingredient())
-                    .setStandardSlotBackground()
+            var slot = builder.addSlot(role, ironFarmAssembly ? assemblyX[i] : startX + i * SLOT_STEP, 6);
+            if (!guideIngredient.displayStack().isEmpty()) {
+                slot.addItemStack(guideIngredient.displayStack());
+            } else {
+                slot.addIngredients(guideIngredient.ingredient());
+            }
+            slot.setStandardSlotBackground()
                     .addRichTooltipCallback((slotView, tooltip) -> {
                         if (!guideIngredient.label().getString().isEmpty()) {
                             tooltip.add(guideIngredient.label());
@@ -86,6 +92,11 @@ public final class BlockGuideJeiCategory implements IRecipeCategory<BlockGuideIn
     @Override
     public void draw(BlockGuideInfo recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
         var font = Minecraft.getInstance().font;
+
+        if (isIronFarmAssembly(recipe)) {
+            graphics.drawString(font, "+", 82, 10, 0x555555, false);
+            graphics.drawString(font, "→", 126, 10, 0x555555, false);
+        }
 
         int titleWidth = font.width(recipe.title());
         graphics.drawString(
@@ -106,5 +117,9 @@ public final class BlockGuideJeiCategory implements IRecipeCategory<BlockGuideIn
             }
             y += 2;
         }
+    }
+
+    private static boolean isIronFarmAssembly(BlockGuideInfo recipe) {
+        return "block_guide/iron_farm_noise_switch".equals(recipe.id().getPath());
     }
 }

@@ -9,7 +9,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 
-/** Item form uses a custom renderer so the iron pedestal, lever and dust are visible in inventory. */
+/** Item form uses a custom renderer so the emerald pedestal, lever and dust are visible in inventory. */
 public final class VillagerNoiseSwitchItem extends BlockItem {
     public VillagerNoiseSwitchItem(Block block, Properties properties) { super(block, properties); }
     @Override public int getMaxStackSize(ItemStack stack){CompoundTag d=stack.getTagElement("BlockEntityTag");return d!=null&&!d.isEmpty()?1:super.getMaxStackSize(stack);}

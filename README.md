@@ -1,5 +1,7 @@
 # Easy Farmer's Delight Compat — Forge 1.20.1
 
+Current release: **1.3.0** (Forge 1.20.1)
+
 **Easy Farmer's Delight Compat** is an independent, unofficial compatibility addon that brings **Farmer's Delight** farming and cutting mechanics into **Easy Villagers** automation.
 
 > **Backport notice:** this repository is the **Forge / Minecraft 1.20.1 backport** of Easy Farmer's Delight Compat.  
@@ -62,7 +64,15 @@ The **Cutter** automates Farmer's Delight Cutting Board recipes while following 
 
 ### Villager Noise Switch
 
-A client-local **Villager Noise Switch** is included for controlling villager sounds without altering the stored villager or machine behavior.
+A client-local **Villager Noise Switch** is included for controlling villager sounds without altering the stored villager or machine behavior. Its recipe and internal pedestal now use an Emerald Block to distinguish it from the Iron Farm variant. Like its Iron Farm sibling, the Villager Noise Switch is always non-stackable.
+
+### Iron Farm Noise Switch
+
+The **Iron Farm Noise Switch** uses the former Iron Block recipe and must be assembled after placement with four additional Iron Blocks, followed by a Carved Pumpkin. The four blocks appear inside in the vanilla Iron Golem construction order before the pumpkin permanently completes the miniature Golem.
+
+Once assembled, right-clicking toggles a persistent client-local mute that cancels only Zombie Ambient and Iron Golem Hurt/Death sounds emitted from the exact position of Easy Villagers Iron Farm blocks. Normal Zombies and Iron Golems remain audible.
+
+The Iron Farm Noise Switch is always non-stackable and preserves its assembly/Golem state when mined. Its Lever and Redstone presentation is client-personal and emits no real Redstone.
 
 ### Recipe viewer and HUD integrations
 
