@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "easyfarmersdelightcompat:block/cutter" },
+    "facing=south": { "model": "easyfarmersdelightcompat:block/cutter", "y": 180 },
+    "facing=west": { "model": "easyfarmersdelightcompat:block/cutter", "y": 270 },
+    "facing=east": { "model": "easyfarmersdelightcompat:block/cutter", "y": 90 }
+  }
+}

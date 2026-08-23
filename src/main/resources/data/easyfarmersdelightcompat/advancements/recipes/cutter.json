@@ -1,0 +1,6 @@
+{
+  "parent":"minecraft:recipes/root",
+  "criteria":{"automatic_unlock":{"trigger":"minecraft:tick"}},
+  "requirements":[["automatic_unlock"]],
+  "rewards":{"recipes":["easyfarmersdelightcompat:cutter"]}
+}

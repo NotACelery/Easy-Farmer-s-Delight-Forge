@@ -1,0 +1,54 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
+    id 'idea'
+}
+version = mod_version
+group = mod_group_id
+base { archivesName = "${mod_id}-${minecraft_version}-forge" }
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+    copyIdeResources = true
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'info'
+            mods { "${mod_id}" { source sourceSets.main } }
+        }
+        client {}
+        server { args '--nogui' }
+    }
+}
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.blamejared.com' }
+    maven { url = 'https://repo.sleeping.town/' }
+    maven { url = 'https://api.modrinth.com/maven' }
+}
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
+    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}")
+    compileOnly fg.deobf("dev.emi:emi-forge:${emi_version}:api")
+    compileOnly fg.deobf("maven.modrinth:nvQzSEkH:xJQHCmWJ")
+    implementation fg.deobf("maven.modrinth:R2OftAxM:UiX0eEUW")
+    implementation fg.deobf("maven.modrinth:Kaov2qgi:mmqcSSvf")
+}
+processResources {
+    def replaceProperties = [minecraft_version:minecraft_version, minecraft_version_range:minecraft_version_range,
+        forge_version_range:forge_version_range, loader_version_range:loader_version_range,
+        mod_id:mod_id, mod_name:mod_name, mod_license:mod_license, mod_version:mod_version]
+    inputs.properties replaceProperties
+    filesMatching('META-INF/mods.toml') { expand replaceProperties + [project: project] }
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+jar {
+    manifest { attributes(['Specification-Title':mod_id,'Specification-Vendor':'Celerbi','Specification-Version':'1',
+        'Implementation-Title':project.name,'Implementation-Version':project.jar.archiveVersion,'Implementation-Vendor':'Celerbi']) }
+    finalizedBy 'reobfJar'
+}
+publishing { publications { register('mavenJava', MavenPublication) { artifact jar } } }

@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "easyfarmersdelightcompat:paddy_farmer",
+    "easyfarmersdelightcompat:rich_farmer",
+    "easyfarmersdelightcompat:rich_paddy_farmer",
+    "easyfarmersdelightcompat:cutter",
+    "easyfarmersdelightcompat:villager_noise_switch"
+  ]
+}

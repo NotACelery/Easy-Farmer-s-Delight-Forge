@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "easyfarmersdelightcompat:block/villager_noise_switch" },
+    "facing=south": { "model": "easyfarmersdelightcompat:block/villager_noise_switch", "y": 180 },
+    "facing=west": { "model": "easyfarmersdelightcompat:block/villager_noise_switch", "y": 270 },
+    "facing=east": { "model": "easyfarmersdelightcompat:block/villager_noise_switch", "y": 90 }
+  }
+}
