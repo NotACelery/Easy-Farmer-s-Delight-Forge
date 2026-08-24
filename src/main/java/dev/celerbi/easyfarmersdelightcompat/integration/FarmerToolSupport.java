@@ -21,11 +21,7 @@ public final class FarmerToolSupport {
             new ResourceLocation("forge", "tools/knives")
     );
 
-    /**
-     * Ordered category policy used by acceptance, empty-slot examples and later
-     * viewer documentation. Keeping the category lists here prevents GUI/viewer
-     * code from silently drifting away from the actual slot rules.
-     */
+    /** Shared category order for slot validation and viewer examples. */
     public static final List<TagKey<Item>> HARVEST_TOOL_CATEGORIES = List.of(
             KNIVES,
             ItemTags.HOES,
@@ -75,14 +71,7 @@ public final class FarmerToolSupport {
         return isCuttingTool(stack) ? stack.copyWithCount(1) : ItemStack.EMPTY;
     }
 
-    /**
-     * Returns stable, de-duplicated one-count examples for a tool tag.
-     *
-     * The method intentionally does not cache globally: datapack/server tag
-     * contents may differ between connections. GUI callers should snapshot the
-     * result when their screen opens; server-side diagnostic callers can query
-     * the current registry/tag state when needed.
-     */
+    /** Returns stable one-count examples for the current tag contents. */
     public static List<ItemStack> taggedToolStacks(TagKey<Item> tag) {
         List<ItemStack> result = new ArrayList<>();
         BuiltInRegistries.ITEM.getTag(tag).ifPresent(set -> {
@@ -105,21 +94,13 @@ public final class FarmerToolSupport {
         }));
         return List.copyOf(result);
     }
-    /**
-     * Server-side diagnostic samples. Normally the live tag provides every valid
-     * tool; the vanilla Axe fallback keeps non-RNG Cutter diagnostics functional
-     * even if a tag lookup is temporarily unavailable during a data reload.
-     */
+    /** Axe samples for diagnostics, with a vanilla fallback during tag reloads. */
     public static List<ItemStack> representativeAxes() {
         List<ItemStack> axes = taggedToolStacks(ItemTags.AXES);
         return axes.isEmpty() ? List.of(new ItemStack(Items.IRON_AXE)) : axes;
     }
 
-    /**
-     * Same principle for knives. Farmer's Delight supplies the common knife tag;
-     * if the tag lookup is temporarily unavailable, try stable FD registry ids
-     * without creating a hard compile-time dependency on its item classes.
-     */
+    /** Knife samples with stable Farmer's Delight registry-id fallbacks. */
     public static List<ItemStack> representativeKnives() {
         List<ItemStack> knives = taggedToolStacks(KNIVES);
         if (!knives.isEmpty()) return knives;

@@ -32,11 +32,7 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraftforge.client.model.data.ModelData;
 
-/**
- * Renders the contents of our farmer blocks using the same spatial rules as
- * Easy Villagers' 1.21.1 FarmerRenderer: villager behind the crop, both rotated
- * by the block FACING value and both kept inside the one-block enclosure.
- */
+/** Renders virtual villager/crop contents inside the Farmer enclosure. */
 public final class CompatFarmerBlockEntityRenderer implements BlockEntityRenderer<CompatFarmerBlockEntity> {
     private static final ResourceLocation RICE_CROP_ID = new ResourceLocation("farmersdelight", "rice");
     private static final ResourceLocation RICE_PANICLES_ID = new ResourceLocation("farmersdelight", "rice_panicles");
@@ -51,9 +47,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
     private static final float PADDY_WATERLINE_Y = 1.25F / 16.0F;
     private static final float PADDY_SURFACE_EPSILON = 1.0F / 1024.0F;
     private static final float PADDY_ISLAND_TOP_Y = PADDY_WATERLINE_Y + PADDY_SURFACE_EPSILON;
-    // The Paddy model's water field spans 2/16..14/16. Keep both submerged
-    // islands fully inside that footprint and distribute them symmetrically:
-    // villager support centered at 5/16, Sugar Cane substrate at 11/16.
+    // Paddy support islands stay inside the model's internal water footprint.
     private static final float PADDY_ISLAND_SCALE = 5.0F / 16.0F;
     private static final float PADDY_SUPPORT_LOCAL_Z = -3.0F / 16.0F;
     private static final float PADDY_SAND_LOCAL_Z = 3.0F / 16.0F;
@@ -128,9 +122,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         }
 
         poseStack.pushPose();
-        // Paddy villagers stand on the submerged support island at the exact
-        // internal waterline (plus a sub-pixel render epsilon to avoid z-fighting). They render at 90% of the normal Farmer size so
-        // profession hats remain inside the glass enclosure.
+        // Paddy villagers sit on the submerged support and render slightly smaller to fit the glass.
         double baseY = farmer.variant().isAquatic() ? PADDY_ISLAND_TOP_Y : 1D / 16D;
         poseStack.translate(0.5D, baseY, 0.5D);
         poseStack.mulPose(Axis.YP.rotationDegrees(-direction.toYRot()));
@@ -175,11 +167,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         }
     }
 
-    /**
-     * Rice has two real Farmer's Delight blocks. Both are rendered inside the same
-     * 0.45-scaled crop space, so even the fully mature two-stage plant stays below
-     * the glass roof instead of extending into the block above.
-     */
+    /** Renders both rice halves inside the Farmer's scaled crop space. */
     private void renderRice(
             CompatFarmerBlockEntity farmer,
             Direction direction,
@@ -206,11 +194,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         poseStack.popPose();
     }
 
-    /**
-     * Tomato can contain base + Rope 1 + Rope 2. Three full 0.45 blocks would be
-     * taller than the enclosure, so the complete trellis is rendered as one
-     * 0.28-scale stack (3 * 0.28 = 0.84 blocks maximum height).
-     */
+    /** Scales the full three-section Tomato trellis to fit inside one block. */
     private void renderTomato(
             CompatFarmerBlockEntity farmer,
             Direction direction,
@@ -252,12 +236,10 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         poseStack.pushPose();
         poseStack.translate(0D, section, 0D);
         if (tomatoOnRope != Blocks.AIR) {
-            // Farmer's Delight 1.3+ uses tomatoes_on_rope; older supported builds
-            // may expose the dedicated rope section as hanging_tomatoes instead.
+            // Newer FD uses tomatoes_on_rope; older builds may expose hanging_tomatoes.
             renderBlockState(withAge(tomatoOnRope.defaultBlockState(), progress), poseStack, buffer, combinedLight, combinedOverlay);
         } else if (tomato != Blocks.AIR) {
-            // The declared minimum, Farmer's Delight 1.2.9, represents hanging
-            // tomatoes with the legacy ropelogged state on the normal tomato block.
+            // FD 1.2.9 falls back to the legacy ropelogged tomato state.
             BlockState legacy = withBooleanProperty(withAge(tomato.defaultBlockState(), progress), "ropelogged", true);
             renderBlockState(legacy, poseStack, buffer, combinedLight, combinedOverlay);
         }
@@ -275,10 +257,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         Block platform = farmer.variant().isRich() ? BuiltInRegistries.BLOCK.get(RICH_SOIL_ID) : Blocks.DIRT;
         if (platform == Blocks.AIR) platform = Blocks.DIRT;
         poseStack.pushPose();
-        // The support is a submerged island: its top face is exactly flush with
-        // the Paddy model's water surface (Y = 1.25/16). Most of the visual block
-        // therefore sits below the waterline instead of protruding above it. A tiny
-        // render-only epsilon keeps its top face from z-fighting the static water plane.
+        // Keep the support top flush with the Paddy water plane, with a tiny z-fight offset.
         applyScaledBlockTransform(
                 poseStack,
                 direction,
@@ -294,19 +273,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
     }
 
 
-    /**
-     * Resolve light for the virtual contents of the enclosure, not for the opaque
-     * terrain block that may happen to touch one of its faces.
-     *
-     * Easy Villagers' Farmer is logically hollow. Our crops/villager are BER
-     * geometry, however, so vanilla gives them a single packed-light sample from
-     * the block entity position. A roof block or a grass block beside the Farmer
-     * can make that sample much darker than the light that visibly enters through
-     * the remaining glass faces. Sample a small exterior halo instead: immediate
-     * neighbours plus the air layer around the top edge. We deliberately do not
-     * sample straight through pos.above(2), so a genuinely enclosed/dark machine
-     * is still allowed to be dark.
-     */
+    /** Samples nearby exterior light for the Farmer's virtual interior geometry. */
     private static int resolveInteriorLight(Level level, BlockPos pos, int fallback) {
         int block = LightTexture.block(fallback);
         int sky = LightTexture.sky(fallback);
@@ -335,9 +302,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
             int combinedLight,
             int combinedOverlay
     ) {
-        // Sand is the second submerged island and uses the exact same waterline
-        // as the villager support. The cane begins on that top face, not one full
-        // rendered Sand block above the water.
+        // Sugar Cane starts on the submerged sand island at the same waterline.
         poseStack.pushPose();
         applyScaledBlockTransform(
                 poseStack,
@@ -381,10 +346,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         Block fruit = stem.is(Blocks.MELON_STEM) ? Blocks.MELON
                 : stem.is(Blocks.PUMPKIN_STEM) ? Blocks.PUMPKIN : Blocks.AIR;
 
-        // Split the available Farmer width into thirds: stem center at 1/3,
-        // fruit center at 2/3. When the virtual fruit exists, render the actual
-        // vanilla attached-stem state facing EAST (toward the fruit) instead of
-        // leaving a mature vertical stem that makes the fruit look spawned in.
+        // Stem and fruit use opposite thirds; ready stems render attached toward the fruit.
         BlockState renderedStem = stem;
         if (farmer.fruitReady() && fruit != Blocks.AIR) {
             Block attached = stem.is(Blocks.MELON_STEM) ? Blocks.ATTACHED_MELON_STEM : Blocks.ATTACHED_PUMPKIN_STEM;
@@ -436,11 +398,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         );
     }
 
-    /**
-     * Renders a vanilla one-block model with an explicit center, bottom Y and
-     * independent XYZ scale inside the Farmer enclosure. Local X/Z are evaluated
-     * after FACING rotation, so 1/3/2/3 layouts stay consistent in every direction.
-     */
+    /** Renders a block model at an explicit local center/scale after Farmer rotation. */
     private static void applyScaledBlockTransform(
             PoseStack poseStack,
             Direction direction,
@@ -458,11 +416,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         poseStack.translate(-0.5D, 0.0D, -0.5D);
     }
 
-    /**
-     * Uses the same block-model render pipeline as Easy Villagers instead of
-     * renderSingleBlock(). This preserves the crop's own RenderType and tint and
-     * avoids the black/corrupted geometry seen in the previous build.
-     */
+    /** Uses the block-model pipeline so crop render types and tints remain intact. */
     private void renderBlockState(
             BlockState state,
             PoseStack poseStack,

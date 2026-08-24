@@ -24,13 +24,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.items.IItemHandler;
 
-/**
- * Narrow runtime bridge to Easy Villagers.
- *
- * The addon deliberately does not compile against Easy Villagers implementation
- * classes. The dependency is required at runtime, and this adapter only touches the
- * small Farmer surface that we need to retain the original villager and output data.
- */
+/** Reflection bridge for the small Easy Villagers Farmer surface this addon needs. */
 public final class EasyVillagersFarmerAdapter {
     private static final ResourceLocation EASY_FARMER_ID = new ResourceLocation("easy_villagers", "farmer");
     private static final ResourceLocation RICE_CROP_ID = new ResourceLocation("farmersdelight", "rice");
@@ -170,10 +164,7 @@ public final class EasyVillagersFarmerAdapter {
         return crop != null && RICE_CROP_ID.equals(BuiltInRegistries.BLOCK.getKey(crop.getBlock()));
     }
 
-    /**
-     * Uses Easy Villagers' own seed validation, including the villager_plantable_seeds
-     * tag and its farm-crop blacklist.
-     */
+    /** Delegates seed validation to Easy Villagers. */
     public boolean isValidSeed(ItemStack stack, RegistryAccess registries) {
         if (stack.isEmpty()) {
             return false;
@@ -191,12 +182,7 @@ public final class EasyVillagersFarmerAdapter {
         }
     }
 
-    /**
-     * Resolves a normal terrestrial seed through Easy Villagers' own validation,
-     * then stores the resulting crop state directly. Calling FarmerTileentity#setCrop
-     * would also invoke the delegate's sync packet even though that tile entity is not
-     * actually placed in the world.
-     */
+    /** Resolves a seed with Easy Villagers, then stores the crop without delegate sync. */
     public boolean setCropFromSeed(ItemStack stack, RegistryAccess registries) {
         if (stack.isEmpty()) {
             return false;
@@ -219,11 +205,7 @@ public final class EasyVillagersFarmerAdapter {
         }
     }
 
-    /**
-     * Runs only Easy Villagers' internal crop-aging operation. We deliberately avoid
-     * invoking FarmerTileentity.tickServer(), because that method also calls its own
-     * block-entity sync routine even though the delegate is not actually placed.
-     */
+    /** Runs Easy Villagers crop aging without ticking/syncing the unplaced delegate. */
     public boolean ageCrop(RegistryAccess registries) {
         BlockEntity farmer = getDelegate(registries);
         if (farmer == null) {
@@ -394,10 +376,7 @@ public final class EasyVillagersFarmerAdapter {
                 return Math.max(1, number.intValue());
             }
         } catch (ReflectiveOperationException | RuntimeException e) {
-            // farmSpeed is a tuning value, not a reason to disable the entire
-            // Easy Villagers delegate. Falling back to 1 made every virtual crop
-            // run ten times faster than Easy Villagers' default when reflection
-            // failed, which looked exactly like a 200-tick-rate world.
+            // A failed farmSpeed lookup must not silently turn the Farmer into a 1-tick-speed machine.
             warnFarmSpeedFallback(e);
             return DEFAULT_FARM_SPEED;
         }
@@ -419,8 +398,7 @@ public final class EasyVillagersFarmerAdapter {
         }
 
         CompoundTag merged = fallback.copy();
-        // These three keys are owned by Easy Villagers' Farmer and must reflect
-        // removals as well as additions made through the delegate.
+        // Mirror Easy Villagers-owned keys, including removals.
         merged.remove("Villager");
         merged.remove("Crop");
         merged.remove("Items");

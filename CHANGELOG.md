@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1 — 2026-08-23
+
+- Replaced the mod icon and resource-pack icon with the new in-game screenshot-based artwork.
+- Cleaned up overly verbose and redundant source comments without changing runtime behavior.
+- Fixed the Iron Farm Noise Switch display Golem moving its head/body while stored; the miniature Golem now renders in a fully frozen pose.
+
 ## 1.3.0 — 2026-08-22
 
 - Villager Noise Switch is now always non-stackable, matching its Iron Farm sibling.

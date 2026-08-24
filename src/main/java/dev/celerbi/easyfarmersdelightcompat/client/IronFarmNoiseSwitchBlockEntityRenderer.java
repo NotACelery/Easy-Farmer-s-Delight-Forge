@@ -11,8 +11,8 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.core.Direction;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FaceAttachedHorizontalDirectionalBlock;
@@ -34,7 +34,7 @@ public final class IronFarmNoiseSwitchBlockEntityRenderer implements BlockEntity
     private static final double DUST_CELL = INNER_SIZE / 3.0D;
 
     private final BlockRenderDispatcher blockRenderer;
-    private Entity cachedGolem;
+    private IronGolem cachedGolem;
     private Level cachedGolemLevel;
 
     public IronFarmNoiseSwitchBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
@@ -50,7 +50,7 @@ public final class IronFarmNoiseSwitchBlockEntityRenderer implements BlockEntity
         boolean muted = noiseSwitch.hasGolem() && ClientPreferences.ironFarmSoundsMuted();
 
         if (noiseSwitch.hasGolem()) {
-            renderGolem(noiseSwitch, facing, partialTick, pose, buffer, packedLight);
+            renderGolem(noiseSwitch, facing, pose, buffer, packedLight);
         } else {
             renderAssembly(noiseSwitch.assemblyStage(), facing, pose, buffer, packedLight, packedOverlay);
         }
@@ -85,7 +85,7 @@ public final class IronFarmNoiseSwitchBlockEntityRenderer implements BlockEntity
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private void renderGolem(IronFarmNoiseSwitchBlockEntity noiseSwitch, Direction facing, float partialTick,
+    private void renderGolem(IronFarmNoiseSwitchBlockEntity noiseSwitch, Direction facing,
                              PoseStack pose, MultiBufferSource buffer, int packedLight) {
         Level level = noiseSwitch.getLevel();
         if (level == null) return;
@@ -96,6 +96,8 @@ public final class IronFarmNoiseSwitchBlockEntityRenderer implements BlockEntity
         }
         if (cachedGolem == null) return;
 
+        freezeGolemPose(cachedGolem);
+
         pose.pushPose();
         pose.translate(0.5D, 1.0D / 16.0D, 0.5D);
         pose.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
@@ -103,8 +105,24 @@ public final class IronFarmNoiseSwitchBlockEntityRenderer implements BlockEntity
         pose.scale(GOLEM_SCALE, GOLEM_SCALE, GOLEM_SCALE);
 
         EntityRenderer renderer = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(cachedGolem);
-        renderer.render(cachedGolem, 180.0F, partialTick, pose, buffer, packedLight);
+        renderer.render(cachedGolem, 180.0F, 0.0F, pose, buffer, packedLight);
         pose.popPose();
+    }
+
+    private static void freezeGolemPose(IronGolem golem) {
+        golem.setNoAi(true);
+        golem.setDeltaMovement(0.0D, 0.0D, 0.0D);
+        golem.tickCount = 0;
+
+        golem.setXRot(0.0F);
+        golem.xRotO = 0.0F;
+        golem.setYRot(0.0F);
+        golem.yRotO = 0.0F;
+        golem.setYBodyRot(0.0F);
+        golem.yBodyRotO = 0.0F;
+        golem.setYHeadRot(0.0F);
+        golem.yHeadRotO = 0.0F;
+        golem.walkAnimation.setSpeed(0.0F);
     }
 
     private void renderRedstoneCarpet(Direction facing, boolean muted, PoseStack pose, MultiBufferSource buffer,

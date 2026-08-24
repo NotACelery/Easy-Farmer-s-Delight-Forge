@@ -50,13 +50,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraft.core.Direction;
 import javax.annotation.Nullable;
 
-/**
- * Compatibility-safe storage for our farmer family.
- *
- * Unknown NBT is deliberately preserved. Easy Villagers' Farmer payload is kept
- * opaque and is only accessed through the narrow runtime adapter when a feature
- * actually needs it.
- */
+/** Farmer state plus the opaque Easy Villagers payload we need to preserve. */
 public final class CompatFarmerBlockEntity extends BlockEntity {
     private static final String KEY_SCHEMA = "EfdcSchema";
     private static final String KEY_PADDY_GROWTH = "EfdcPaddyGrowth";
@@ -88,12 +82,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             new ResourceLocation("farmersdelight", "unaffected_by_rich_soil")
     );
 
-    /**
-     * Virtual Farmer's Delight rice lifecycle:
-     * 0..3 = submerged lower rice ages 0..3
-     * 4..7 = upper panicles ages 0..3 (lower rice remains age 3)
-     * next successful work cycle = harvest; the submerged lower plant stays mature at stage 3
-     */
+    /** Rice stages: 0..3 lower crop, 4..7 panicles; harvest returns to stage 3. */
     private static final int MAX_PADDY_GROWTH = 7;
     private static final int MAX_SUGAR_CANE_AGE = 15;
 
@@ -199,13 +188,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         return fruitReady;
     }
 
-    /**
-     * Tool category required by the operation that is actually ready to continue.
-     *
-     * Optional yield tools are intentionally excluded: Rice can harvest without a
-     * Knife and normal crops can harvest without a Fortune Hoe. This method only
-     * reports hard blockers that should surface as a red "waiting for tool" status.
-     */
+    /** Reports only tools that are hard blockers for the current operation. */
     public ToolRequirement currentToolRequirement() {
         if (!variant().isRich() || level == null) return ToolRequirement.NONE;
 
@@ -437,11 +420,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         setChanged();
     }
 
-    /**
-     * Returns whether this machine owns state that must be preserved in its item.
-     * A completely empty Farmer intentionally serializes nothing when broken so
-     * empty machine items remain safe to stack normally.
-     */
+    /** Empty Farmers stay stackable; any real machine state must be preserved. */
     public boolean hasStoredContents(RegistryAccess registries) {
         if (easyVillagers.hasVillager(registries) || easyVillagers.getCrop(registries) != null) {
             return true;
@@ -462,9 +441,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             return true;
         }
 
-        // Preserve unknown Easy Villagers/future compatibility data rather than
-        // silently discarding it just to make the item stackable. Known empty
-        // Farmer keys are removed before this final check.
+        // Unknown payload still counts as machine state after known empty keys are stripped.
         CompoundTag unknown = passthroughData.copy();
         stripMetadata(unknown);
         stripAddonKeys(unknown);
@@ -483,20 +460,12 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             farmer.setChanged();
         }
 
-        // Melon/Pumpkin stems have a virtual Rich Soil block below them. A real
-        // Rich Soil block is NOT driven by Easy Villagers' farmSpeed: Minecraft
-        // selects random-tick positions from the chunk section, and only then does
-        // Farmer's Delight roll richSoilBoostChance. Reproduce that independent
-        // clock here so stems do not receive the old over-aggressive farmSpeed-scaled
-        // Bone Meal bonus. Other already-validated Rich Farmer crops keep their
-        // existing tuning below.
+        // Stem Rich Soil uses Minecraft's random-tick cadence, not Easy Villagers' farmSpeed.
         if (farmer.variant().isRich() && !farmer.variant().isAquatic()) {
             farmer.tryVirtualStemRichSoilRandomTick(level, registries);
         }
 
-        // Every Farmer family uses Easy Villagers' one-second work cadence for its
-        // ordinary machine work. The configured farmSpeed remains the common speed
-        // control for base growth and independently-growing Tomato rope sections.
+        // Ordinary work runs once per second; farmSpeed still gates crop growth.
         if (level.getGameTime() % 20L != 0L) {
             return;
         }
@@ -521,11 +490,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
                 return;
             }
 
-            // Sugar Cane has its own vanilla AGE 0..15 before it creates the next
-            // section. One Easy Villagers farmSpeed success therefore advances the
-            // internal cane age, not an entire block. This preserves the Farmer's
-            // configured acceleration while avoiding the old 16x-too-fast 1->2->3
-            // behavior. Rich Soil deliberately does not accelerate Sugar Cane.
+            // Sugar Cane advances its vanilla 0..15 age before adding another section.
             if (farmer.sugarCaneHeight < 3 && level.random.nextInt(farmSpeed) == 0) {
                 if (farmer.sugarCaneAge >= MAX_SUGAR_CANE_AGE) {
                     farmer.sugarCaneHeight++;
@@ -548,21 +513,16 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
                     && !villager.isBaby()
                     && villager.getVillagerData().getProfession() == VillagerProfession.FARMER;
 
-            // Once the panicles are fully mature, harvesting happens on the next
-            // one-second Farmer cadence without requiring a second farmSpeed RNG roll.
-            // Growth itself still uses Easy Villagers' configured RNG. This prevents
-            // fully-grown Rice from visually stalling for several extra work rolls.
+            // Mature panicles harvest on the next work tick; growth alone uses farmSpeed RNG.
             if (farmer.paddyGrowth >= MAX_PADDY_GROWTH && canHarvest) {
                 if (farmer.harvestMatureRice(level, registries)) {
-                    // Farmer's Delight keeps the mature submerged plant after the
-                    // panicles are harvested, so only the upper half regrows.
+                    // Harvest keeps the mature submerged rice; only panicles regrow.
                     farmer.paddyGrowth = 3;
                     farmer.syncRiceCropState(registries);
                     farmer.setChanged();
                     level.playSound(null, pos, SoundEvents.VILLAGER_WORK_FARMER, SoundSource.BLOCKS, 1.0F, 1.0F);
                 }
-                // A mature Paddy waits here while output is full; it must not
-                // consume/reset its panicles until the complete harvest can fit.
+                // Do not reset mature rice until its whole harvest fits.
                 return;
             }
 
@@ -574,9 +534,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
                 farmer.setChanged();
             }
 
-            // Rich Paddy receives a separate opportunity at the same cadence. This
-            // models Rich Soil as part of the machine instead of requiring Minecraft
-            // to randomly select an imaginary Rich Soil block from a chunk section.
+            // Rich Paddy gets a separate virtual Rich Soil opportunity.
             if (farmer.variant().isRich()
                     && level.random.nextInt(farmSpeed) == 0) {
                 farmer.tryRichPaddyBoost(level, registries);
@@ -589,10 +547,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             return;
         }
 
-        // Once a virtual Melon/Pumpkin fruit exists, the Farmer is waiting on a
-        // concrete harvest condition (adult Farmer, Axe and output room), not on
-        // another random growth roll. Retry once per normal one-second work cadence
-        // so inserting the missing Axe resumes the machine promptly.
+        // Ready stem fruit retries harvest each work tick while waiting on Axe/output/adult state.
         if (isStemState(crop) && farmer.fruitReady) {
             if (farmer.harvestReadyStem(level, registries)) {
                 farmer.setChanged();
@@ -600,26 +555,12 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             return;
         }
 
-        // Growth and harvesting are deliberately separate phases.
-        //
-        // Easy Villagers' farmSpeed RNG controls how often a crop advances a growth
-        // stage. Once the final stage has already been reached, however, requiring
-        // another successful farmSpeed roll makes a visually mature crop sit idle
-        // for an average of farmSpeed seconds (about 10 seconds at the default
-        // value). Rice and ready Melon/Pumpkin already avoid that second RNG gate;
-        // normal crops, Tomato and Mushroom Colonies must follow the same rule.
-        //
-        // A mature crop therefore gets one deterministic harvest attempt on every
-        // normal one-second Farmer cadence. If a hard requirement (Knife), adult
-        // Farmer, or output space is missing, it simply remains mature/standby and
-        // retries next cadence without resetting or consuming anything.
+        // Growth uses farmSpeed RNG; once mature, harvest is retried every work tick until it succeeds.
         boolean baseHandledThisCadence = false;
         if (!isStemState(crop) && isMatureAgeState(crop)) {
             ResourceLocation cropId = BuiltInRegistries.BLOCK.getKey(crop.getBlock());
 
-            // budding_tomatoes age 3 is an intermediate growth state. Its transition
-            // into the persistent tomatoes vine remains a normal farmSpeed growth
-            // step, not a harvest.
+            // Budding tomatoes age 3 still needs one normal growth step into the persistent vine.
             boolean finalTomatoStage = TOMATO_CROP_ID.equals(cropId);
             if (!isTomatoState(crop) || finalTomatoStage) {
                 boolean changed;
@@ -636,17 +577,14 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
                     farmer.setChanged();
                 }
 
-                // Non-Tomato crops have no independent rope sections to service.
-                // Whether the harvest succeeded or is waiting on a requirement,
-                // there is no valid growth work left for this crop this cadence.
+                // Non-Tomato crops have no rope work left this tick.
                 if (!finalTomatoStage) {
                     return;
                 }
             }
         }
 
-        // Base crop gets its Easy Villagers growth roll only while it was not
-        // already at a final harvestable stage at the start of this cadence.
+        // Only non-mature base crops receive a growth roll.
         if (!baseHandledThisCadence && level.random.nextInt(farmSpeed) == 0) {
             boolean changed;
             if (isTomatoState(crop)) {
@@ -663,10 +601,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             }
         }
 
-        // Tomato rope sections grow independently, but their harvest phase is also
-        // deterministic once a section reaches progress 3. A mature rope section
-        // must not wait for another farmSpeed success, and a section harvested on
-        // this cadence must not immediately receive a fresh growth roll.
+        // Tomato rope sections grow independently; mature sections harvest without another RNG gate.
         BlockState afterBase = farmer.easyVillagers.getCrop(registries);
         if (afterBase != null && TOMATO_CROP_ID.equals(BuiltInRegistries.BLOCK.getKey(afterBase.getBlock()))) {
             boolean ropeOneHandled = farmer.ropeCount >= 1 && farmer.ropeOneProgress >= 3;
@@ -687,10 +622,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             }
         }
 
-        // Preserve the already-validated Rich Farmer tuning for non-stem crops.
-        // Melon/Pumpkin stems are intentionally excluded: their Rich Soil boost is
-        // simulated from Minecraft's real random-tick cadence above instead of being
-        // coupled to Easy Villagers' farmSpeed.
+        // Non-stem Rich Farmer crops keep the existing boost; stems use the random-tick path above.
         BlockState richAfterBase = farmer.easyVillagers.getCrop(registries);
         if (farmer.variant().isRich()
                 && !isStemState(richAfterBase)
@@ -699,20 +631,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         }
     }
 
-    /**
-     * Simulates the random-tick clock of the one virtual Rich Soil block below a
-     * Melon/Pumpkin stem.
-     *
-     * ServerLevel picks {@code randomTickSpeed} random positions from each ticking
-     * chunk section every game tick. One particular block is therefore selected
-     * with probability 1/4096 per pick. We collapse those picks into the exact
-     * "selected at least once this tick" probability and then let Farmer's Delight's
-     * own richSoilBoostChance decide whether Bone Meal is applied.
-     *
-     * At the vanilla randomTickSpeed of 3 this is intentionally much rarer than the
-     * previous 1/farmSpeed roll, while still scaling naturally with /gamerule
-     * randomTickSpeed and with Minecraft's tick-rate command.
-     */
+    /** Simulates selection of one virtual Rich Soil block by Minecraft's random-tick clock. */
     private void tryVirtualStemRichSoilRandomTick(ServerLevel level, RegistryAccess registries) {
         if (fruitReady) return;
 
@@ -738,14 +657,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         setChanged();
     }
 
-    /**
-     * Emulates the virtual Rich Soil below the Rich Farmer.
-     *
-     * A real Rich Soil block is randomly ticked by Minecraft and, when selected,
-     * Farmer's Delight rolls richSoilBoostChance before applying bone meal. Our crop
-     * exists only as a stored BlockState, so we reproduce those two rolls and then
-     * apply the crop's own bone-meal age increment without placing it in the world.
-     */
+    /** Applies the same random-tick and Rich Soil boost rolls to the stored crop state. */
     private void tryRichSoilBoost(ServerLevel level, RegistryAccess registries) {
         BlockState crop = easyVillagers.getCrop(registries);
         if (crop == null || crop.is(UNAFFECTED_BY_RICH_SOIL)) {
@@ -835,9 +747,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             int currentAge = getAge(crop);
             int maxAge = maxAge(crop);
             if (currentAge >= maxAge) return false;
-            // Vanilla StemBlock bonemeal advances by 2..5 ages. Keep fruitReady false:
-            // Rich Soil accelerates only stem maturation; fruit generation stays on
-            // the Farmer's normal work roll as specified by this virtual lifecycle.
+            // Rich Soil accelerates stem age only; fruit generation stays on the normal work roll.
             int increment = 2 + level.random.nextInt(4);
             easyVillagers.setCropState(withAge(crop, Math.min(maxAge, currentAge + increment)), registries);
             fruitReady = false;
@@ -868,11 +778,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         return true;
     }
 
-    /**
-     * Compatible crops expose their bone-meal increment as a protected method.
-     * Reflection lets us respect each implementation (CropBlock, RiceBlock,
-     * BuddingTomatoBlock, etc.) instead of hardcoding one arbitrary increment.
-     */
+    /** Uses each crop implementation's own protected bone-meal increment when available. */
     private static int getBoneMealAgeIncrease(Block block, Level level) {
         Class<?> type = block.getClass();
         while (type != null) {
@@ -890,11 +796,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         return 0;
     }
 
-    /**
-     * Generic Easy Villagers-style crop lifecycle with lossless output handling.
-     * Growth is unchanged, but a mature crop only resets after its exact generated
-     * loot can fit completely in the four-slot output inventory.
-     */
+    /** Generic crop lifecycle; mature crops reset only after all generated loot fits. */
     private boolean ageNormalCropSafely(ServerLevel level, RegistryAccess registries) {
         BlockState crop = easyVillagers.getCrop(registries);
         if (crop == null) {
@@ -943,12 +845,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         return true;
     }
 
-    /**
-     * Farmer's Delight Mushroom Colony lifecycle used by the Rich Farmer. The
-     * colony itself is persistent: ages 0..3 grow progressively, and a mature
-     * colony is harvested like a full knife harvest (3 mushrooms at age 3)
-     * before returning to age 0 without consuming another mushroom item.
-     */
+    /** Persistent Mushroom Colony lifecycle for Rich Farmers. */
     private boolean ageMushroomColony(ServerLevel level, RegistryAccess registries) {
         BlockState crop = easyVillagers.getCrop(registries);
         if (!isMushroomColonyState(crop)) {
@@ -967,9 +864,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             return false;
         }
 
-        // Farmer's Delight colonies require a Knife for their mature harvest.
-        // Growth is allowed to finish normally; a mature colony simply waits until
-        // the Rich Farmer is equipped, matching the validated sandbox behaviour.
+        // Mature colonies wait for a Knife; growth itself is never blocked.
         if (variant().isRich() && !FarmerToolSupport.isKnife(harvestTool)) {
             return false;
         }
@@ -984,8 +879,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             return false;
         }
 
-        // MushroomColonyBlock's full knife harvest returns colonyAge mushrooms
-        // and resets the persistent colony to age 0. At max age (3), that is 3.
+        // Full knife harvest returns colonyAge mushrooms and resets the persistent colony.
         Item mushroom = BuiltInRegistries.ITEM.get(mushroomItemId);
         ItemStack harvest = new ItemStack(mushroom, maxAge);
         if (!canFitAll(output, List.of(harvest))) {
@@ -1331,11 +1225,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         return state.setValue(integerProperty, safeAge);
     }
 
-    /**
-     * Simulates the same stacking rules used by insertIntoOutput without mutating
-     * the real inventory. Harvesting is only committed when every generated drop
-     * can be stored, so no crop output can disappear due to a full container.
-     */
+    /** Checks the full harvest against output stacking rules without mutating inventory. */
     private static boolean canFitAll(Container output, List<ItemStack> stacks) {
         ItemStack[] simulated = new ItemStack[output.getContainerSize()];
         for (int slot = 0; slot < simulated.length; slot++) {

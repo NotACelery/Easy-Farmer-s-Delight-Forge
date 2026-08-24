@@ -45,23 +45,11 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.network.NetworkHooks;
 
-/**
- * Base block for every farmer owned by this addon.
- *
- * The geometry/assets are ours. Easy Villagers is an external runtime dependency;
- * interaction with its Farmer data is isolated behind a small adapter.
- */
+/** Base block shared by the addon Farmer variants. */
 public final class CompatFarmerBlock extends Block implements EntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
-    /**
-     * Match Easy Villagers' VillagerBlockBase exactly: the machine is a hollow
-     * one-block enclosure with a 1/16-thick shell, not a logical full cube.
-     *
-     * This matters for vanilla light/face sampling. Keeping the default full-cube
-     * shape made an adjacent opaque block poison the light used by inner model
-     * faces even though the visual model itself was transparent/no-occlusion.
-     */
+    /** Hollow 1/16 shell matching Easy Villagers; avoids full-cube lighting artifacts. */
     private static final VoxelShape FARMER_SHAPE = Shapes.or(
             Block.box(0D, 0D, 0D, 16D, 1D, 16D),
             Block.box(0D, 15D, 0D, 16D, 16D, 16D),
@@ -174,9 +162,7 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
             }
         }
 
-        // Rich variants expose one protected Harvest Tool slot. Knives, Hoes and
-        // Axes can be equipped directly; crop-specific logic decides which tool is
-        // actually used for each harvest.
+        // Rich variants accept Knife/Hoe/Axe in the protected Harvest Tool slot.
         if (!player.isShiftKeyDown() && variant.isRich() && FarmerToolSupport.isHarvestTool(heldItem)
                 && farmer.getHarvestTool().isEmpty()) {
             if (!level.isClientSide) {
@@ -219,8 +205,7 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
 
-        // Tomato ropes are permanent infrastructure inside the Rich Farmer. Add them
-        // with Rope; sneak-interaction removes the topmost rope before the crop itself.
+        // Rope builds Tomato supports; sneak-use removes the top support first.
         if (!variant.isAquatic() && variant.isRich() && farmer.hasTomatoCrop(registries)) {
             if (player.isShiftKeyDown() && farmer.ropeCount() > 0) {
                 if (!level.isClientSide) {
@@ -357,16 +342,14 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
         if (blockEntity instanceof CompatFarmerBlockEntity compatFarmer
                 && compatFarmer.hasStoredContents(params.getLevel().registryAccess())) {
             compatFarmer.saveToItem(stack);
-            // Stateful machines must never share one ItemStack because placing
-            // multiple copies would duplicate their stored villager/inventory.
+            // Stateful Farmers are always non-stackable.
         }
         return List.of(stack);
     }
 
     @Override
     public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos, Player player) {
-        // Creative Pick Block is intentionally clean. Normal block drops still
-        // preserve the complete machine state through getDrops().
+        // Creative Pick Block stays clean; normal drops preserve machine state.
         return new ItemStack(this);
     }
 }
