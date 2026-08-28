@@ -1,44 +1,44 @@
 {
-  "multipart": [
-    {
-      "when": {
-        "facing": "north"
-      },
-      "apply": {
-        "model": "easyfarmersdelightcompat:block/paddy_farmer"
-      }
-    },
-    {
-      "when": {
-        "facing": "south"
-      },
-      "apply": {
-        "model": "easyfarmersdelightcompat:block/paddy_farmer",
-        "y": 180
-      }
-    },
-    {
-      "when": {
-        "facing": "west"
-      },
-      "apply": {
-        "model": "easyfarmersdelightcompat:block/paddy_farmer",
-        "y": 270
-      }
-    },
-    {
-      "when": {
-        "facing": "east"
-      },
-      "apply": {
-        "model": "easyfarmersdelightcompat:block/paddy_farmer",
-        "y": 90
-      }
-    },
-    {
-      "apply": {
-        "model": "easyfarmersdelightcompat:block/paddy_water"
-      }
-    }
-  ]
+    "multipart": [
+        {
+            "when": {
+                "facing": "north"
+            },
+            "apply": {
+                "model": "easyfarmersdelightcompat:block/paddy_farmer"
+            }
+        },
+        {
+            "when": {
+                "facing": "south"
+            },
+            "apply": {
+                "model": "easyfarmersdelightcompat:block/paddy_farmer",
+                "y": 180
+            }
+        },
+        {
+            "when": {
+                "facing": "west"
+            },
+            "apply": {
+                "model": "easyfarmersdelightcompat:block/paddy_farmer",
+                "y": 270
+            }
+        },
+        {
+            "when": {
+                "facing": "east"
+            },
+            "apply": {
+                "model": "easyfarmersdelightcompat:block/paddy_farmer",
+                "y": 90
+            }
+        },
+        {
+            "apply": {
+                "model": "easyfarmersdelightcompat:block/paddy_water"
+            }
+        }
+    ]
 }

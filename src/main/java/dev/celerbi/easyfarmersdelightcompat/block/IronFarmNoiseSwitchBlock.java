@@ -44,7 +44,9 @@ public final class IronFarmNoiseSwitchBlock extends Block implements EntityBlock
     }
 
     @Override
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) { builder.add(FACING); }
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(FACING);
+    }
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
@@ -62,7 +64,9 @@ public final class IronFarmNoiseSwitchBlock extends Block implements EntityBlock
     }
 
     @Override
-    public float getShadeBrightness(BlockState state, BlockGetter level, BlockPos pos) { return 1.0F; }
+    public float getShadeBrightness(BlockState state, BlockGetter level, BlockPos pos) {
+        return 1.0F;
+    }
 
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
@@ -70,8 +74,8 @@ public final class IronFarmNoiseSwitchBlock extends Block implements EntityBlock
     }
 
     @Override
-    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
-                                 InteractionHand hand, BlockHitResult hit) {
+    public InteractionResult use( BlockState state, Level level, BlockPos pos,
+                                              Player player, InteractionHand hand, BlockHitResult hit) {
         ItemStack held = player.getItemInHand(hand);
         if (!(level.getBlockEntity(pos) instanceof IronFarmNoiseSwitchBlockEntity noiseSwitch)) {
             return InteractionResult.PASS;
@@ -84,7 +88,8 @@ public final class IronFarmNoiseSwitchBlock extends Block implements EntityBlock
 
         if (held.is(Items.IRON_BLOCK) && noiseSwitch.needsIronBlock()) {
             if (!level.isClientSide && noiseSwitch.insertIronBlock()) {
-                if (!player.getAbilities().instabuild) held.shrink(1);
+                if (!player.getAbilities().instabuild)
+                    held.shrink(1);
                 level.playSound(null, pos, Blocks.IRON_BLOCK.defaultBlockState().getSoundType().getPlaceSound(),
                         SoundSource.BLOCKS, 0.8F, 1.0F);
             }
@@ -93,7 +98,8 @@ public final class IronFarmNoiseSwitchBlock extends Block implements EntityBlock
 
         if (held.is(Items.CARVED_PUMPKIN) && noiseSwitch.needsCarvedPumpkin()) {
             if (!level.isClientSide && noiseSwitch.completeGolem()) {
-                if (!player.getAbilities().instabuild) held.shrink(1);
+                if (!player.getAbilities().instabuild)
+                    held.shrink(1);
                 level.playSound(null, pos, Blocks.CARVED_PUMPKIN.defaultBlockState().getSoundType().getPlaceSound(),
                         SoundSource.BLOCKS, 0.8F, 1.0F);
                 level.playSound(null, pos, SoundEvents.IRON_GOLEM_REPAIR, SoundSource.BLOCKS, 1.0F, 0.9F);
@@ -105,8 +111,10 @@ public final class IronFarmNoiseSwitchBlock extends Block implements EntityBlock
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
-    private static void showAssemblyRequirement(Level level, Player player, IronFarmNoiseSwitchBlockEntity noiseSwitch) {
-        if (!level.isClientSide) return;
+    private static void showAssemblyRequirement(Level level, Player player,
+            IronFarmNoiseSwitchBlockEntity noiseSwitch) {
+        if (!level.isClientSide)
+            return;
         if (noiseSwitch.needsIronBlock()) {
             player.displayClientMessage(Component.translatable(
                     "message.easyfarmersdelightcompat.iron_farm_noise_switch.iron_required",
@@ -120,7 +128,8 @@ public final class IronFarmNoiseSwitchBlock extends Block implements EntityBlock
     }
 
     private static void toggleClient(Level level, Player player, IronFarmNoiseSwitchBlockEntity noiseSwitch) {
-        if (!level.isClientSide) return;
+        if (!level.isClientSide)
+            return;
         boolean muted = ClientPreferences.toggleIronFarmSoundsMuted();
         player.displayClientMessage(Component.translatable(muted
                 ? "message.easyfarmersdelightcompat.iron_farm_noise_switch.muted"
@@ -132,7 +141,8 @@ public final class IronFarmNoiseSwitchBlock extends Block implements EntityBlock
     }
 
     @Override
-    public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos, Player player) {
+    public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos,
+            Player player) {
         return new ItemStack(ModBlocks.IRON_FARM_NOISE_SWITCH_ITEM.get());
     }
 
@@ -141,7 +151,7 @@ public final class IronFarmNoiseSwitchBlock extends Block implements EntityBlock
         ItemStack dropped = new ItemStack(ModBlocks.IRON_FARM_NOISE_SWITCH_ITEM.get());
         BlockEntity blockEntity = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
         if (blockEntity instanceof IronFarmNoiseSwitchBlockEntity noiseSwitch
-                && (noiseSwitch.hasGolem() || noiseSwitch.assemblyStage() > 0)) {
+                 && (noiseSwitch.hasGolem() || noiseSwitch.assemblyStage() > 0)) {
             CompoundTag data = noiseSwitch.saveWithoutMetadata();
             if (!data.isEmpty()) {
                 BlockItem.setBlockEntityData(dropped, ModBlockEntities.IRON_FARM_NOISE_SWITCH.get(), data);

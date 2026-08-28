@@ -40,49 +40,121 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.network.NetworkHooks;
 
-/** Easy-Villagers-style enclosure for automated Farmer's Delight cutting. */
 public final class CutterBlock extends Block implements EntityBlock {
-    public static final DirectionProperty FACING=BlockStateProperties.HORIZONTAL_FACING;
-    public CutterBlock(Properties properties){super(properties);registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH));}
-    @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> b){b.add(FACING);}
-    @Override public BlockState getStateForPlacement(BlockPlaceContext c){return defaultBlockState().setValue(FACING,c.getHorizontalDirection().getOpposite());}
-    @Override public BlockState rotate(BlockState s,Rotation r){return s.setValue(FACING,r.rotate(s.getValue(FACING)));}
-    @Override public BlockState mirror(BlockState s,Mirror m){return s.rotate(m.getRotation(s.getValue(FACING)));}
-    @Override public float getShadeBrightness(BlockState s,BlockGetter l,BlockPos p){return 1F;}
-    @Override public BlockEntity newBlockEntity(BlockPos p,BlockState s){return new CutterBlockEntity(p,s);}
-    @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level l,BlockState s,BlockEntityType<T> t){
-        if(l.isClientSide||t!=ModBlockEntities.CUTTER.get())return null;
-        return (level,pos,state,be)->{if(level instanceof net.minecraft.server.level.ServerLevel sl&&be instanceof CutterBlockEntity c)CutterBlockEntity.serverTick(sl,pos,state,c);};
+    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public CutterBlock(Properties properties) {
+        super(properties);
+        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
-    @Override public InteractionResult use(BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){
-        ItemStack held=player.getItemInHand(hand);
-        if(!(level.getBlockEntity(pos) instanceof CutterBlockEntity cutter))return InteractionResult.PASS;
-        if(!player.isShiftKeyDown() && FarmerToolSupport.isCuttingTool(held) && cutter.toolHandler().getStackInSlot(0).isEmpty()){
-            if(!level.isClientSide){
-                ItemStack one=held.copyWithCount(1);
-                if(cutter.toolHandler().insertItem(0,one,false).isEmpty()){
-                    if(!player.getAbilities().instabuild)held.shrink(1);
-                    level.playSound(null,pos,SoundEvents.UI_STONECUTTER_TAKE_RESULT,SoundSource.BLOCKS,.7F,1F);
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> b) {
+        b.add(FACING);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext c) {
+        return defaultBlockState().setValue(FACING, c.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    public BlockState rotate(BlockState s, Rotation r) {
+        return s.setValue(FACING, r.rotate(s.getValue(FACING)));
+    }
+
+    @Override
+    public BlockState mirror(BlockState s, Mirror m) {
+        return s.rotate(m.getRotation(s.getValue(FACING)));
+    }
+
+    @Override
+    public float getShadeBrightness(BlockState s, BlockGetter l, BlockPos p) {
+        return 1F;
+    }
+
+    @Override
+    public BlockEntity newBlockEntity(BlockPos p, BlockState s) {
+        return new CutterBlockEntity(p, s);
+    }
+
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level l, BlockState s, BlockEntityType<T> t) {
+        if (l.isClientSide || t != ModBlockEntities.CUTTER.get())
+            return null;
+        return (level, pos, state, be) -> {
+            if (level instanceof net.minecraft.server.level.ServerLevel sl && be instanceof CutterBlockEntity c)
+                CutterBlockEntity.serverTick(sl, pos, state, c);
+        };
+    }
+
+    @Override
+    public InteractionResult use( BlockState state, Level level, BlockPos pos,
+            Player player, InteractionHand hand, BlockHitResult hit) {
+        ItemStack held = player.getItemInHand(hand);
+        if (!(level.getBlockEntity(pos) instanceof CutterBlockEntity cutter))
+            return InteractionResult.PASS;
+        if (!player.isShiftKeyDown() && FarmerToolSupport.isCuttingTool(held) && cutter.toolHandler().getStackInSlot(0)
+                .isEmpty()) {
+            if (!level.isClientSide) {
+                ItemStack one = held.copyWithCount(1);
+                if (cutter.toolHandler().insertItem(0, one, false).isEmpty()) {
+                    if (!player.getAbilities().instabuild)
+                        held.shrink(1);
+                    level.playSound(null, pos, SoundEvents.UI_STONECUTTER_TAKE_RESULT, SoundSource.BLOCKS, .7F, 1F);
                 }
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
-        if(player.isShiftKeyDown()&&cutter.hasVillager()){
-            if(!level.isClientSide){ItemStack removed=cutter.removeVillager();if(!removed.isEmpty())ItemHandlerHelper.giveItemToPlayer(player,removed);level.playSound(null,pos,SoundEvents.VILLAGER_CELEBRATE,SoundSource.BLOCKS,1F,1F);}return InteractionResult.sidedSuccess(level.isClientSide);
+        if (player.isShiftKeyDown() && cutter.hasVillager()) {
+            if (!level.isClientSide) {
+                ItemStack removed = cutter.removeVillager();
+                if (!removed.isEmpty())
+                    ItemHandlerHelper.giveItemToPlayer(player, removed);
+                level.playSound(null, pos, SoundEvents.VILLAGER_CELEBRATE, SoundSource.BLOCKS, 1F, 1F);
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
         }
-        if(!cutter.hasVillager()&&cutter.isVillagerItem(held)){
-            if(!level.isClientSide&&cutter.insertVillager(held)){if(!player.getAbilities().instabuild)held.shrink(1);level.playSound(null,pos,SoundEvents.VILLAGER_YES,SoundSource.BLOCKS,1F,1F);}return InteractionResult.sidedSuccess(level.isClientSide);
+        if (!cutter.hasVillager() && cutter.isVillagerItem(held)) {
+            if (!level.isClientSide && cutter.insertVillager(held)) {
+                if (!player.getAbilities().instabuild)
+                    held.shrink(1);
+                level.playSound(null, pos, SoundEvents.VILLAGER_YES, SoundSource.BLOCKS, 1F, 1F);
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
         }
-        openMenu(level,pos,player,cutter);return InteractionResult.sidedSuccess(level.isClientSide);
+        openMenu(level, pos, player, cutter);
+        return InteractionResult.sidedSuccess(level.isClientSide);
     }
-    private static void openMenu(Level level,BlockPos pos,Player player,CutterBlockEntity cutter){
-        if(level.isClientSide||!(player instanceof ServerPlayer sp))return;
-        NetworkHooks.openScreen(sp,new net.minecraft.world.SimpleMenuProvider((id,inv,ignored)->new CutterMenu(id,inv,cutter),Component.translatable("container.easyfarmersdelightcompat.cutter")),pos);
+
+    private static void openMenu(Level level, BlockPos pos, Player player, CutterBlockEntity cutter) {
+        if (level.isClientSide || !(player instanceof ServerPlayer sp))
+            return;
+        NetworkHooks.openScreen(
+                sp,
+                new net.minecraft.world.SimpleMenuProvider(
+                        (id, inv, ignored) -> new CutterMenu(id, inv, cutter),
+                        Component.translatable("container.easyfarmersdelightcompat.cutter")),
+                pos);
     }
-    @Override public ItemStack getCloneItemStack(BlockState state,HitResult target,BlockGetter level,BlockPos pos,Player player){BlockEntity be=level.getBlockEntity(pos);return be instanceof CutterBlockEntity c?CutterLogVariant.createCutter(c.logVariant()):new ItemStack(ModBlocks.CUTTER_ITEM.get());}
-    @Override public List<ItemStack> getDrops(BlockState state,LootParams.Builder params){
-        ItemStack dropped=new ItemStack(ModBlocks.CUTTER_ITEM.get()); BlockEntity be=params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
-        if(be instanceof CutterBlockEntity cutter){CompoundTag data=cutter.saveWithoutMetadata();if(!data.isEmpty())BlockItem.setBlockEntityData(dropped,ModBlockEntities.CUTTER.get(),data);}
+
+    @Override
+    public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos,
+            Player player) {
+        BlockEntity be = level.getBlockEntity(pos);
+        return be instanceof CutterBlockEntity c
+                ? CutterLogVariant.createCutter(c.logVariant())
+                : new ItemStack(ModBlocks.CUTTER_ITEM.get());
+    }
+
+    @Override
+    public List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+        ItemStack dropped = new ItemStack(ModBlocks.CUTTER_ITEM.get());
+        BlockEntity be = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
+        if (be instanceof CutterBlockEntity cutter) {
+            CompoundTag data = cutter.saveWithoutMetadata();
+            if (!data.isEmpty())
+                BlockItem.setBlockEntityData(dropped, ModBlockEntities.CUTTER.get(), data);
+        }
         return List.of(dropped);
     }
 }

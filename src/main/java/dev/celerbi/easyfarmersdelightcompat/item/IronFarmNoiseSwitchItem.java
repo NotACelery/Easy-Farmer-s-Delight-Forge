@@ -19,7 +19,8 @@ public final class IronFarmNoiseSwitchItem extends BlockItem {
 
             @Override
             public BlockEntityWithoutLevelRenderer getCustomRenderer() {
-                if (renderer == null) renderer = new IronFarmNoiseSwitchItemRenderer();
+                if (renderer == null)
+                    renderer = new IronFarmNoiseSwitchItemRenderer();
                 return renderer;
             }
         });

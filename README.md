@@ -10,6 +10,8 @@ Current release: **1.3.1** (Forge 1.20.1)
 
 The Forge edition keeps the same gameplay goals and feature set wherever the 1.20.1 versions of the dependencies allow it, while using the native Forge 1.20.1 APIs and data formats.
 
+For implementation architecture, persistence invariants, compatibility boundaries and regression checks, see [`DEVELOPMENT.md`](DEVELOPMENT.md).
+
 ## Target versions
 
 - Minecraft **1.20.1**

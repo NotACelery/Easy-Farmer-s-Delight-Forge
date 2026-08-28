@@ -24,7 +24,6 @@ import snownee.jade.api.ui.IDisplayHelper;
 import snownee.jade.api.ui.IElement;
 import snownee.jade.api.ui.IElementHelper;
 
-/** Jade status for Cutter storage plus non-RNG processing diagnostics. */
 public enum CutterJadeProvider implements IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
     INSTANCE;
 
@@ -44,7 +43,8 @@ public enum CutterJadeProvider implements IBlockComponentProvider, IServerDataPr
 
     @Override
     public void appendServerData(CompoundTag data, BlockAccessor accessor) {
-        if (!(accessor.getBlockEntity() instanceof CutterBlockEntity cutter)) return;
+        if (!(accessor.getBlockEntity() instanceof CutterBlockEntity cutter))
+            return;
 
         data.putString(VARIANT, BuiltInRegistries.BLOCK.getKey(cutter.logVariant()).toString());
         data.putBoolean(HAS_VILLAGER, cutter.hasVillager());
@@ -52,7 +52,8 @@ public enum CutterJadeProvider implements IBlockComponentProvider, IServerDataPr
 
         data.remove(TOOL);
         ItemStack tool = cutter.toolHandler().getStackInSlot(0);
-        if (!tool.isEmpty()) data.put(TOOL, tool.save(new net.minecraft.nbt.CompoundTag()));
+        if (!tool.isEmpty())
+            data.put(TOOL, tool.save(new net.minecraft.nbt.CompoundTag()));
 
         data.remove(WAITING_TOOL);
         data.remove(WRONG_TOOL);
@@ -92,7 +93,7 @@ public enum CutterJadeProvider implements IBlockComponentProvider, IServerDataPr
         }
 
         if (data.contains(TOOL, Tag.TAG_COMPOUND)) {
-            ItemStack tool = ItemStack.of(data.getCompound(TOOL));
+            ItemStack tool = ItemStack.of( data.getCompound(TOOL));
             if (!tool.isEmpty()) {
                 tooltip.add(Component.translatable(
                         "jade.easyfarmersdelightcompat.cutter.tool",
@@ -122,9 +123,11 @@ public enum CutterJadeProvider implements IBlockComponentProvider, IServerDataPr
             IDisplayHelper display = IDisplayHelper.get();
             for (int i = 0; i < list.size(); i++) {
                 CompoundTag output = list.getCompound(i);
-                ItemStack stack = ItemStack.of(output.getCompound(STACK));
+                ItemStack stack = ItemStack.of( output
+                        .getCompound(STACK));
                 int count = Math.max(0, output.getInt(COUNT));
-                if (stack.isEmpty() || count <= 0) continue;
+                if (stack.isEmpty() || count <= 0)
+                    continue;
                 Component line = Component.literal(display.humanReadableNumber(count, "", false, null))
                         .append("× ")
                         .append(display.stripColor(stack.getHoverName()));
@@ -150,14 +153,16 @@ public enum CutterJadeProvider implements IBlockComponentProvider, IServerDataPr
                     : "jade.easyfarmersdelightcompat.waiting.knife_or_axe";
             default -> null;
         };
-        if (key != null) tooltip.add(Component.translatable(key).withStyle(ChatFormatting.RED));
+        if (key != null)
+            tooltip.add(Component.translatable(key).withStyle(ChatFormatting.RED));
     }
 
     private static List<OutputEntry> aggregate(CutterBlockEntity cutter) {
         List<OutputEntry> outputs = new ArrayList<>();
         for (int slot = 0; slot < cutter.outputHandler().getSlots(); slot++) {
             ItemStack stack = cutter.outputHandler().getStackInSlot(slot);
-            if (stack.isEmpty()) continue;
+            if (stack.isEmpty())
+                continue;
             boolean merged = false;
             for (int i = 0; i < outputs.size(); i++) {
                 OutputEntry entry = outputs.get(i);
@@ -167,7 +172,8 @@ public enum CutterJadeProvider implements IBlockComponentProvider, IServerDataPr
                     break;
                 }
             }
-            if (!merged) outputs.add(new OutputEntry(stack.copyWithCount(1), stack.getCount()));
+            if (!merged)
+                outputs.add(new OutputEntry(stack.copyWithCount(1), stack.getCount()));
         }
         return outputs;
     }

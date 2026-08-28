@@ -16,15 +16,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 
-/**
- * Single source of viewer-only Farmer/Cutter/Block Guide documentation.
- *
- * <p>Gameplay does not read this class. JEI and EMI both do, which keeps the two
- * viewers informationally identical without allowing viewer code to become a
- * second gameplay ruleset.</p>
- */
 public final class RecipeViewerData {
-    /** General tool reference shown only for Rich Farmer variants with a Harvest Tool slot. */
+
     public static final List<FarmerHarvestInfo> FARMER_TOOL_GUIDES = List.of(
             new FarmerHarvestInfo(
                     id("farmer_harvest/tools/knife"),
@@ -58,7 +51,6 @@ public final class RecipeViewerData {
             )
     );
 
-    /** Paddy-only harvesting reference. Applies to Paddy Farmer and Rich Paddy Farmer. */
     public static final List<FarmerHarvestInfo> PADDY_HARVESTS = List.of(
             new FarmerHarvestInfo(
                     id("paddy_harvest/rice"),
@@ -82,7 +74,6 @@ public final class RecipeViewerData {
             )
     );
 
-    /** Rich Farmer harvesting reference. Paddy-only crops intentionally do not live here. */
     public static final List<FarmerHarvestInfo> RICH_FARMER_HARVESTS = List.of(
             new FarmerHarvestInfo(
                     id("rich_farmer_harvest/normal_crops"),
@@ -142,11 +133,13 @@ public final class RecipeViewerData {
                     Component.translatable("easyfarmersdelightcompat.viewer.guide.paddy_rice.title"),
                     List.of(
                             catalyst(
-                                    Ingredient.of(ModBlocks.PADDY_FARMER_ITEM.get(), ModBlocks.RICH_PADDY_FARMER_ITEM.get()),
+                                    Ingredient.of(ModBlocks.PADDY_FARMER_ITEM.get(), ModBlocks.RICH_PADDY_FARMER_ITEM
+                                            .get()),
                                     "easyfarmersdelightcompat.viewer.label.machine"
                             ),
                             input(ingredient("farmersdelight", "rice"), "easyfarmersdelightcompat.viewer.label.rice"),
-                            output(ingredient("farmersdelight", "rice_panicle"), Component.translatable("easyfarmersdelightcompat.viewer.label.rice"))
+                            output(ingredient("farmersdelight", "rice_panicle"), Component
+                                    .translatable("easyfarmersdelightcompat.viewer.label.rice"))
                     ),
                     lines("easyfarmersdelightcompat.viewer.guide.paddy_rice", 4)
             ),
@@ -155,12 +148,14 @@ public final class RecipeViewerData {
                     Component.translatable("easyfarmersdelightcompat.viewer.guide.paddy_sugar_cane.title"),
                     List.of(
                             catalyst(
-                                    Ingredient.of(ModBlocks.PADDY_FARMER_ITEM.get(), ModBlocks.RICH_PADDY_FARMER_ITEM.get()),
+                                    Ingredient.of(ModBlocks.PADDY_FARMER_ITEM.get(), ModBlocks.RICH_PADDY_FARMER_ITEM
+                                            .get()),
                                     "easyfarmersdelightcompat.viewer.label.machine"
                             ),
                             input(Ingredient.of(Items.SAND), "easyfarmersdelightcompat.viewer.label.sand"),
                             input(Ingredient.of(Items.SUGAR_CANE), "easyfarmersdelightcompat.viewer.label.sugar_cane"),
-                            output(Ingredient.of(new ItemStack(Items.SUGAR_CANE, 2)), Component.translatable("easyfarmersdelightcompat.viewer.label.sugar_cane"))
+                            output(Ingredient.of(new ItemStack(Items.SUGAR_CANE, 2)), Component
+                                    .translatable("easyfarmersdelightcompat.viewer.label.sugar_cane"))
                     ),
                     lines("easyfarmersdelightcompat.viewer.guide.paddy_sugar_cane", 6)
             ),
@@ -168,7 +163,8 @@ public final class RecipeViewerData {
                     id("block_guide/rich_normal_crops"),
                     Component.translatable("easyfarmersdelightcompat.viewer.guide.rich_normal_crops.title"),
                     List.of(
-                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()), "easyfarmersdelightcompat.viewer.label.machine"),
+                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.machine"),
                             input(
                                     Ingredient.of(Items.CARROT, Items.POTATO, Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS),
                                     "easyfarmersdelightcompat.viewer.label.normal_crop"
@@ -181,11 +177,14 @@ public final class RecipeViewerData {
                     id("block_guide/rich_tomatoes_rope"),
                     Component.translatable("easyfarmersdelightcompat.viewer.guide.rich_tomatoes_rope.title"),
                     List.of(
-                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()), "easyfarmersdelightcompat.viewer.label.machine"),
-                            input(ingredient("farmersdelight", "tomato_seeds"), "easyfarmersdelightcompat.viewer.label.tomato_seeds"),
+                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.machine"),
+                            input(ingredient("farmersdelight", "tomato_seeds"),
+                                    "easyfarmersdelightcompat.viewer.label.tomato_seeds"),
                             input(ingredient("farmersdelight", "rope"), "easyfarmersdelightcompat.viewer.label.rope"),
                             tool(Ingredient.of(ItemTags.HOES), "easyfarmersdelightcompat.viewer.label.hoe"),
-                            output(ingredient("farmersdelight", "tomato"), stack("farmersdelight", "tomato").getHoverName())
+                            output(ingredient("farmersdelight", "tomato"), stack("farmersdelight", "tomato")
+                                    .getHoverName())
                     ),
                     lines("easyfarmersdelightcompat.viewer.guide.rich_tomatoes_rope", 5)
             ),
@@ -193,11 +192,17 @@ public final class RecipeViewerData {
                     id("block_guide/rich_mushroom_colonies"),
                     Component.translatable("easyfarmersdelightcompat.viewer.guide.rich_mushroom_colonies.title"),
                     List.of(
-                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()), "easyfarmersdelightcompat.viewer.label.machine"),
-                            input(Ingredient.of(Items.RED_MUSHROOM, Items.BROWN_MUSHROOM), "easyfarmersdelightcompat.viewer.label.mushroom"),
-                            tool(Ingredient.of(FarmerToolSupport.KNIVES), "easyfarmersdelightcompat.viewer.label.knife"),
+                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.machine"),
+                            input(Ingredient.of(Items.RED_MUSHROOM, Items.BROWN_MUSHROOM),
+                                    "easyfarmersdelightcompat.viewer.label.mushroom"),
+                            tool(Ingredient.of(FarmerToolSupport.KNIVES),
+                                    "easyfarmersdelightcompat.viewer.label.knife"),
                             output(
-                                    Ingredient.of(new ItemStack(Items.RED_MUSHROOM, 3), new ItemStack(Items.BROWN_MUSHROOM, 3)),
+                                    Ingredient.of(
+                                            new ItemStack(Items.RED_MUSHROOM, 3),
+                                            new ItemStack(Items.BROWN_MUSHROOM, 3)
+                                    ),
                                     Component.translatable("easyfarmersdelightcompat.viewer.label.mushroom")
                             )
                     ),
@@ -207,10 +212,13 @@ public final class RecipeViewerData {
                     id("block_guide/rich_melon"),
                     Component.translatable("easyfarmersdelightcompat.viewer.guide.rich_melon.title"),
                     List.of(
-                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()), "easyfarmersdelightcompat.viewer.label.machine"),
-                            input(Ingredient.of(Items.MELON_SEEDS), "easyfarmersdelightcompat.viewer.label.melon_seeds"),
+                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.machine"),
+                            input(Ingredient.of(Items.MELON_SEEDS),
+                                    "easyfarmersdelightcompat.viewer.label.melon_seeds"),
                             tool(Ingredient.of(ItemTags.AXES), "easyfarmersdelightcompat.viewer.label.axe"),
-                            output(Ingredient.of(Items.MELON_SLICE, Items.MELON), new ItemStack(Items.MELON).getHoverName())
+                            output(Ingredient.of(Items.MELON_SLICE, Items.MELON), new ItemStack(Items.MELON)
+                                    .getHoverName())
                     ),
                     lines("easyfarmersdelightcompat.viewer.guide.rich_melon", 7)
             ),
@@ -218,8 +226,10 @@ public final class RecipeViewerData {
                     id("block_guide/rich_pumpkin"),
                     Component.translatable("easyfarmersdelightcompat.viewer.guide.rich_pumpkin.title"),
                     List.of(
-                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()), "easyfarmersdelightcompat.viewer.label.machine"),
-                            input(Ingredient.of(Items.PUMPKIN_SEEDS), "easyfarmersdelightcompat.viewer.label.pumpkin_seeds"),
+                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.machine"),
+                            input(Ingredient.of(Items.PUMPKIN_SEEDS),
+                                    "easyfarmersdelightcompat.viewer.label.pumpkin_seeds"),
                             tool(Ingredient.of(ItemTags.AXES), "easyfarmersdelightcompat.viewer.label.axe"),
                             output(Ingredient.of(Items.PUMPKIN), new ItemStack(Items.PUMPKIN).getHoverName())
                     ),
@@ -229,12 +239,17 @@ public final class RecipeViewerData {
                     id("block_guide/cutter"),
                     Component.translatable("easyfarmersdelightcompat.viewer.guide.cutter.title"),
                     List.of(
-                            catalyst(Ingredient.of(ModBlocks.CUTTER_ITEM.get()), "easyfarmersdelightcompat.viewer.label.machine"),
-                            input(ingredient("easy_villagers", "villager"), "easyfarmersdelightcompat.viewer.label.villager"),
-                            input(Ingredient.of(Items.SPRUCE_LOG), "easyfarmersdelightcompat.viewer.label.cutter_input"),
-                            tool(Ingredient.of(FarmerToolSupport.KNIVES), "easyfarmersdelightcompat.viewer.label.knife"),
+                            catalyst(Ingredient.of(ModBlocks.CUTTER_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.machine"),
+                            input(ingredient("easy_villagers", "villager"),
+                                    "easyfarmersdelightcompat.viewer.label.villager"),
+                            input(Ingredient.of(Items.SPRUCE_LOG),
+                                    "easyfarmersdelightcompat.viewer.label.cutter_input"),
+                            tool(Ingredient.of(FarmerToolSupport.KNIVES),
+                                    "easyfarmersdelightcompat.viewer.label.knife"),
                             tool(Ingredient.of(ItemTags.AXES), "easyfarmersdelightcompat.viewer.label.axe"),
-                            output(Ingredient.of(Items.STRIPPED_SPRUCE_LOG), new ItemStack(Items.STRIPPED_SPRUCE_LOG).getHoverName())
+                            output(Ingredient.of(Items.STRIPPED_SPRUCE_LOG), new ItemStack(Items.STRIPPED_SPRUCE_LOG)
+                                    .getHoverName())
                     ),
                     lines("easyfarmersdelightcompat.viewer.guide.cutter", 7)
             ),
@@ -242,8 +257,10 @@ public final class RecipeViewerData {
                     id("block_guide/noise_switch"),
                     Component.translatable("easyfarmersdelightcompat.viewer.guide.noise_switch.title"),
                     List.of(
-                            catalyst(Ingredient.of(ModBlocks.VILLAGER_NOISE_SWITCH_ITEM.get()), "easyfarmersdelightcompat.viewer.label.machine"),
-                            input(ingredient("easy_villagers", "villager"), "easyfarmersdelightcompat.viewer.label.villager")
+                            catalyst(Ingredient.of(ModBlocks.VILLAGER_NOISE_SWITCH_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.machine"),
+                            input(ingredient("easy_villagers", "villager"),
+                                    "easyfarmersdelightcompat.viewer.label.villager")
                     ),
                     lines("easyfarmersdelightcompat.viewer.guide.noise_switch", 7)
             ),
@@ -261,11 +278,13 @@ public final class RecipeViewerData {
                                     new ItemStack(Items.IRON_BLOCK, 4),
                                     "easyfarmersdelightcompat.viewer.label.iron_block"
                             ),
-                            input(Ingredient.of(Items.CARVED_PUMPKIN), "easyfarmersdelightcompat.viewer.label.carved_pumpkin"),
+                            input(Ingredient.of(Items.CARVED_PUMPKIN),
+                                    "easyfarmersdelightcompat.viewer.label.carved_pumpkin"),
                             outputPreview(
                                     Ingredient.of(ModBlocks.IRON_FARM_NOISE_SWITCH_ITEM.get()),
                                     completedIronFarmNoiseSwitch(),
-                                    Component.translatable("easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch.completed")
+                                    Component.translatable(
+                                            "easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch.completed")
                             )
                     ),
                     lines("easyfarmersdelightcompat.viewer.guide.iron_farm_noise_switch", 3)
@@ -299,14 +318,18 @@ public final class RecipeViewerData {
         ItemStack probeAxe = new ItemStack(Items.IRON_AXE);
         for (Item item : BuiltInRegistries.ITEM) {
             ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
-            if ("minecraft".equals(itemId.getNamespace())) continue;
+            if ("minecraft".equals(itemId.getNamespace()))
+                continue;
 
             ItemStack input = item.getDefaultInstance();
-            if (input.isEmpty() || !isModdedLogLike(input, itemId)) continue;
+            if (input.isEmpty() || !isModdedLogLike(input, itemId))
+                continue;
 
             AxeActionResolver.resolve(input, probeAxe).ifPresent(result -> {
-                if (result.action() != AxeActionResolver.Action.STRIP) return;
-                if (containsItem(logInputs, input.getItem())) return;
+                if (result.action() != AxeActionResolver.Action.STRIP)
+                    return;
+                if (containsItem(logInputs, input.getItem()))
+                    return;
                 addStripPair(logInputs, strippedOutputs, input, result.output());
             });
         }
@@ -328,21 +351,25 @@ public final class RecipeViewerData {
         addStripPair(inputs, outputs, new ItemStack(input), new ItemStack(output));
     }
 
-    private static void addStripPair(List<ItemStack> inputs, List<ItemStack> outputs, ItemStack input, ItemStack output) {
-        if (input.isEmpty() || output.isEmpty()) return;
+    private static void addStripPair(List<ItemStack> inputs, List<ItemStack> outputs, ItemStack input,
+            ItemStack output) {
+        if (input.isEmpty() || output.isEmpty())
+            return;
         inputs.add(input.copyWithCount(1));
         outputs.add(output.copyWithCount(1));
     }
 
     private static boolean containsItem(List<ItemStack> stacks, Item item) {
         for (ItemStack stack : stacks) {
-            if (stack.getItem() == item) return true;
+            if (stack.getItem() == item)
+                return true;
         }
         return false;
     }
 
     private static boolean isModdedLogLike(ItemStack stack, ResourceLocation id) {
-        if (stack.is(ItemTags.LOGS)) return true;
+        if (stack.is(ItemTags.LOGS))
+            return true;
         String path = id.getPath();
         return path.contains("log") || path.contains("wood") || path.contains("stem") || path.contains("hyphae");
     }
@@ -361,7 +388,8 @@ public final class RecipeViewerData {
     }
 
     private static GuideIngredient inputPreview(Ingredient ingredient, ItemStack displayStack, String labelKey) {
-        return new GuideIngredient(ingredient, GuideIngredient.Role.INPUT, Component.translatable(labelKey), displayStack);
+        return new GuideIngredient(ingredient, GuideIngredient.Role.INPUT, Component.translatable(labelKey),
+                displayStack);
     }
 
     private static GuideIngredient outputPreview(Ingredient ingredient, ItemStack displayStack, Component label) {
@@ -369,7 +397,8 @@ public final class RecipeViewerData {
     }
 
     private static GuideIngredient catalystPreview(Ingredient ingredient, ItemStack displayStack, String labelKey) {
-        return new GuideIngredient(ingredient, GuideIngredient.Role.CATALYST, Component.translatable(labelKey), displayStack);
+        return new GuideIngredient(ingredient, GuideIngredient.Role.CATALYST, Component.translatable(labelKey),
+                displayStack);
     }
 
     private static GuideIngredient input(Ingredient ingredient, String labelKey) {

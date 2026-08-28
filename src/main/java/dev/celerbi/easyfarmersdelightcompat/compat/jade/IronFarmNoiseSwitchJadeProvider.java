@@ -16,7 +16,9 @@ import snownee.jade.api.config.IPluginConfig;
 public enum IronFarmNoiseSwitchJadeProvider implements IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
     INSTANCE;
 
-    private static final ResourceLocation UID = new ResourceLocation(EasyFarmersDelightCompat.MOD_ID, "iron_farm_noise_switch");
+    private static final ResourceLocation UID = new ResourceLocation(
+            EasyFarmersDelightCompat.MOD_ID, "iron_farm_noise_switch"
+    );
     private static final String STAGE = "EfdcIronFarmNoiseSwitchStage";
     private static final String HAS_GOLEM = "EfdcIronFarmNoiseSwitchHasGolem";
 
@@ -64,5 +66,7 @@ public enum IronFarmNoiseSwitchJadeProvider implements IBlockComponentProvider, 
     }
 
     @Override
-    public ResourceLocation getUid() { return UID; }
+    public ResourceLocation getUid() {
+        return UID;
+    }
 }

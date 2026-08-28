@@ -5,7 +5,6 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
-/** Small text-wrapping helper so EMI guide text behaves like the JEI equivalent. */
 public final class EmiTextUtil {
     private static final int LINE_HEIGHT = 9;
 

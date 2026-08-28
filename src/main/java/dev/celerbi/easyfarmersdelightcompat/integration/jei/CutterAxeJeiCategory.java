@@ -16,7 +16,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
-/** One compact two-row summary page for Cutter axe fallback actions. */
 public final class CutterAxeJeiCategory implements IRecipeCategory<CutterAxeInfo> {
     private static final int WIDTH = 150;
     private static final int HEIGHT = 58;

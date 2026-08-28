@@ -16,12 +16,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
-/**
- * Visual in-game manual for Easy Farmer's Delight Compat machines.
- *
- * <p>All page content comes from RecipeViewerData; this class only maps the
- * viewer-neutral roles to JEI slots and draws localized text.</p>
- */
 public final class BlockGuideJeiCategory implements IRecipeCategory<BlockGuideInfo> {
     private static final int WIDTH = 180;
     private static final int HEIGHT = 180;
@@ -64,7 +58,9 @@ public final class BlockGuideJeiCategory implements IRecipeCategory<BlockGuideIn
         boolean ironFarmAssembly = isIronFarmAssembly(recipe);
         int totalWidth = count <= 0 ? 0 : 16 + (count - 1) * SLOT_STEP;
         int startX = Math.max(4, (WIDTH - totalWidth) / 2);
-        int[] assemblyX = {8, 58, 94, 150};
+        int[] assemblyX = {
+            8, 58, 94, 150
+        };
 
         for (int i = 0; i < count; i++) {
             GuideIngredient guideIngredient = recipe.ingredients().get(i);
@@ -90,7 +86,8 @@ public final class BlockGuideJeiCategory implements IRecipeCategory<BlockGuideIn
     }
 
     @Override
-    public void draw(BlockGuideInfo recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
+    public void draw(BlockGuideInfo recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX,
+            double mouseY) {
         var font = Minecraft.getInstance().font;
 
         if (isIronFarmAssembly(recipe)) {
@@ -111,7 +108,8 @@ public final class BlockGuideJeiCategory implements IRecipeCategory<BlockGuideIn
         int y = 47;
         for (Component paragraph : recipe.lines()) {
             for (var line : font.split(paragraph, WIDTH - 10)) {
-                if (y > HEIGHT - 9) return;
+                if (y > HEIGHT - 9)
+                    return;
                 graphics.drawString(font, line, 5, y, 0x555555, false);
                 y += 9;
             }

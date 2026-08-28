@@ -22,11 +22,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.RedstoneSide;
 
-public final class IronFarmNoiseSwitchBlockEntityRenderer implements BlockEntityRenderer<IronFarmNoiseSwitchBlockEntity> {
+public final class IronFarmNoiseSwitchBlockEntityRenderer
+        implements BlockEntityRenderer<IronFarmNoiseSwitchBlockEntity> {
     private static final float WORK_SCALE = 0.30F;
-    // Assembly occupies the same rear zone used by the Villager in the VNS.
+
     private static final float ASSEMBLY_SCALE = 0.16F;
-    // Match the visual height/weight of the VNS Villager without touching the pedestal.
+
     private static final float GOLEM_SCALE = 0.34F;
     private static final double FLOOR_Y = 1.0D / 16.0D + 0.002D;
     private static final double INNER_MIN = 1.0D / 16.0D;
@@ -61,7 +62,8 @@ public final class IronFarmNoiseSwitchBlockEntityRenderer implements BlockEntity
 
     private void renderAssembly(int stage, Direction facing, PoseStack pose, MultiBufferSource buffer,
                                 int packedLight, int packedOverlay) {
-        if (stage <= 0) return;
+        if (stage <= 0)
+            return;
 
         pose.pushPose();
         pose.translate(0.5D, 1.0D / 16.0D, 0.5D);
@@ -70,9 +72,12 @@ public final class IronFarmNoiseSwitchBlockEntityRenderer implements BlockEntity
         pose.scale(ASSEMBLY_SCALE, ASSEMBLY_SCALE, ASSEMBLY_SCALE);
 
         renderAssemblyBlock(0.0D, 0.0D, pose, buffer, packedLight, packedOverlay);
-        if (stage >= 2) renderAssemblyBlock(0.0D, 1.0D, pose, buffer, packedLight, packedOverlay);
-        if (stage >= 3) renderAssemblyBlock(-1.0D, 1.0D, pose, buffer, packedLight, packedOverlay);
-        if (stage >= 4) renderAssemblyBlock(1.0D, 1.0D, pose, buffer, packedLight, packedOverlay);
+        if (stage >= 2)
+            renderAssemblyBlock(0.0D, 1.0D, pose, buffer, packedLight, packedOverlay);
+        if (stage >= 3)
+            renderAssemblyBlock(-1.0D, 1.0D, pose, buffer, packedLight, packedOverlay);
+        if (stage >= 4)
+            renderAssemblyBlock(1.0D, 1.0D, pose, buffer, packedLight, packedOverlay);
         pose.popPose();
     }
 
@@ -80,7 +85,8 @@ public final class IronFarmNoiseSwitchBlockEntityRenderer implements BlockEntity
                                      int packedLight, int packedOverlay) {
         pose.pushPose();
         pose.translate(x - 0.5D, y, -0.5D);
-        blockRenderer.renderSingleBlock(Blocks.IRON_BLOCK.defaultBlockState(), pose, buffer, packedLight, packedOverlay);
+        blockRenderer.renderSingleBlock(Blocks.IRON_BLOCK.defaultBlockState(), pose, buffer, packedLight,
+                packedOverlay);
         pose.popPose();
     }
 
@@ -88,13 +94,15 @@ public final class IronFarmNoiseSwitchBlockEntityRenderer implements BlockEntity
     private void renderGolem(IronFarmNoiseSwitchBlockEntity noiseSwitch, Direction facing,
                              PoseStack pose, MultiBufferSource buffer, int packedLight) {
         Level level = noiseSwitch.getLevel();
-        if (level == null) return;
+        if (level == null)
+            return;
 
         if (cachedGolem == null || cachedGolemLevel != level) {
             cachedGolem = EntityType.IRON_GOLEM.create(level);
             cachedGolemLevel = level;
         }
-        if (cachedGolem == null) return;
+        if (cachedGolem == null)
+            return;
 
         freezeGolemPose(cachedGolem);
 
@@ -154,7 +162,8 @@ public final class IronFarmNoiseSwitchBlockEntityRenderer implements BlockEntity
                               int packedLight, int packedOverlay) {
         pose.pushPose();
         applyWorkTransform(pose, facing);
-        blockRenderer.renderSingleBlock(Blocks.IRON_BLOCK.defaultBlockState(), pose, buffer, packedLight, packedOverlay);
+        blockRenderer.renderSingleBlock(Blocks.IRON_BLOCK.defaultBlockState(), pose, buffer, packedLight,
+                packedOverlay);
 
         BlockState lever = Blocks.LEVER.defaultBlockState()
                 .setValue(FaceAttachedHorizontalDirectionalBlock.FACE, AttachFace.FLOOR)
@@ -168,8 +177,7 @@ public final class IronFarmNoiseSwitchBlockEntityRenderer implements BlockEntity
     private static void applyWorkTransform(PoseStack pose, Direction facing) {
         pose.translate(0.5D, 1.0D / 16.0D, 0.5D);
         pose.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
-        // Keep the compact switch pedestal in the front half, leaving the rear
-        // half exclusively for the stored Villager, exactly like the original UX.
+
         pose.translate(0.0D, 0.0D, 4.0D / 16.0D);
         pose.scale(WORK_SCALE, WORK_SCALE, WORK_SCALE);
         pose.translate(-0.5D, 0.0D, -0.5D);

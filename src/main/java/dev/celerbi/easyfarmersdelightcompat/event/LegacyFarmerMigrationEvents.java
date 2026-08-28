@@ -6,11 +6,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 
-/**
- * One-time login sweep for empty Farmer items created by older addon builds.
- * inventoryTick remains the normal safety net; this guarantees that every loaded
- * legacy stack is normalized immediately even before the player touches it.
- */
 public final class LegacyFarmerMigrationEvents {
     private LegacyFarmerMigrationEvents() {
     }

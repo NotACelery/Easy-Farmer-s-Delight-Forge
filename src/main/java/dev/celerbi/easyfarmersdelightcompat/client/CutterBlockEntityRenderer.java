@@ -25,19 +25,119 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
 public final class CutterBlockEntityRenderer implements BlockEntityRenderer<CutterBlockEntity> {
-    private static final ResourceLocation CUTTING_BOARD_ID=new ResourceLocation("farmersdelight","cutting_board");
-    private static final TagKey<Item> FLAT=TagKey.create(Registries.ITEM,new ResourceLocation("farmersdelight","flat_on_cutting_board"));
-    private static final float WORK_SCALE=.45F,VILLAGER_SCALE=.45F;
-    private final BlockRenderDispatcher blockRenderer;private final ItemRenderer itemRenderer;private final VillagerRenderer villagerRenderer;
-    public CutterBlockEntityRenderer(BlockEntityRendererProvider.Context context){
-        Minecraft mc=Minecraft.getInstance();blockRenderer=context.getBlockRenderDispatcher();itemRenderer=mc.getItemRenderer();
-        EntityRendererProvider.Context ec=new EntityRendererProvider.Context(mc.getEntityRenderDispatcher(),mc.getItemRenderer(),mc.getBlockRenderer(),mc.gameRenderer.itemInHandRenderer,mc.getResourceManager(),mc.getEntityModels(),mc.font);villagerRenderer=new VillagerRenderer(ec);
+    private static final ResourceLocation CUTTING_BOARD_ID = new ResourceLocation("farmersdelight",
+            "cutting_board");
+    private static final TagKey<Item> FLAT = TagKey.create(
+            Registries.ITEM,
+            new ResourceLocation("farmersdelight", "flat_on_cutting_board"));
+    private static final float WORK_SCALE = .45F, VILLAGER_SCALE = .45F;
+    private final BlockRenderDispatcher blockRenderer;
+    private final ItemRenderer itemRenderer;
+    private final VillagerRenderer villagerRenderer;
+    public CutterBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
+        Minecraft mc = Minecraft.getInstance();
+        blockRenderer = context.getBlockRenderDispatcher();
+        itemRenderer = mc.getItemRenderer();
+        EntityRendererProvider.Context ec = new EntityRendererProvider.Context(
+                mc.getEntityRenderDispatcher(),
+                mc.getItemRenderer(),
+                mc.getBlockRenderer(),
+                mc.gameRenderer.itemInHandRenderer,
+                mc.getResourceManager(),
+                mc.getEntityModels(),
+                mc.font
+        );
+        villagerRenderer = new VillagerRenderer(ec);
     }
-    @Override public void render(CutterBlockEntity cutter,float pt,PoseStack pose,MultiBufferSource buffer,int light,int overlay){Direction facing=cutter.getBlockState().hasProperty(CutterBlock.FACING)?cutter.getBlockState().getValue(CutterBlock.FACING):Direction.SOUTH;renderVillager(cutter,facing,pose,buffer,light);if(cutter.isItemPreview())renderPreviewContents(cutter,facing,pose,buffer,light,overlay);else renderWorkstation(cutter,facing,pose,buffer,light,overlay);}
-    private void renderVillager(CutterBlockEntity cutter,Direction facing,PoseStack pose,MultiBufferSource buffer,int light){Villager v=cutter.villagerAdapter().getVillagerEntity();if(v==null)return;pose.pushPose();pose.translate(.5D,1D/16D,.5D);pose.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));pose.translate(0D,0D,-4D/16D);pose.scale(VILLAGER_SCALE,VILLAGER_SCALE,VILLAGER_SCALE);villagerRenderer.render(v,0F,1F,pose,buffer,light);pose.popPose();}
-    private void renderWorkstation(CutterBlockEntity cutter,Direction facing,PoseStack pose,MultiBufferSource buffer,int light,int overlay){pose.pushPose();applyWorkTransform(pose,facing);blockRenderer.renderSingleBlock(cutter.logVariant().defaultBlockState(),pose,buffer,light,overlay);renderBoardAndItem(cutter,pose,buffer,light,overlay,true);pose.popPose();}
-    private void renderPreviewContents(CutterBlockEntity cutter,Direction facing,PoseStack pose,MultiBufferSource buffer,int light,int overlay){if(cutter.displayInput().isEmpty())return;pose.pushPose();applyWorkTransform(pose,facing);renderBoardAndItem(cutter,pose,buffer,light,overlay,true);pose.popPose();}
-    private void renderBoardAndItem(CutterBlockEntity cutter,PoseStack pose,MultiBufferSource buffer,int light,int overlay,boolean renderBoard){Block board=BuiltInRegistries.BLOCK.get(CUTTING_BOARD_ID);if(board==Blocks.AIR)return;pose.pushPose();pose.translate(0D,1D,0D);if(renderBoard)blockRenderer.renderSingleBlock(board.defaultBlockState(),pose,buffer,light,overlay);renderItem(cutter,pose,buffer,light,overlay);pose.popPose();}
-    private void renderItem(CutterBlockEntity cutter,PoseStack pose,MultiBufferSource buffer,int light,int overlay){ItemStack shown=cutter.displayInput();if(shown.isEmpty()||cutter.getLevel()==null)return;pose.pushPose();pose.pushPose();boolean block=itemRenderer.getModel(shown,cutter.getLevel(),null,0).applyTransform(ItemDisplayContext.FIXED,pose,false).isGui3d();pose.popPose();if(block&&!shown.is(FLAT)){pose.translate(.5D,.30D,.5D);pose.scale(.8F,.8F,.8F);}else{pose.translate(.5D,.11D,.5D);pose.mulPose(Axis.XP.rotationDegrees(90F));pose.scale(.6F,.6F,.6F);}itemRenderer.renderStatic(shown,ItemDisplayContext.FIXED,light,overlay,pose,buffer,cutter.getLevel(),cutter.getBlockPos().hashCode());pose.popPose();}
-    private static void applyWorkTransform(PoseStack pose,Direction facing){pose.translate(.5D,1D/16D,.5D);pose.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));pose.translate(0D,0D,2D/16D);pose.translate(-.5D,0D,-.5D);pose.scale(WORK_SCALE,WORK_SCALE,WORK_SCALE);pose.translate(.5D/WORK_SCALE-.5D,0D,.5D/WORK_SCALE-.5D);}
+
+    @Override
+    public void render(CutterBlockEntity cutter, float pt, PoseStack pose, MultiBufferSource buffer, int light,
+            int overlay) {
+        Direction facing = cutter.getBlockState().hasProperty(CutterBlock.FACING) ? cutter.getBlockState()
+                .getValue(CutterBlock.FACING) : Direction.SOUTH;
+        renderVillager(cutter, facing, pose, buffer, light);
+        if (cutter.isItemPreview())
+            renderPreviewContents(cutter, facing, pose, buffer, light, overlay);
+        else
+            renderWorkstation(cutter, facing, pose, buffer, light, overlay);
+    }
+
+    private void renderVillager(CutterBlockEntity cutter, Direction facing, PoseStack pose, MultiBufferSource buffer,
+            int light) {
+        Villager v = cutter.villagerAdapter().getVillagerEntity();
+        if (v == null)
+            return;
+        pose.pushPose();
+        pose.translate(.5D, 1D / 16D, .5D);
+        pose.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
+        pose.translate(0D, 0D, -4D / 16D);
+        pose.scale(VILLAGER_SCALE, VILLAGER_SCALE, VILLAGER_SCALE);
+        villagerRenderer.render(v, 0F, 1F, pose, buffer, light);
+        pose.popPose();
+    }
+
+    private void renderWorkstation(CutterBlockEntity cutter, Direction facing, PoseStack pose, MultiBufferSource buffer,
+            int light, int overlay) {
+        pose.pushPose();
+        applyWorkTransform(pose, facing);
+        blockRenderer.renderSingleBlock(cutter.logVariant().defaultBlockState(), pose, buffer, light, overlay);
+        renderBoardAndItem(cutter, pose, buffer, light, overlay, true);
+        pose.popPose();
+    }
+
+    private void renderPreviewContents(CutterBlockEntity cutter, Direction facing, PoseStack pose,
+            MultiBufferSource buffer, int light, int overlay) {
+        if (cutter.displayInput().isEmpty())
+            return;
+        pose.pushPose();
+        applyWorkTransform(pose, facing);
+        renderBoardAndItem(cutter, pose, buffer, light, overlay, true);
+        pose.popPose();
+    }
+
+    private void renderBoardAndItem(CutterBlockEntity cutter, PoseStack pose, MultiBufferSource buffer, int light,
+            int overlay, boolean renderBoard) {
+        Block board = BuiltInRegistries.BLOCK.get(CUTTING_BOARD_ID);
+        if (board == Blocks.AIR)
+            return;
+        pose.pushPose();
+        pose.translate(0D, 1D, 0D);
+        if (renderBoard)
+            blockRenderer.renderSingleBlock(board.defaultBlockState(), pose, buffer, light, overlay);
+        renderItem(cutter, pose, buffer, light, overlay);
+        pose.popPose();
+    }
+
+    private void renderItem(CutterBlockEntity cutter, PoseStack pose, MultiBufferSource buffer, int light,
+            int overlay) {
+        ItemStack shown = cutter.displayInput();
+        if (shown.isEmpty() || cutter.getLevel() == null)
+            return;
+        pose.pushPose();
+        pose.pushPose();
+        boolean block = itemRenderer.getModel(shown, cutter.getLevel(), null, 0)
+                .applyTransform(ItemDisplayContext.FIXED, pose, false)
+                .isGui3d();
+        pose.popPose();
+        if (block && !shown.is(FLAT)) {
+            pose.translate(.5D, .30D, .5D);
+            pose.scale(.8F, .8F, .8F);
+        } else {
+            pose.translate(.5D, .11D, .5D);
+            pose.mulPose(Axis.XP.rotationDegrees(90F));
+            pose.scale(.6F, .6F, .6F);
+        }
+        itemRenderer.renderStatic(shown, ItemDisplayContext.FIXED, light, overlay, pose, buffer, cutter.getLevel(),
+                cutter.getBlockPos().hashCode());
+        pose.popPose();
+    }
+
+    private static void applyWorkTransform(PoseStack pose, Direction facing) {
+        pose.translate(.5D, 1D / 16D, .5D);
+        pose.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
+        pose.translate(0D, 0D, 2D / 16D);
+        pose.translate(-.5D, 0D, -.5D);
+        pose.scale(WORK_SCALE, WORK_SCALE, WORK_SCALE);
+        pose.translate(.5D / WORK_SCALE - .5D, 0D, .5D / WORK_SCALE - .5D);
+    }
 }

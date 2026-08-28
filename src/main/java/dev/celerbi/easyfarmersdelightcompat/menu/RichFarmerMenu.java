@@ -15,7 +15,6 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-/** Easy Villagers output-style menu plus one protected persistent Harvest Tool slot. */
 public final class RichFarmerMenu extends AbstractContainerMenu {
     public static final int OUTPUT_SLOTS = 4;
     public static final int HARVEST_TOOL_SLOT = 4;
@@ -44,14 +43,24 @@ public final class RichFarmerMenu extends AbstractContainerMenu {
         }
         for (int i = 0; i < OUTPUT_SLOTS; i++) {
             addSlot(new Slot(output, i, 52 + i * 18, 20) {
-                @Override public boolean mayPlace(ItemStack stack) { return false; }
+                @Override
+                public boolean mayPlace(ItemStack stack) {
+                    return false;
+                }
             });
         }
 
         toolContainer = new HarvestToolContainer(farmer);
         Slot toolSlot = new Slot(toolContainer, 0, 142, 20) {
-            @Override public boolean mayPlace(ItemStack stack) { return FarmerToolSupport.isHarvestTool(stack); }
-            @Override public int getMaxStackSize() { return 1; }
+            @Override
+            public boolean mayPlace(ItemStack stack) {
+                return FarmerToolSupport.isHarvestTool(stack);
+            }
+
+            @Override
+            public int getMaxStackSize() {
+                return 1;
+            }
         };
         toolSlot.setBackground(InventoryMenu.BLOCK_ATLAS, FarmerToolSupport.EMPTY_HARVEST_TOOL_SLOT);
         addSlot(toolSlot);
@@ -68,14 +77,17 @@ public final class RichFarmerMenu extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        if (index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (index < 0 || index >= slots.size())
+            return ItemStack.EMPTY;
         Slot slot = slots.get(index);
-        if (!slot.hasItem()) return ItemStack.EMPTY;
+        if (!slot.hasItem())
+            return ItemStack.EMPTY;
         ItemStack stack = slot.getItem();
         ItemStack original = stack.copy();
 
         if (index < PLAYER_START) {
-            if (!moveItemStackTo(stack, PLAYER_START, PLAYER_END, true)) return ItemStack.EMPTY;
+            if (!moveItemStackTo(stack, PLAYER_START, PLAYER_END, true))
+                return ItemStack.EMPTY;
         } else if (FarmerToolSupport.isHarvestTool(stack) && toolContainer.getItem(0).isEmpty()) {
             toolContainer.setItem(0, stack.copyWithCount(1));
             stack.shrink(1);
@@ -83,22 +95,21 @@ public final class RichFarmerMenu extends AbstractContainerMenu {
             return ItemStack.EMPTY;
         }
 
-        if (stack.isEmpty()) slot.setByPlayer(ItemStack.EMPTY); else slot.setChanged();
+        if (stack.isEmpty())
+            slot.setByPlayer(ItemStack.EMPTY);
+        else
+            slot.setChanged();
         return original;
     }
 
     @Override
     public boolean stillValid(Player player) {
-        if (player.distanceToSqr(blockPos.getX() + .5, blockPos.getY() + .5, blockPos.getZ() + .5) > 64) return false;
+        if (player.distanceToSqr(blockPos.getX() + .5, blockPos.getY() + .5, blockPos.getZ() + .5) > 64)
+            return false;
         BlockEntity be = player.level().getBlockEntity(blockPos);
         return be instanceof CompatFarmerBlockEntity farmer && farmer.variant().isRich();
     }
 
-    /**
-     * Live one-slot view over the BlockEntity. Keeping a detached SimpleContainer copy
-     * would let an Axe break in the Farmer while an open menu still held the old copy,
-     * allowing the broken tool to be resurrected by taking it from the GUI.
-     */
     private static final class HarvestToolContainer implements Container {
         private final CompatFarmerBlockEntity farmer;
 
@@ -123,9 +134,11 @@ public final class RichFarmerMenu extends AbstractContainerMenu {
 
         @Override
         public ItemStack removeItem(int slot, int amount) {
-            if (slot != 0 || amount <= 0 || farmer == null) return ItemStack.EMPTY;
+            if (slot != 0 || amount <= 0 || farmer == null)
+                return ItemStack.EMPTY;
             ItemStack current = farmer.getHarvestTool();
-            if (current.isEmpty()) return ItemStack.EMPTY;
+            if (current.isEmpty())
+                return ItemStack.EMPTY;
             int removedCount = Math.min(amount, current.getCount());
             ItemStack removed = current.copyWithCount(removedCount);
             current.shrink(removedCount);
@@ -135,20 +148,24 @@ public final class RichFarmerMenu extends AbstractContainerMenu {
 
         @Override
         public ItemStack removeItemNoUpdate(int slot) {
-            if (slot != 0 || farmer == null) return ItemStack.EMPTY;
+            if (slot != 0 || farmer == null)
+                return ItemStack.EMPTY;
             ItemStack current = farmer.getHarvestTool();
-            if (!current.isEmpty()) farmer.setHarvestTool(ItemStack.EMPTY);
+            if (!current.isEmpty())
+                farmer.setHarvestTool(ItemStack.EMPTY);
             return current;
         }
 
         @Override
         public void setItem(int slot, ItemStack stack) {
-            if (slot == 0 && farmer != null) farmer.setHarvestTool(stack);
+            if (slot == 0 && farmer != null)
+                farmer.setHarvestTool(stack);
         }
 
         @Override
         public void setChanged() {
-            if (farmer != null) farmer.setChanged();
+            if (farmer != null)
+                farmer.setChanged();
         }
 
         @Override
@@ -163,7 +180,8 @@ public final class RichFarmerMenu extends AbstractContainerMenu {
 
         @Override
         public void clearContent() {
-            if (farmer != null) farmer.setHarvestTool(ItemStack.EMPTY);
+            if (farmer != null)
+                farmer.setHarvestTool(ItemStack.EMPTY);
         }
     }
 

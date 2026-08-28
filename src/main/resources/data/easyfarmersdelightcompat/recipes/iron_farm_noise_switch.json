@@ -1,27 +1,27 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "category": "redstone",
-  "key": {
-    "G": {
-      "item": "minecraft:glass_pane"
+    "type": "minecraft:crafting_shaped",
+    "category": "redstone",
+    "key": {
+        "G": {
+            "item": "minecraft:glass_pane"
+        },
+        "L": {
+            "item": "minecraft:lever"
+        },
+        "R": {
+            "item": "minecraft:redstone_block"
+        },
+        "I": {
+            "item": "minecraft:iron_block"
+        }
     },
-    "L": {
-      "item": "minecraft:lever"
-    },
-    "R": {
-      "item": "minecraft:redstone_block"
-    },
-    "I": {
-      "item": "minecraft:iron_block"
+    "pattern": [
+        "GGG",
+        "GLG",
+        "RIR"
+    ],
+    "result": {
+        "count": 1,
+        "item": "easyfarmersdelightcompat:iron_farm_noise_switch"
     }
-  },
-  "pattern": [
-    "GGG",
-    "GLG",
-    "RIR"
-  ],
-  "result": {
-    "count": 1,
-    "item": "easyfarmersdelightcompat:iron_farm_noise_switch"
-  }
 }

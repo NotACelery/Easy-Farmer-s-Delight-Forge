@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.resources.ResourceLocation;
 
-/** One compact two-row summary page for Cutter axe fallback actions. */
 public final class CutterAxeEmiRecipe implements EmiRecipe {
     private static final int INPUT_X = 12;
     private static final int TOOL_X = 50;

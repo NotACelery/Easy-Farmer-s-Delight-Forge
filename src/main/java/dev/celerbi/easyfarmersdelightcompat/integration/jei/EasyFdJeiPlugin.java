@@ -18,7 +18,7 @@ import net.minecraft.world.item.ItemStack;
 
 @JeiPlugin
 public final class EasyFdJeiPlugin implements IModPlugin {
-    /** Legacy id now hosts only the shared Harvest Tool reference. */
+
     public static final RecipeType<FarmerHarvestInfo> FARMER_HARVEST =
             RecipeType.create(EasyFarmersDelightCompat.MOD_ID, "farmer_harvest", FarmerHarvestInfo.class);
     public static final RecipeType<FarmerHarvestInfo> PADDY_HARVEST =
@@ -73,31 +73,27 @@ public final class EasyFdJeiPlugin implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        // General Harvest Tool reference: only Rich variants have the tool slot.
+
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.RICH_FARMER_ITEM.get()), FARMER_HARVEST);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.RICH_PADDY_FARMER_ITEM.get()), FARMER_HARVEST);
 
-        // Machine-specific harvesting categories.
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.PADDY_FARMER_ITEM.get()), PADDY_HARVEST);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.RICH_PADDY_FARMER_ITEM.get()), PADDY_HARVEST);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.RICH_FARMER_ITEM.get()), RICH_FARMER_HARVEST);
 
-        // Cutter-specific fallback actions + Farmer's Delight Cutting.
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.CUTTER_ITEM.get()), CUTTER_AXE);
         registerCutting(registration);
 
-        // In-game Block Guide / manual.
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.PADDY_FARMER_ITEM.get()), BLOCK_GUIDE);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.RICH_FARMER_ITEM.get()), BLOCK_GUIDE);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.RICH_PADDY_FARMER_ITEM.get()), BLOCK_GUIDE);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.CUTTER_ITEM.get()), BLOCK_GUIDE);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.VILLAGER_NOISE_SWITCH_ITEM.get()), BLOCK_GUIDE);
     }
-
     private static void registerCutting(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(
-                new ItemStack(ModBlocks.CUTTER_ITEM.get()),
+            registration.addRecipeCatalyst(
+                    new ItemStack(ModBlocks.CUTTER_ITEM.get()),
                 FDRecipeTypes.CUTTING
-        );
+            );
+        }
     }
-}

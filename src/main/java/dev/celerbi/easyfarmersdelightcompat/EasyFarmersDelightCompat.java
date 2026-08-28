@@ -13,6 +13,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 @Mod(EasyFarmersDelightCompat.MOD_ID)
 public final class EasyFarmersDelightCompat {
     public static final String MOD_ID = "easyfarmersdelightcompat";
+
     public EasyFarmersDelightCompat() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         ModBlocks.register(modEventBus);

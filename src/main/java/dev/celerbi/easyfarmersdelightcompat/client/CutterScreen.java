@@ -9,9 +9,12 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 public final class CutterScreen extends AbstractContainerScreen<CutterMenu> {
-    private static final ResourceLocation BACKGROUND = new ResourceLocation("easy_villagers", "textures/gui/container/input_output.png");
-    private static final ResourceLocation EASY_OUTPUT = new ResourceLocation("easy_villagers", "textures/gui/container/output.png");
-    private static final ResourceLocation EMPTY_TOOL = new ResourceLocation("easyfarmersdelightcompat", "textures/item/empty_knife_slot.png");
+    private static final ResourceLocation BACKGROUND = new ResourceLocation("easy_villagers",
+            "textures/gui/container/input_output.png");
+    private static final ResourceLocation EASY_OUTPUT = new ResourceLocation("easy_villagers",
+            "textures/gui/container/output.png");
+    private static final ResourceLocation EMPTY_TOOL = new ResourceLocation("easyfarmersdelightcompat",
+            "textures/item/empty_knife_slot.png");
     private ToolSlotTooltipRenderer.Examples cuttingToolExamples;
 
     public CutterScreen(CutterMenu menu, Inventory inv, Component title) {
@@ -31,10 +34,11 @@ public final class CutterScreen extends AbstractContainerScreen<CutterMenu> {
     @Override
     protected void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
         if (menu.getCarried().isEmpty()
-                && hoveredSlot != null
-                && hoveredSlot.index == CutterMenu.TOOL_SLOT
-                && !hoveredSlot.hasItem()) {
-            if (cuttingToolExamples == null) cuttingToolExamples = ToolSlotTooltipRenderer.cuttingExamples();
+                 && hoveredSlot != null
+                 && hoveredSlot.index == CutterMenu.TOOL_SLOT
+                 && !hoveredSlot.hasItem()) {
+            if (cuttingToolExamples == null)
+                cuttingToolExamples = ToolSlotTooltipRenderer.cuttingExamples();
             ToolSlotTooltipRenderer.renderCuttingTools(graphics, mouseX, mouseY, width, height, cuttingToolExamples);
             return;
         }

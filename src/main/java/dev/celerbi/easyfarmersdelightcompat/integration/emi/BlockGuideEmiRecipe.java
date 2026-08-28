@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.List;
 import net.minecraft.resources.ResourceLocation;
 
-/** EMI renderer for one shared Block Guide page. */
 public final class BlockGuideEmiRecipe implements EmiRecipe {
     private static final int WIDTH = 180;
     private static final int HEIGHT = 180;
@@ -37,29 +36,23 @@ public final class BlockGuideEmiRecipe implements EmiRecipe {
 
     @Override
     public List<EmiIngredient> getInputs() {
-        // A Block Guide page is documentation for a machine block, not a use of
-        // every ingredient shown inside the page. Keeping this empty prevents
-        // Sand, crops and tools from opening the guide through EMI's Uses view.
+
         return List.of();
     }
 
     @Override
     public List<EmiIngredient> getCatalysts() {
-        // The machine is rendered visually as a catalyst, but it must not be an
-        // EMI lookup catalyst/workstation. Otherwise right-clicking the machine
-        // routes to Uses instead of placing Block Guide beside Crafting.
+
         return List.of();
     }
 
     @Override
     public List<EmiStack> getOutputs() {
-        // EMI's Recipes view is sourced from getOutputs(). The guide's machine
-        // catalysts therefore act as semantic source targets: opening Recipes
-        // for Paddy Farmer, Rich Farmer, Cutter, etc. groups this category next
-        // to the normal Crafting category for that exact block.
+
         List<EmiStack> result = new ArrayList<>();
         for (GuideIngredient ingredient : info.ingredients()) {
-            if (ingredient.role() != GuideIngredient.Role.CATALYST) continue;
+            if (ingredient.role() != GuideIngredient.Role.CATALYST)
+                continue;
             Arrays.stream(ingredient.ingredient().getItems())
                     .filter(stack -> !stack.isEmpty())
                     .map(EmiStack::of)
@@ -84,7 +77,9 @@ public final class BlockGuideEmiRecipe implements EmiRecipe {
         boolean ironFarmAssembly = isIronFarmAssembly();
         int totalWidth = count <= 0 ? 0 : 16 + (count - 1) * SLOT_STEP;
         int startX = Math.max(4, (WIDTH - totalWidth) / 2);
-        int[] assemblyX = {8, 58, 94, 150};
+        int[] assemblyX = {
+            8, 58, 94, 150
+        };
 
         for (int i = 0; i < count; i++) {
             GuideIngredient ingredient = info.ingredients().get(i);
@@ -97,7 +92,7 @@ public final class BlockGuideEmiRecipe implements EmiRecipe {
                     4
             );
             if (ingredient.role() == GuideIngredient.Role.CATALYST
-                    || ingredient.role() == GuideIngredient.Role.TOOL) {
+                     || ingredient.role() == GuideIngredient.Role.TOOL) {
                 slot.catalyst(true);
             }
             if (!ingredient.label().getString().isEmpty()) {

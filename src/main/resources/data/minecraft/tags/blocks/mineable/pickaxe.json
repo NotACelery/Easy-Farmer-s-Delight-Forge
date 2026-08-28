@@ -1,11 +1,11 @@
 {
-  "replace": false,
-  "values": [
-    "easyfarmersdelightcompat:paddy_farmer",
-    "easyfarmersdelightcompat:rich_farmer",
-    "easyfarmersdelightcompat:rich_paddy_farmer",
-    "easyfarmersdelightcompat:cutter",
-    "easyfarmersdelightcompat:villager_noise_switch",
-    "easyfarmersdelightcompat:iron_farm_noise_switch"
-  ]
+    "replace": false,
+    "values": [
+        "easyfarmersdelightcompat:paddy_farmer",
+        "easyfarmersdelightcompat:rich_farmer",
+        "easyfarmersdelightcompat:rich_paddy_farmer",
+        "easyfarmersdelightcompat:cutter",
+        "easyfarmersdelightcompat:villager_noise_switch",
+        "easyfarmersdelightcompat:iron_farm_noise_switch"
+    ]
 }

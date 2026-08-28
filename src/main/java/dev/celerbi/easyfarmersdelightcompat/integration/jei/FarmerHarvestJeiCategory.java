@@ -15,7 +15,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
-/** JEI rendering adapter shared by the Farmer tool/Paddy/Rich Farmer guide categories. */
 public final class FarmerHarvestJeiCategory implements IRecipeCategory<FarmerHarvestInfo> {
     private static final int WIDTH = 180;
     private static final int HEIGHT = 106;
@@ -88,7 +87,8 @@ public final class FarmerHarvestJeiCategory implements IRecipeCategory<FarmerHar
     }
 
     @Override
-    public void draw(FarmerHarvestInfo recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
+    public void draw(FarmerHarvestInfo recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX,
+            double mouseY) {
         var font = Minecraft.getInstance().font;
         if (recipe.hasTool()) {
             graphics.drawString(font, "+", 35, 13, 0x404040, false);
@@ -99,7 +99,8 @@ public final class FarmerHarvestJeiCategory implements IRecipeCategory<FarmerHar
 
         int y = 36;
         for (var line : font.split(recipe.description(), 170)) {
-            if (y > HEIGHT - 9) return;
+            if (y > HEIGHT - 9)
+                return;
             graphics.drawString(font, line, 5, y, 0x555555, false);
             y += 9;
         }

@@ -21,14 +21,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.RedstoneSide;
 
-/**
- * Client-personal renderer for the Noise Switch.
- *
- * The physical block has no powered state. Lever and redstone are rendered from
- * ClientPreferences so two players can look at the same block and see different
- * states without causing any world/redstone update.
- */
-public final class VillagerNoiseSwitchBlockEntityRenderer implements BlockEntityRenderer<VillagerNoiseSwitchBlockEntity> {
+public final class VillagerNoiseSwitchBlockEntityRenderer
+        implements BlockEntityRenderer<VillagerNoiseSwitchBlockEntity> {
     private static final float WORK_SCALE = 0.30F;
     private static final float VILLAGER_SCALE = 0.45F;
     private static final double FLOOR_Y = 1.0D / 16.0D + 0.002D;
@@ -81,7 +75,8 @@ public final class VillagerNoiseSwitchBlockEntityRenderer implements BlockEntity
             int packedLight
     ) {
         Villager villager = noiseSwitch.villagerAdapter().getVillagerEntity();
-        if (villager == null) return;
+        if (villager == null)
+            return;
 
         pose.pushPose();
         pose.translate(0.5D, 1.0D / 16.0D, 0.5D);
@@ -134,7 +129,8 @@ public final class VillagerNoiseSwitchBlockEntityRenderer implements BlockEntity
     ) {
         pose.pushPose();
         applyWorkTransform(pose, facing);
-        blockRenderer.renderSingleBlock(Blocks.EMERALD_BLOCK.defaultBlockState(), pose, buffer, packedLight, packedOverlay);
+        blockRenderer.renderSingleBlock(Blocks.EMERALD_BLOCK.defaultBlockState(), pose, buffer, packedLight,
+                packedOverlay);
 
         BlockState lever = Blocks.LEVER.defaultBlockState()
                 .setValue(FaceAttachedHorizontalDirectionalBlock.FACE, AttachFace.FLOOR)
@@ -148,8 +144,7 @@ public final class VillagerNoiseSwitchBlockEntityRenderer implements BlockEntity
     private static void applyWorkTransform(PoseStack pose, Direction facing) {
         pose.translate(0.5D, 1.0D / 16.0D, 0.5D);
         pose.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
-        // Keep the compact switch pedestal in the front half, leaving the rear
-        // half exclusively for the stored Villager, exactly like the original UX.
+
         pose.translate(0.0D, 0.0D, 4.0D / 16.0D);
         pose.scale(WORK_SCALE, WORK_SCALE, WORK_SCALE);
         pose.translate(-0.5D, 0.0D, -0.5D);

@@ -5,10 +5,6 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-/**
- * Non-destructive description of which supported Cutter tool categories can
- * process a pending input. Used by diagnostics/viewers without rolling outputs.
- */
 public final class CutterOperationProbe {
     public record Result(boolean knifeCuttingRecipe, boolean axeCuttingRecipe, boolean axeAction) {
         public boolean knifeSupported() {

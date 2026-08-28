@@ -10,14 +10,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.Properties;
 import net.minecraftforge.fml.loading.FMLPaths;
 
-/**
- * Global client-only preferences for the current Minecraft installation.
- *
- * The Noise Switch intentionally does not use world/player NBT: one local value must
- * survive dimensions, servers, world unloads and restarts. Changes are flushed to
- * disk immediately with a temporary-file replace so a later crash cannot roll back
- * an already completed click.
- */
 public final class ClientPreferences {
     private static final String FILE_NAME = "easyfarmersdelightcompat-client.properties";
     private static final String KEY_VILLAGERS_MUTED = "villagersMuted";
@@ -45,8 +37,6 @@ public final class ClientPreferences {
         save();
     }
 
-
-
     public static synchronized boolean ironFarmSoundsMuted() {
         ensureLoaded();
         return ironFarmSoundsMuted;
@@ -64,12 +54,14 @@ public final class ClientPreferences {
     }
 
     private static void ensureLoaded() {
-        if (loaded) return;
+        if (loaded)
+            return;
         loaded = true;
         villagersMuted = false;
         ironFarmSoundsMuted = false;
         Path path = configPath();
-        if (!Files.isRegularFile(path)) return;
+        if (!Files.isRegularFile(path))
+            return;
         Properties properties = new Properties();
         try (InputStream in = Files.newInputStream(path)) {
             properties.load(in);
@@ -90,7 +82,8 @@ public final class ClientPreferences {
         properties.setProperty(KEY_VILLAGERS_MUTED, Boolean.toString(villagersMuted));
         properties.setProperty(KEY_IRON_FARM_SOUNDS_MUTED, Boolean.toString(ironFarmSoundsMuted));
         try {
-            if (parent != null) Files.createDirectories(parent);
+            if (parent != null)
+                Files.createDirectories(parent);
             try (OutputStream out = Files.newOutputStream(temp)) {
                 properties.store(out, "Easy Farmer's Delight Compat client preferences");
             }
@@ -101,7 +94,10 @@ public final class ClientPreferences {
             }
         } catch (IOException e) {
             System.err.println("[Easy Farmer's Delight Compat] Failed to save client preferences: " + e.getMessage());
-            try { Files.deleteIfExists(temp); } catch (IOException ignoredAgain) { }
+            try {
+                Files.deleteIfExists(temp);
+            } catch (IOException ignoredAgain) {
+            }
         }
     }
 

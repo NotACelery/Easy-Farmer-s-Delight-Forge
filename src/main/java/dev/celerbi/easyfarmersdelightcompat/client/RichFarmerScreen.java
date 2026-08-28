@@ -8,7 +8,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 public final class RichFarmerScreen extends AbstractContainerScreen<RichFarmerMenu> {
-    private static final ResourceLocation BACKGROUND = new ResourceLocation("easy_villagers", "textures/gui/container/output.png");
+    private static final ResourceLocation BACKGROUND = new ResourceLocation("easy_villagers",
+            "textures/gui/container/output.png");
     private ToolSlotTooltipRenderer.Examples harvestToolExamples;
 
     public RichFarmerScreen(RichFarmerMenu menu, Inventory inv, Component title) {
@@ -28,10 +29,11 @@ public final class RichFarmerScreen extends AbstractContainerScreen<RichFarmerMe
     @Override
     protected void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
         if (menu.getCarried().isEmpty()
-                && hoveredSlot != null
-                && hoveredSlot.index == RichFarmerMenu.HARVEST_TOOL_SLOT
-                && !hoveredSlot.hasItem()) {
-            if (harvestToolExamples == null) harvestToolExamples = ToolSlotTooltipRenderer.harvestExamples();
+                 && hoveredSlot != null
+                 && hoveredSlot.index == RichFarmerMenu.HARVEST_TOOL_SLOT
+                 && !hoveredSlot.hasItem()) {
+            if (harvestToolExamples == null)
+                harvestToolExamples = ToolSlotTooltipRenderer.harvestExamples();
             ToolSlotTooltipRenderer.renderHarvestTools(graphics, mouseX, mouseY, width, height, harvestToolExamples);
             return;
         }

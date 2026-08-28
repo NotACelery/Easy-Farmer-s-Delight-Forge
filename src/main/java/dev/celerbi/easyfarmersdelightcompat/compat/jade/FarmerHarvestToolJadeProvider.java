@@ -13,11 +13,9 @@ import snownee.jade.api.IServerDataProvider;
 import snownee.jade.api.ITooltip;
 import snownee.jade.api.config.IPluginConfig;
 
-/** Jade line for the generalized Rich Farmer / Rich Paddy Harvest Tool slot. */
 public enum FarmerHarvestToolJadeProvider implements IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
     INSTANCE;
 
-    /** Keep the 1.1.0 UID so users' per-provider Jade preferences are preserved. */
     private static final ResourceLocation UID = new ResourceLocation(
             EasyFarmersDelightCompat.MOD_ID,
             "farmer_knife"
@@ -29,15 +27,17 @@ public enum FarmerHarvestToolJadeProvider implements IBlockComponentProvider, IS
         data.remove(KEY);
         if (accessor.getBlockEntity() instanceof CompatFarmerBlockEntity farmer && farmer.variant().isRich()) {
             ItemStack tool = farmer.getHarvestTool();
-            if (!tool.isEmpty()) data.put(KEY, tool.save(new net.minecraft.nbt.CompoundTag()));
+            if (!tool.isEmpty())
+                data.put(KEY, tool.save(new net.minecraft.nbt.CompoundTag()));
         }
     }
 
     @Override
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
         CompoundTag data = accessor.getServerData();
-        if (!data.contains(KEY, Tag.TAG_COMPOUND)) return;
-        ItemStack tool = ItemStack.of(data.getCompound(KEY));
+        if (!data.contains(KEY, Tag.TAG_COMPOUND))
+            return;
+        ItemStack tool = ItemStack.of( data.getCompound(KEY));
         if (!tool.isEmpty()) {
             tooltip.add(Component.translatable(
                     "jade.easyfarmersdelightcompat.farmer.tool",

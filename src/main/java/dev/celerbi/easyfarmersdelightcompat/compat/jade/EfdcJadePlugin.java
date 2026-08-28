@@ -33,7 +33,6 @@ import snownee.jade.api.IWailaPlugin;
 import snownee.jade.api.WailaPlugin;
 import snownee.jade.api.config.IPluginConfig;
 
-/** Optional Jade integration for Farmer family, Cutter and Villager Noise Switch. */
 @WailaPlugin("jade")
 public final class EfdcJadePlugin implements IWailaPlugin {
     private static final ResourceLocation UID = new ResourceLocation(
@@ -60,10 +59,14 @@ public final class EfdcJadePlugin implements IWailaPlugin {
     private static final String WAITING_TOOL = "WaitingTool";
 
     private static final ResourceLocation RICE = new ResourceLocation("farmersdelight", "rice");
-    private static final ResourceLocation BUDDING_TOMATOES = new ResourceLocation("farmersdelight", "budding_tomatoes");
-    private static final ResourceLocation TOMATOES = new ResourceLocation("farmersdelight", "tomatoes");
-    private static final ResourceLocation RED_MUSHROOM_COLONY = new ResourceLocation("farmersdelight", "red_mushroom_colony");
-    private static final ResourceLocation BROWN_MUSHROOM_COLONY = new ResourceLocation("farmersdelight", "brown_mushroom_colony");
+    private static final ResourceLocation BUDDING_TOMATOES = new ResourceLocation("farmersdelight",
+            "budding_tomatoes");
+    private static final ResourceLocation TOMATOES = new ResourceLocation("farmersdelight",
+            "tomatoes");
+    private static final ResourceLocation RED_MUSHROOM_COLONY = new ResourceLocation("farmersdelight",
+            "red_mushroom_colony");
+    private static final ResourceLocation BROWN_MUSHROOM_COLONY = new ResourceLocation(
+            "farmersdelight", "brown_mushroom_colony");
     private static final ResourceLocation MELON_STEM = new ResourceLocation("melon_stem");
     private static final ResourceLocation PUMPKIN_STEM = new ResourceLocation("pumpkin_stem");
 
@@ -73,7 +76,10 @@ public final class EfdcJadePlugin implements IWailaPlugin {
         registration.registerBlockDataProvider(FarmerHarvestToolJadeProvider.INSTANCE, CompatFarmerBlockEntity.class);
         registration.registerBlockDataProvider(CutterJadeProvider.INSTANCE, CutterBlockEntity.class);
         registration.registerBlockDataProvider(NoiseSwitchJadeProvider.INSTANCE, VillagerNoiseSwitchBlockEntity.class);
-        registration.registerBlockDataProvider(IronFarmNoiseSwitchJadeProvider.INSTANCE, IronFarmNoiseSwitchBlockEntity.class);
+        registration.registerBlockDataProvider(
+                IronFarmNoiseSwitchJadeProvider.INSTANCE,
+                IronFarmNoiseSwitchBlockEntity.class
+        );
     }
 
     @Override
@@ -107,7 +113,8 @@ public final class EfdcJadePlugin implements IWailaPlugin {
         @Override
         public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
             CompoundTag status = status(accessor);
-            if (status == null) return;
+            if (status == null)
+                return;
 
             if (status.getBoolean(PADDY_SAND)) {
                 appendSugarCane(tooltip, status);
@@ -165,7 +172,8 @@ public final class EfdcJadePlugin implements IWailaPlugin {
 
     private static CompoundTag status(BlockAccessor accessor) {
         CompoundTag serverData = accessor.getServerData();
-        if (serverData.contains(ROOT)) return serverData.getCompound(ROOT);
+        if (serverData.contains(ROOT))
+            return serverData.getCompound(ROOT);
         if (accessor.getBlockEntity() instanceof CompatFarmerBlockEntity farmer) {
             return buildStatus(farmer, accessor.getLevel());
         }
@@ -251,13 +259,15 @@ public final class EfdcJadePlugin implements IWailaPlugin {
     }
 
     private static void appendRichSoil(ITooltip tooltip, CompoundTag status, ResourceLocation cropId) {
-        if (!status.getBoolean(RICH)) return;
+        if (!status.getBoolean(RICH))
+            return;
         if (status.getBoolean(PADDY_SAND)) {
             tooltip.add(Component.translatable("jade.easyfarmersdelightcompat.rich_soil.no_effect_sugar_cane")
                     .withStyle(ChatFormatting.GRAY));
             return;
         }
-        if (cropId == null) return;
+        if (cropId == null)
+            return;
         if (isStem(cropId) && status.getInt(AGE) >= status.getInt(MAX_AGE)) {
             tooltip.add(Component.translatable("jade.easyfarmersdelightcompat.rich_soil.stem_only")
                     .withStyle(ChatFormatting.GRAY));
@@ -275,9 +285,11 @@ public final class EfdcJadePlugin implements IWailaPlugin {
             return true;
         }
         if (TOMATOES.equals(cropId)) {
-            if (status.getInt(BASE_PROGRESS) < 3) return true;
+            if (status.getInt(BASE_PROGRESS) < 3)
+                return true;
             int ropes = Math.max(0, Math.min(2, status.getInt(ROPE_COUNT)));
-            if (ropes >= 1 && status.getInt(ROPE_ONE_PROGRESS) < 3) return true;
+            if (ropes >= 1 && status.getInt(ROPE_ONE_PROGRESS) < 3)
+                return true;
             return ropes >= 2 && status.getInt(ROPE_TWO_PROGRESS) < 3;
         }
         int maxAge = status.getInt(MAX_AGE);
@@ -286,14 +298,16 @@ public final class EfdcJadePlugin implements IWailaPlugin {
 
     private static void appendWaitingTool(ITooltip tooltip, CompoundTag status) {
         String waiting = status.getString(WAITING_TOOL);
-        if (waiting.isEmpty()) return;
+        if (waiting.isEmpty())
+            return;
         String key = switch (waiting) {
             case "KNIFE" -> "jade.easyfarmersdelightcompat.waiting.knife";
             case "AXE" -> "jade.easyfarmersdelightcompat.waiting.axe";
             case "KNIFE_OR_AXE" -> "jade.easyfarmersdelightcompat.waiting.knife_or_axe";
             default -> null;
         };
-        if (key != null) tooltip.add(Component.translatable(key).withStyle(ChatFormatting.RED));
+        if (key != null)
+            tooltip.add(Component.translatable(key).withStyle(ChatFormatting.RED));
     }
 
     private static void appendTomatoGrowth(ITooltip tooltip, CompoundTag status) {
@@ -324,13 +338,20 @@ public final class EfdcJadePlugin implements IWailaPlugin {
     }
 
     private static Component cropName(ResourceLocation cropId) {
-        if (cropId == null) return Component.translatable("jade.easyfarmersdelightcompat.unknown");
-        if (RICE.equals(cropId)) return Component.translatable("item.farmersdelight.rice");
-        if (isTomato(cropId)) return Component.translatable("item.farmersdelight.tomato");
-        if (RED_MUSHROOM_COLONY.equals(cropId)) return Component.translatable("block.minecraft.red_mushroom");
-        if (BROWN_MUSHROOM_COLONY.equals(cropId)) return Component.translatable("block.minecraft.brown_mushroom");
-        if (MELON_STEM.equals(cropId)) return Blocks.MELON.getName();
-        if (PUMPKIN_STEM.equals(cropId)) return Blocks.PUMPKIN.getName();
+        if (cropId == null)
+            return Component.translatable("jade.easyfarmersdelightcompat.unknown");
+        if (RICE.equals(cropId))
+            return Component.translatable("item.farmersdelight.rice");
+        if (isTomato(cropId))
+            return Component.translatable("item.farmersdelight.tomato");
+        if (RED_MUSHROOM_COLONY.equals(cropId))
+            return Component.translatable("block.minecraft.red_mushroom");
+        if (BROWN_MUSHROOM_COLONY.equals(cropId))
+            return Component.translatable("block.minecraft.brown_mushroom");
+        if (MELON_STEM.equals(cropId))
+            return Blocks.MELON.getName();
+        if (PUMPKIN_STEM.equals(cropId))
+            return Blocks.PUMPKIN.getName();
         Block crop = BuiltInRegistries.BLOCK.get(cropId);
         return crop.getName();
     }
@@ -344,7 +365,8 @@ public final class EfdcJadePlugin implements IWailaPlugin {
     }
 
     private static int percent(int progress, int maximum) {
-        if (maximum <= 0) return 0;
+        if (maximum <= 0)
+            return 0;
         int safeProgress = Math.max(0, Math.min(maximum, progress));
         return Math.round((safeProgress * 100.0F) / maximum);
     }

@@ -32,22 +32,28 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraftforge.client.model.data.ModelData;
 
-/** Renders virtual villager/crop contents inside the Farmer enclosure. */
 public final class CompatFarmerBlockEntityRenderer implements BlockEntityRenderer<CompatFarmerBlockEntity> {
-    private static final ResourceLocation RICE_CROP_ID = new ResourceLocation("farmersdelight", "rice");
-    private static final ResourceLocation RICE_PANICLES_ID = new ResourceLocation("farmersdelight", "rice_panicles");
-    private static final ResourceLocation BUDDING_TOMATO_ID = new ResourceLocation("farmersdelight", "budding_tomatoes");
-    private static final ResourceLocation TOMATO_CROP_ID = new ResourceLocation("farmersdelight", "tomatoes");
-    private static final ResourceLocation TOMATO_ON_ROPE_ID = new ResourceLocation("farmersdelight", "tomatoes_on_rope");
-    private static final ResourceLocation LEGACY_HANGING_TOMATO_ID = new ResourceLocation("farmersdelight", "hanging_tomatoes");
-    private static final ResourceLocation RICH_SOIL_ID = new ResourceLocation("farmersdelight", "rich_soil");
+    private static final ResourceLocation RICE_CROP_ID = new ResourceLocation("farmersdelight",
+            "rice");
+    private static final ResourceLocation RICE_PANICLES_ID = new ResourceLocation("farmersdelight",
+            "rice_panicles");
+    private static final ResourceLocation BUDDING_TOMATO_ID = new ResourceLocation("farmersdelight",
+            "budding_tomatoes");
+    private static final ResourceLocation TOMATO_CROP_ID = new ResourceLocation("farmersdelight",
+            "tomatoes");
+    private static final ResourceLocation TOMATO_ON_ROPE_ID = new ResourceLocation("farmersdelight",
+            "tomatoes_on_rope");
+    private static final ResourceLocation LEGACY_HANGING_TOMATO_ID = new ResourceLocation(
+            "farmersdelight", "hanging_tomatoes");
+    private static final ResourceLocation RICH_SOIL_ID = new ResourceLocation("farmersdelight",
+            "rich_soil");
 
     private static final float FARM_SCALE = 0.45F;
     private static final float PADDY_VILLAGER_SCALE = 0.90F;
     private static final float PADDY_WATERLINE_Y = 1.25F / 16.0F;
     private static final float PADDY_SURFACE_EPSILON = 1.0F / 1024.0F;
     private static final float PADDY_ISLAND_TOP_Y = PADDY_WATERLINE_Y + PADDY_SURFACE_EPSILON;
-    // Paddy support islands stay inside the model's internal water footprint.
+
     private static final float PADDY_ISLAND_SCALE = 5.0F / 16.0F;
     private static final float PADDY_SUPPORT_LOCAL_Z = -3.0F / 16.0F;
     private static final float PADDY_SAND_LOCAL_Z = 3.0F / 16.0F;
@@ -107,7 +113,6 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         renderCrop(farmer, registries, direction, poseStack, buffer, interiorLight, combinedOverlay);
     }
 
-    /** Mirrors Easy Villagers FarmerRenderer villager transform exactly. */
     private void renderVillager(
             CompatFarmerBlockEntity farmer,
             RegistryAccess registries,
@@ -122,7 +127,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         }
 
         poseStack.pushPose();
-        // Paddy villagers sit on the submerged support and render slightly smaller to fit the glass.
+
         double baseY = farmer.variant().isAquatic() ? PADDY_ISLAND_TOP_Y : 1D / 16D;
         poseStack.translate(0.5D, baseY, 0.5D);
         poseStack.mulPose(Axis.YP.rotationDegrees(-direction.toYRot()));
@@ -167,7 +172,6 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         }
     }
 
-    /** Renders both rice halves inside the Farmer's scaled crop space. */
     private void renderRice(
             CompatFarmerBlockEntity farmer,
             Direction direction,
@@ -194,7 +198,6 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         poseStack.popPose();
     }
 
-    /** Scales the full three-section Tomato trellis to fit inside one block. */
     private void renderTomato(
             CompatFarmerBlockEntity farmer,
             Direction direction,
@@ -215,10 +218,12 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         Block tomato = BuiltInRegistries.BLOCK.get(TOMATO_CROP_ID);
 
         if (farmer.ropeCount() >= 1) {
-            renderTomatoSection(1, farmer.ropeOneProgress(), tomatoOnRope, tomato, poseStack, buffer, combinedLight, combinedOverlay);
+            renderTomatoSection(1, farmer.ropeOneProgress(), tomatoOnRope, tomato, poseStack, buffer, combinedLight,
+                    combinedOverlay);
         }
         if (farmer.ropeCount() >= 2) {
-            renderTomatoSection(2, farmer.ropeTwoProgress(), tomatoOnRope, tomato, poseStack, buffer, combinedLight, combinedOverlay);
+            renderTomatoSection(2, farmer.ropeTwoProgress(), tomatoOnRope, tomato, poseStack, buffer, combinedLight,
+                    combinedOverlay);
         }
         poseStack.popPose();
     }
@@ -236,10 +241,11 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         poseStack.pushPose();
         poseStack.translate(0D, section, 0D);
         if (tomatoOnRope != Blocks.AIR) {
-            // Newer FD uses tomatoes_on_rope; older builds may expose hanging_tomatoes.
-            renderBlockState(withAge(tomatoOnRope.defaultBlockState(), progress), poseStack, buffer, combinedLight, combinedOverlay);
+
+            renderBlockState(withAge(tomatoOnRope.defaultBlockState(), progress), poseStack, buffer, combinedLight,
+                    combinedOverlay);
         } else if (tomato != Blocks.AIR) {
-            // FD 1.2.9 falls back to the legacy ropelogged tomato state.
+
             BlockState legacy = withBooleanProperty(withAge(tomato.defaultBlockState(), progress), "ropelogged", true);
             renderBlockState(legacy, poseStack, buffer, combinedLight, combinedOverlay);
         }
@@ -255,9 +261,10 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
             int combinedOverlay
     ) {
         Block platform = farmer.variant().isRich() ? BuiltInRegistries.BLOCK.get(RICH_SOIL_ID) : Blocks.DIRT;
-        if (platform == Blocks.AIR) platform = Blocks.DIRT;
+        if (platform == Blocks.AIR)
+            platform = Blocks.DIRT;
         poseStack.pushPose();
-        // Keep the support top flush with the Paddy water plane, with a tiny z-fight offset.
+
         applyScaledBlockTransform(
                 poseStack,
                 direction,
@@ -272,8 +279,6 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         poseStack.popPose();
     }
 
-
-    /** Samples nearby exterior light for the Farmer's virtual interior geometry. */
     private static int resolveInteriorLight(Level level, BlockPos pos, int fallback) {
         int block = LightTexture.block(fallback);
         int sky = LightTexture.sky(fallback);
@@ -302,7 +307,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
             int combinedLight,
             int combinedOverlay
     ) {
-        // Sugar Cane starts on the submerged sand island at the same waterline.
+
         poseStack.pushPose();
         applyScaledBlockTransform(
                 poseStack,
@@ -344,9 +349,8 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
             BlockState stem
     ) {
         Block fruit = stem.is(Blocks.MELON_STEM) ? Blocks.MELON
-                : stem.is(Blocks.PUMPKIN_STEM) ? Blocks.PUMPKIN : Blocks.AIR;
+                 : stem.is(Blocks.PUMPKIN_STEM) ? Blocks.PUMPKIN : Blocks.AIR;
 
-        // Stem and fruit use opposite thirds; ready stems render attached toward the fruit.
         BlockState renderedStem = stem;
         if (farmer.fruitReady() && fruit != Blocks.AIR) {
             Block attached = stem.is(Blocks.MELON_STEM) ? Blocks.ATTACHED_MELON_STEM : Blocks.ATTACHED_PUMPKIN_STEM;
@@ -384,7 +388,6 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         }
     }
 
-    /** Mirrors Easy Villagers FarmerRenderer crop positioning. */
     private static void applyCropTransform(PoseStack poseStack, Direction direction, float scale) {
         applyScaledBlockTransform(
                 poseStack,
@@ -398,7 +401,6 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         );
     }
 
-    /** Renders a block model at an explicit local center/scale after Farmer rotation. */
     private static void applyScaledBlockTransform(
             PoseStack poseStack,
             Direction direction,
@@ -416,7 +418,6 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         poseStack.translate(-0.5D, 0.0D, -0.5D);
     }
 
-    /** Uses the block-model pipeline so crop render types and tints remain intact. */
     private void renderBlockState(
             BlockState state,
             PoseStack poseStack,
@@ -452,7 +453,6 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         ResourceLocation id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
         return BUDDING_TOMATO_ID.equals(id) || TOMATO_CROP_ID.equals(id);
     }
-
 
     private static BlockState withBooleanProperty(BlockState state, String propertyName, boolean value) {
         Optional<Property<?>> property = state.getProperties().stream()

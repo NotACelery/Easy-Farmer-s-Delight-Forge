@@ -11,16 +11,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 
-/**
- * EMI-only representation of the three stateful Farmer upgrade recipes.
- *
- * <p>The gameplay recipes remain the real recipes. This wrapper exists only so
- * EMI does not route those recipes through its generic crafting filler, which
- * compares concrete ItemStack components while moving ingredients. Easy
- * Villagers Farmer items may legitimately carry BLOCK_ENTITY_DATA and other
- * components, so the generic filler can recognize the Ingredient but then fail
- * to move the actual Farmer stack.</p>
- */
 public final class FarmerUpgradeEmiRecipe extends EmiCraftingRecipe {
     private final ResourceLocation gameplayId;
     private final List<Ingredient> minecraftIngredients;
@@ -48,10 +38,6 @@ public final class FarmerUpgradeEmiRecipe extends EmiCraftingRecipe {
         return minecraftIngredients;
     }
 
-    /**
-     * Prevent EMI's vanilla crafting handler from claiming this recipe. The
-     * dedicated FarmerUpgradeEmiRecipeHandler still provides the Fill button.
-     */
     @Override
     public boolean supportsRecipeTree() {
         return false;

@@ -1,25 +1,25 @@
 {
-  "replace": false,
-  "values": [
-    {
-      "id": "argentum:yerba_semilla",
-      "required": false
-    },
-    {
-      "id": "argentum:te_semilla",
-      "required": false
-    },
-    {
-      "id": "argentum:batata",
-      "required": false
-    },
-    {
-      "id": "argentum:membrillo_semilla",
-      "required": false
-    },
-    {
-      "id": "ars_nouveau:magebloom_crop",
-      "required": false
-    }
-  ]
+    "replace": false,
+    "values": [
+        {
+            "id": "argentum:yerba_semilla",
+            "required": false
+        },
+        {
+            "id": "argentum:te_semilla",
+            "required": false
+        },
+        {
+            "id": "argentum:batata",
+            "required": false
+        },
+        {
+            "id": "argentum:membrillo_semilla",
+            "required": false
+        },
+        {
+            "id": "ars_nouveau:magebloom_crop",
+            "required": false
+        }
+    ]
 }

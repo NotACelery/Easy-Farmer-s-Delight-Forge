@@ -12,7 +12,6 @@ import java.util.List;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
-/** EMI rendering adapter for the shared FarmerHarvestInfo datasets. */
 public final class FarmerHarvestEmiRecipe implements EmiRecipe {
     private final FarmerHarvestInfo info;
     private final EmiRecipeCategory category;
@@ -85,14 +84,12 @@ public final class FarmerHarvestEmiRecipe implements EmiRecipe {
             }
         }
 
-        // Keep the page player-facing: the description already explains the useful
-        // behaviour in plain language. Technical loot-table notes stay out of the UI.
         EmiTextUtil.addWrappedParagraphs(widgets, List.of(info.description()), 4, 36, 172, 0x555555);
     }
 
     @Override
     public boolean supportsRecipeTree() {
-        // These are documentation entries, not deterministic crafting recipes.
+
         return false;
     }
 }

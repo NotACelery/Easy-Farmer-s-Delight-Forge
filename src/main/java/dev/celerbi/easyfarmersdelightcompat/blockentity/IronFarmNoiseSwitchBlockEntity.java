@@ -22,20 +22,33 @@ public final class IronFarmNoiseSwitchBlockEntity extends BlockEntity {
         super(ModBlockEntities.IRON_FARM_NOISE_SWITCH.get(), pos, state);
     }
 
-    public int assemblyStage() { return assemblyStage; }
-    public boolean hasGolem() { return hasGolem; }
-    public boolean needsIronBlock() { return !hasGolem && assemblyStage < REQUIRED_IRON_BLOCKS; }
-    public boolean needsCarvedPumpkin() { return !hasGolem && assemblyStage >= REQUIRED_IRON_BLOCKS; }
+    public int assemblyStage() {
+        return assemblyStage;
+    }
+
+    public boolean hasGolem() {
+        return hasGolem;
+    }
+
+    public boolean needsIronBlock() {
+        return !hasGolem && assemblyStage < REQUIRED_IRON_BLOCKS;
+    }
+
+    public boolean needsCarvedPumpkin() {
+        return !hasGolem && assemblyStage >= REQUIRED_IRON_BLOCKS;
+    }
 
     public boolean insertIronBlock() {
-        if (!needsIronBlock()) return false;
+        if (!needsIronBlock())
+            return false;
         assemblyStage++;
         setChangedAndSync();
         return true;
     }
 
     public boolean completeGolem() {
-        if (!needsCarvedPumpkin()) return false;
+        if (!needsCarvedPumpkin())
+            return false;
         assemblyStage = REQUIRED_IRON_BLOCKS;
         hasGolem = true;
         setChangedAndSync();
@@ -54,7 +67,8 @@ public final class IronFarmNoiseSwitchBlockEntity extends BlockEntity {
         super.load(tag);
         assemblyStage = Math.max(0, Math.min(REQUIRED_IRON_BLOCKS, tag.getInt(KEY_ASSEMBLY_STAGE)));
         hasGolem = tag.getBoolean(KEY_HAS_GOLEM);
-        if (hasGolem) assemblyStage = REQUIRED_IRON_BLOCKS;
+        if (hasGolem)
+            assemblyStage = REQUIRED_IRON_BLOCKS;
     }
 
     @Override

@@ -24,10 +24,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.items.IItemHandler;
 
-/** Reflection bridge for the small Easy Villagers Farmer surface this addon needs. */
 public final class EasyVillagersFarmerAdapter {
-    private static final ResourceLocation EASY_FARMER_ID = new ResourceLocation("easy_villagers", "farmer");
-    private static final ResourceLocation RICE_CROP_ID = new ResourceLocation("farmersdelight", "rice");
+    private static final ResourceLocation EASY_FARMER_ID = new ResourceLocation("easy_villagers",
+            "farmer");
+    private static final ResourceLocation RICE_CROP_ID = new ResourceLocation("farmersdelight",
+            "rice");
 
     private static final String FARMER_TILEENTITY = "de.maxhenkel.easyvillagers.blocks.tileentity.FarmerTileentity";
     private static final String VILLAGER_ITEM = "de.maxhenkel.easyvillagers.items.VillagerItem";
@@ -87,7 +88,8 @@ public final class EasyVillagersFarmerAdapter {
             villagerEntityField.set(farmer, null);
 
             Villager villager = getVillagerEntity(registries);
-            if (villager != null && villager.getVillagerXp() <= 0 && villager.getVillagerData().getProfession() != VillagerProfession.NITWIT) {
+            if (villager != null && villager.getVillagerXp() <= 0 && villager.getVillagerData()
+                    .getProfession() != VillagerProfession.NITWIT) {
                 villager.setVillagerData(villager.getVillagerData().setProfession(VillagerProfession.FARMER));
             }
         } catch (ReflectiveOperationException e) {
@@ -164,7 +166,6 @@ public final class EasyVillagersFarmerAdapter {
         return crop != null && RICE_CROP_ID.equals(BuiltInRegistries.BLOCK.getKey(crop.getBlock()));
     }
 
-    /** Delegates seed validation to Easy Villagers. */
     public boolean isValidSeed(ItemStack stack, RegistryAccess registries) {
         if (stack.isEmpty()) {
             return false;
@@ -182,7 +183,6 @@ public final class EasyVillagersFarmerAdapter {
         }
     }
 
-    /** Resolves a seed with Easy Villagers, then stores the crop without delegate sync. */
     public boolean setCropFromSeed(ItemStack stack, RegistryAccess registries) {
         if (stack.isEmpty()) {
             return false;
@@ -205,7 +205,6 @@ public final class EasyVillagersFarmerAdapter {
         }
     }
 
-    /** Runs Easy Villagers crop aging without ticking/syncing the unplaced delegate. */
     public boolean ageCrop(RegistryAccess registries) {
         BlockEntity farmer = getDelegate(registries);
         if (farmer == null) {
@@ -285,7 +284,7 @@ public final class EasyVillagersFarmerAdapter {
             return null;
         }
         try {
-            Object result = findField(farmer.getClass(), "itemHandler").get(farmer);
+            Object result = findField( farmer.getClass(), "itemHandler").get(farmer);
             if (!(result instanceof IItemHandler handler)) {
                 return null;
             }
@@ -376,7 +375,7 @@ public final class EasyVillagersFarmerAdapter {
                 return Math.max(1, number.intValue());
             }
         } catch (ReflectiveOperationException | RuntimeException e) {
-            // A failed farmSpeed lookup must not silently turn the Farmer into a 1-tick-speed machine.
+
             warnFarmSpeedFallback(e);
             return DEFAULT_FARM_SPEED;
         }
@@ -385,10 +384,12 @@ public final class EasyVillagersFarmerAdapter {
     }
 
     private static void warnFarmSpeedFallback(Exception e) {
-        if (farmSpeedFallbackWarned) return;
+        if (farmSpeedFallbackWarned)
+            return;
         farmSpeedFallbackWarned = true;
         System.err.println("[Easy Farmer's Delight Compat] Could not read Easy Villagers farmer.farm_speed; using default 10 without disabling the Farmer adapter.");
-        if (e != null) e.printStackTrace();
+        if (e != null)
+            e.printStackTrace();
     }
 
     public CompoundTag snapshot(CompoundTag fallback, RegistryAccess registries) {
@@ -398,7 +399,7 @@ public final class EasyVillagersFarmerAdapter {
         }
 
         CompoundTag merged = fallback.copy();
-        // Mirror Easy Villagers-owned keys, including removals.
+
         merged.remove("Villager");
         merged.remove("Crop");
         merged.remove("Items");
@@ -442,7 +443,6 @@ public final class EasyVillagersFarmerAdapter {
             fail(e);
         }
     }
-
 
     private final class DirtyTrackingContainer implements Container {
         private final Container delegateContainer;
@@ -494,6 +494,7 @@ public final class EasyVillagersFarmerAdapter {
         public int getMaxStackSize() {
             return delegateContainer.getMaxStackSize();
         }
+
         @Override
         public void setChanged() {
             delegateContainer.setChanged();

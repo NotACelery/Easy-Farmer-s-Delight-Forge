@@ -45,8 +45,6 @@ function Find-Jdk17UnderRoot([string]$Root) {
     $direct = Test-Jdk17Home $Root
     if ($direct) { return $direct }
 
-    # Busca javac.exe y deriva la raiz del JDK desde ...\bin\javac.exe.
-    # Es mas robusto que depender del nombre exacto de la carpeta de Temurin.
     try {
         $candidates = @(Get-ChildItem -LiteralPath $Root -Filter 'javac.exe' -File -Recurse -ErrorAction SilentlyContinue)
     } catch {
@@ -158,11 +156,6 @@ try {
     Write-Log 'Ejecutando: clean build --no-daemon --stacktrace --console=plain'
     Write-Host ''
 
-    # ForgeGradle and several of its Java tools write informational messages to STDERR.
-    # Windows PowerShell 5.1 can turn redirected native STDERR into ErrorRecord objects;
-    # with ErrorActionPreference=Stop that incorrectly aborts a healthy build.
-    # Merge STDERR inside cmd.exe first, so PowerShell receives ordinary text and we
-    # decide success/failure exclusively from Gradle's real process exit code.
     $cmdLine = 'call "' + $gradle + '" clean build --no-daemon --stacktrace --console=plain 2>&1'
     & $env:ComSpec /d /s /c $cmdLine | Tee-Object -FilePath $LogPath -Append
     $rc = $LASTEXITCODE

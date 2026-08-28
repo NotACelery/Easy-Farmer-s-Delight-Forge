@@ -20,7 +20,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
-/** Renders a Cutter item without changing its established empty-item silhouette. */
 public final class CutterItemRenderer extends BlockEntityWithoutLevelRenderer {
     private final Minecraft minecraft;
     private final BlockRenderDispatcher blockRenderer;
@@ -46,8 +45,6 @@ public final class CutterItemRenderer extends BlockEntityWithoutLevelRenderer {
         pose.pushPose();
         blockRenderer.renderSingleBlock(state, pose, buffer, light, overlay);
 
-        // Preserve the exact pre-existing empty preview: shell + stored log/Bamboo
-        // variant. Stateful rendering below only adds content that was absent.
         Block variant = CutterLogVariant.fromStack(stack);
         pose.pushPose();
         applyWorkTransform(pose, facing);
@@ -61,8 +58,7 @@ public final class CutterItemRenderer extends BlockEntityWithoutLevelRenderer {
             preview.setItemPreview(true);
 
             CompoundTag data = stack.getTagElement("BlockEntityTag");
-            if (data != null && !data.isEmpty()) {
-                preview.load(data);
+            if (data != null && !data.isEmpty()) {preview.load(data);
                 preview.setItemPreview(true);
             }
 

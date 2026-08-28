@@ -45,25 +45,27 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.network.NetworkHooks;
 
-/** Base block shared by the addon Farmer variants. */
 public final class CompatFarmerBlock extends Block implements EntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
-    /** Hollow 1/16 shell matching Easy Villagers; avoids full-cube lighting artifacts. */
     private static final VoxelShape FARMER_SHAPE = Shapes.or(
             Block.box(0D, 0D, 0D, 16D, 1D, 16D),
             Block.box(0D, 15D, 0D, 16D, 16D, 16D),
             Block.box(0D, 0D, 0D, 1D, 16D, 16D),
             Block.box(15D, 0D, 0D, 16D, 16D, 16D),
             Block.box(0D, 0D, 0D, 16D, 16D, 1D),
-            Block.box(0D, 0D, 15D, 16D, 16D, 16D)
-    );
-    private static final ResourceLocation RICE_ITEM_ID = new ResourceLocation("farmersdelight", "rice");
-    private static final ResourceLocation TOMATO_SEEDS_ID = new ResourceLocation("farmersdelight", "tomato_seeds");
-    private static final ResourceLocation ROPE_ITEM_ID = new ResourceLocation("farmersdelight", "rope");
-    private static final ResourceLocation RED_MUSHROOM_ITEM_ID = new ResourceLocation("minecraft", "red_mushroom");
-    private static final ResourceLocation BROWN_MUSHROOM_ITEM_ID = new ResourceLocation("minecraft", "brown_mushroom");
+            Block.box(0D, 0D, 15D, 16D, 16D, 16D));
 
+    private static final ResourceLocation RICE_ITEM_ID = new ResourceLocation(
+            "farmersdelight", "rice");
+    private static final ResourceLocation TOMATO_SEEDS_ID = new ResourceLocation(
+            "farmersdelight", "tomato_seeds");
+    private static final ResourceLocation ROPE_ITEM_ID = new ResourceLocation(
+            "farmersdelight", "rope");
+    private static final ResourceLocation RED_MUSHROOM_ITEM_ID = new ResourceLocation(
+            "minecraft", "red_mushroom");
+    private static final ResourceLocation BROWN_MUSHROOM_ITEM_ID = new ResourceLocation(
+            "minecraft", "brown_mushroom");
     private final FarmerVariant variant;
 
     public CompatFarmerBlock(Properties properties, FarmerVariant variant) {
@@ -112,19 +114,24 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
     }
 
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
+            Level level,
+            BlockState state,
+            BlockEntityType<T> type) {
         if (level.isClientSide || type != ModBlockEntities.COMPAT_FARMER.get()) {
             return null;
         }
         return (tickLevel, tickPos, tickState, blockEntity) -> {
-            if (tickLevel instanceof ServerLevel serverLevel && blockEntity instanceof CompatFarmerBlockEntity farmer) {
+            if (tickLevel instanceof ServerLevel serverLevel
+                    && blockEntity instanceof CompatFarmerBlockEntity farmer) {
                 CompatFarmerBlockEntity.serverTick(serverLevel, tickPos, tickState, farmer);
             }
         };
     }
 
     @Override
-    public InteractionResult use(BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit) {
+    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand,
+            BlockHitResult hit) {
         ItemStack heldItem = player.getItemInHand(hand);
         BlockEntity blockEntity = level.getBlockEntity(pos);
         if (!(blockEntity instanceof CompatFarmerBlockEntity farmer)) {
@@ -132,11 +139,6 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
         }
 
         var registries = level.registryAccess();
-
-        // Sneak-use is a removal action before any held-item interaction. In 1.21
-        // useItemOn can consume the interaction before useWithoutItem is reached, so
-        // Paddy teardown/removal must also live here instead of relying on an empty
-        // hand. This makes Shift + Right Click deterministic with any held item.
         if (player.isShiftKeyDown() && variant.isAquatic()) {
             if (farmer.hasPaddySand()) {
                 if (!level.isClientSide) {
@@ -149,7 +151,6 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
                 }
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
-
             if (farmer.easyVillagers().getCrop(registries) != null) {
                 if (!level.isClientSide) {
                     ItemStack removed = farmer.removeSelectedCrop(registries);
@@ -161,10 +162,8 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
         }
-
-        // Rich variants accept Knife/Hoe/Axe in the protected Harvest Tool slot.
-        if (!player.isShiftKeyDown() && variant.isRich() && FarmerToolSupport.isHarvestTool(heldItem)
-                && farmer.getHarvestTool().isEmpty()) {
+        if (!player.isShiftKeyDown() && variant.isRich() && FarmerToolSupport.isHarvestTool(heldItem) && farmer
+                .getHarvestTool().isEmpty()) {
             if (!level.isClientSide) {
                 farmer.setHarvestTool(heldItem.copyWithCount(1));
                 consumeOne(heldItem, player);
@@ -172,21 +171,15 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
-
-        if (!player.isShiftKeyDown() && variant.isAquatic()
-                && !farmer.hasPaddySand()
-                && farmer.easyVillagers().getCrop(registries) == null
-                && isSand(heldItem)) {
+        if (!player.isShiftKeyDown() && variant.isAquatic() && !farmer.hasPaddySand() && farmer.easyVillagers().getCrop(
+                    registries) == null && isSand(heldItem)) {
             if (!level.isClientSide && farmer.installPaddySand()) {
                 consumeOne(heldItem, player);
                 level.playSound(null, pos, SoundEvents.SAND_PLACE, SoundSource.BLOCKS, 0.8F, 1.0F);
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
-
-        if (!player.isShiftKeyDown() && variant.isAquatic()
-                && farmer.hasPaddySand()
-                && farmer.sugarCaneHeight() == 0
+        if (!player.isShiftKeyDown() && variant.isAquatic() && farmer.hasPaddySand() && farmer.sugarCaneHeight() == 0
                 && isSugarCane(heldItem)) {
             if (!level.isClientSide && farmer.plantSugarCane()) {
                 consumeOne(heldItem, player);
@@ -194,7 +187,6 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
-
         if (!farmer.easyVillagers().hasVillager(registries) && farmer.easyVillagers().isVillagerItem(heldItem)) {
             if (!level.isClientSide) {
                 farmer.easyVillagers().insertVillager(heldItem, registries);
@@ -204,8 +196,6 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
-
-        // Rope builds Tomato supports; sneak-use removes the top support first.
         if (!variant.isAquatic() && variant.isRich() && farmer.hasTomatoCrop(registries)) {
             if (player.isShiftKeyDown() && farmer.ropeCount() > 0) {
                 if (!level.isClientSide) {
@@ -217,7 +207,6 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
                 }
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
-
             if (isRope(heldItem) && farmer.ropeCount() < 2) {
                 if (!level.isClientSide && farmer.addRope()) {
                     consumeOne(heldItem, player);
@@ -226,13 +215,10 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
         }
-
         if (farmer.easyVillagers().getCrop(registries) == null) {
-            boolean validCrop = variant.isAquatic()
-                    ? (!farmer.hasPaddySand() && isRice(heldItem))
-                    : (variant.isRich() && (isTomatoSeeds(heldItem) || isMushroom(heldItem) || isStemSeed(heldItem)))
-                            || farmer.easyVillagers().isValidSeed(heldItem, registries);
-
+            boolean validCrop = variant.isAquatic() ? (!farmer.hasPaddySand() && isRice(heldItem)) : (variant.isRich()
+                    && (isTomatoSeeds(heldItem) || isMushroom(heldItem) || isStemSeed(heldItem))) || farmer
+                .easyVillagers().isValidSeed(heldItem, registries);
             if (validCrop) {
                 if (!level.isClientSide) {
                     boolean selected;
@@ -248,7 +234,8 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
                         selected = farmer.selectStem(heldItem, registries);
                     } else {
                         selected = farmer.easyVillagers().setCropFromSeed(heldItem, registries);
-                        if (selected) farmer.onNormalCropSelected();
+                        if (selected)
+                            farmer.onNormalCropSelected();
                     }
                     if (selected) {
                         consumeOne(heldItem, player);
@@ -259,7 +246,6 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
         }
-
         if (player.isShiftKeyDown() && farmer.easyVillagers().getCrop(registries) != null) {
             if (!level.isClientSide) {
                 ItemStack removed = farmer.removeSelectedCrop(registries);
@@ -270,7 +256,6 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
-
         if (player.isShiftKeyDown() && farmer.easyVillagers().hasVillager(registries)) {
             if (!level.isClientSide) {
                 ItemStack villager = farmer.easyVillagers().removeVillager(registries);
@@ -282,21 +267,24 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
-
         openOutput(level, pos, player, farmer, state);
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
-    private void openOutput(Level level, BlockPos pos, Player player, CompatFarmerBlockEntity farmer, BlockState state) {
+    private void openOutput(
+            Level level,
+            BlockPos pos,
+            Player player,
+            CompatFarmerBlockEntity farmer,
+            BlockState state) {
         if (level.isClientSide || !(player instanceof ServerPlayer serverPlayer)) {
             return;
         }
         SimpleMenuProvider provider = new SimpleMenuProvider(
-                        (id, inventory, menuPlayer) -> farmer.variant().isRich()
-                                ? new RichFarmerMenu(id, inventory, farmer)
-                                : new PaddyFarmerMenu(id, inventory, farmer),
-                        Component.translatable(state.getBlock().getDescriptionId())
-                );
+                (id, inventory, menuPlayer) -> farmer.variant().isRich()
+                        ? new RichFarmerMenu(id, inventory, farmer)
+                        : new PaddyFarmerMenu(id, inventory, farmer),
+                Component.translatable(state.getBlock().getDescriptionId()));
         NetworkHooks.openScreen(serverPlayer, provider, pos);
     }
 
@@ -342,14 +330,13 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
         if (blockEntity instanceof CompatFarmerBlockEntity compatFarmer
                 && compatFarmer.hasStoredContents(params.getLevel().registryAccess())) {
             compatFarmer.saveToItem(stack);
-            // Stateful Farmers are always non-stackable.
         }
         return List.of(stack);
     }
 
     @Override
-    public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos, Player player) {
-        // Creative Pick Block stays clean; normal drops preserve machine state.
+    public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos,
+            Player player) {
         return new ItemStack(this);
     }
 }

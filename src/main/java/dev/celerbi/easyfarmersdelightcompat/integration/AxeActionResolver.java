@@ -12,7 +12,6 @@ import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.item.HoneycombItem;
 
-/** Item-form fallback for vanilla/Forge axe transformations. */
 public final class AxeActionResolver {
     public enum Action { STRIP, SCRAPE, WAX_OFF }
     public record Result(Action action, ItemStack output, SoundEvent sound) {}
@@ -21,7 +20,7 @@ public final class AxeActionResolver {
 
     public static Optional<Result> resolve(ItemStack input, ItemStack tool) {
         if (input == null || input.isEmpty() || !FarmerToolSupport.isAxe(tool)
-                || !(input.getItem() instanceof BlockItem blockItem)) {
+                 || !(input.getItem() instanceof BlockItem blockItem)) {
             return Optional.empty();
         }
         BlockState original = blockItem.getBlock().defaultBlockState();
@@ -42,7 +41,8 @@ public final class AxeActionResolver {
 
     private static Optional<Result> output(Action action, Block block, SoundEvent sound) {
         Item item = block.asItem();
-        if (item == null || item.getDefaultInstance().isEmpty()) return Optional.empty();
+        if (item == null || item.getDefaultInstance().isEmpty())
+            return Optional.empty();
         return Optional.of(new Result(action, new ItemStack(item), sound));
     }
 }

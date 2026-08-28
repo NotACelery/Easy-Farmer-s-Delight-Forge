@@ -6,13 +6,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 
-/**
- * Viewer-neutral Farmer harvest documentation.
- *
- * <p>The displayed outputs are examples. When {@code realLoot} is true, gameplay
- * remains authoritative and the real crop/block loot table decides the final
- * result, including enchantment-sensitive results such as Fortune/Silk Touch.</p>
- */
 public record FarmerHarvestInfo(
         ResourceLocation id,
         Ingredient input,

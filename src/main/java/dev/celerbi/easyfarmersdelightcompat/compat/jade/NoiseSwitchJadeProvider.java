@@ -13,7 +13,6 @@ import snownee.jade.api.IServerDataProvider;
 import snownee.jade.api.ITooltip;
 import snownee.jade.api.config.IPluginConfig;
 
-/** Jade state for the Noise Switch: physical Villager is server data, mute preference is client-local. */
 public enum NoiseSwitchJadeProvider implements IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
     INSTANCE;
 

@@ -17,7 +17,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
-/** Renders stored Farmer contents in the inventory, matching the placed machine. */
 public final class CompatFarmerItemRenderer extends BlockEntityWithoutLevelRenderer {
     private final Minecraft minecraft;
     private final BlockRenderDispatcher blockRenderer;
@@ -38,7 +37,7 @@ public final class CompatFarmerItemRenderer extends BlockEntityWithoutLevelRende
             int packedOverlay
     ) {
         if (!(stack.getItem() instanceof BlockItem blockItem)
-                || !(blockItem.getBlock() instanceof CompatFarmerBlock farmerBlock)) {
+                 || !(blockItem.getBlock() instanceof CompatFarmerBlock farmerBlock)) {
             return;
         }
 
@@ -53,8 +52,7 @@ public final class CompatFarmerItemRenderer extends BlockEntityWithoutLevelRende
             preview.setItemPreview(true);
 
             CompoundTag data = stack.getTagElement("BlockEntityTag");
-            if (data != null && !data.isEmpty()) {
-                preview.load(data);
+            if (data != null && !data.isEmpty()) {preview.load(data);
                 preview.setItemPreview(true);
             }
 

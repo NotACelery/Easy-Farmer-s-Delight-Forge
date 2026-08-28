@@ -17,7 +17,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
-/** Renders the complete persisted Noise Switch state in inventory. */
 public final class VillagerNoiseSwitchItemRenderer extends BlockEntityWithoutLevelRenderer {
     private final Minecraft minecraft;
     private final BlockRenderDispatcher blockRenderer;
@@ -50,8 +49,7 @@ public final class VillagerNoiseSwitchItemRenderer extends BlockEntityWithoutLev
             preview.setLevel(level);
 
             CompoundTag data = stack.getTagElement("BlockEntityTag");
-            if (data != null && !data.isEmpty()) {
-                preview.load(data);
+            if (data != null && !data.isEmpty()) {preview.load(data);
             }
 
             BlockEntityRenderer<VillagerNoiseSwitchBlockEntity> renderer =

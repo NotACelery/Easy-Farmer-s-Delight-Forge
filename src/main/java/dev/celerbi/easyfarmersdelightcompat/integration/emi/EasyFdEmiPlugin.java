@@ -19,7 +19,7 @@ import net.minecraft.world.item.crafting.Ingredient;
 
 @EmiEntrypoint
 public final class EasyFdEmiPlugin implements EmiPlugin {
-    /** General reference for the Harvest Tool slot. Kept on the legacy category id. */
+
     public static final EmiRecipeCategory FARMER_HARVEST = new EmiRecipeCategory(
             new ResourceLocation(EasyFarmersDelightCompat.MOD_ID, "farmer_harvest"),
             EmiStack.of(ModBlocks.RICH_FARMER_ITEM.get())
@@ -49,13 +49,9 @@ public final class EasyFdEmiPlugin implements EmiPlugin {
         registry.addCategory(CUTTER_AXE);
         registry.addCategory(BLOCK_GUIDE);
 
-        // General Harvest Tool reference only belongs to variants that actually
-        // expose the protected Harvest Tool slot.
         registry.addWorkstation(FARMER_HARVEST, EmiStack.of(ModBlocks.RICH_FARMER_ITEM.get()));
         registry.addWorkstation(FARMER_HARVEST, EmiStack.of(ModBlocks.RICH_PADDY_FARMER_ITEM.get()));
 
-        // Crop guides are split by machine family so opening one Farmer no longer
-        // dumps unrelated crops from the other Farmer into the same category.
         registry.addWorkstation(PADDY_HARVEST, EmiStack.of(ModBlocks.PADDY_FARMER_ITEM.get()));
         registry.addWorkstation(PADDY_HARVEST, EmiStack.of(ModBlocks.RICH_PADDY_FARMER_ITEM.get()));
         registry.addWorkstation(RICH_FARMER_HARVEST, EmiStack.of(ModBlocks.RICH_FARMER_ITEM.get()));
@@ -87,10 +83,6 @@ public final class EasyFdEmiPlugin implements EmiPlugin {
         ResourceLocation richId = modId("rich_farmer");
         ResourceLocation richPaddyId = modId("rich_paddy_farmer");
 
-        // Remove EMI's generic wrappers for the real recipes. Their generic
-        // transfer path compares concrete ItemStack components and can stop at a
-        // stateful Easy Villagers Farmer. Synthetic viewer recipes below keep the
-        // same 3x3 layout while using our Ingredient-aware transfer handler.
         registry.removeRecipes(paddyId);
         registry.removeRecipes(richId);
         registry.removeRecipes(richPaddyId);
@@ -102,9 +94,15 @@ public final class EasyFdEmiPlugin implements EmiPlugin {
                 paddyId,
                 syntheticId("paddy_farmer"),
                 List.of(
-                        Ingredient.of(Items.GLASS_PANE), Ingredient.of(Items.GLASS_PANE), Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.GLASS_PANE), Ingredient.of(easyFarmer), Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.IRON_INGOT), Ingredient.of(Items.WATER_BUCKET), Ingredient.of(Items.IRON_INGOT)
+                        Ingredient.of(Items.GLASS_PANE),
+                        Ingredient.of(Items.GLASS_PANE),
+                        Ingredient.of(Items.GLASS_PANE),
+                        Ingredient.of(Items.GLASS_PANE),
+                        Ingredient.of(easyFarmer),
+                        Ingredient.of(Items.GLASS_PANE),
+                        Ingredient.of(Items.IRON_INGOT),
+                        Ingredient.of(Items.WATER_BUCKET),
+                        Ingredient.of(Items.IRON_INGOT)
                 ),
                 new ItemStack(ModBlocks.PADDY_FARMER_ITEM.get()),
                 true
@@ -114,9 +112,15 @@ public final class EasyFdEmiPlugin implements EmiPlugin {
                 richId,
                 syntheticId("rich_farmer"),
                 List.of(
-                        Ingredient.of(Items.GLASS_PANE), Ingredient.of(Items.GLASS_PANE), Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.GLASS_PANE), Ingredient.of(easyFarmer), Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.IRON_BLOCK), Ingredient.of(richSoil), Ingredient.of(Items.IRON_BLOCK)
+                        Ingredient.of(Items.GLASS_PANE),
+                        Ingredient.of(Items.GLASS_PANE),
+                        Ingredient.of(Items.GLASS_PANE),
+                        Ingredient.of(Items.GLASS_PANE),
+                        Ingredient.of(easyFarmer),
+                        Ingredient.of(Items.GLASS_PANE),
+                        Ingredient.of(Items.IRON_BLOCK),
+                        Ingredient.of(richSoil),
+                        Ingredient.of(Items.IRON_BLOCK)
                 ),
                 new ItemStack(ModBlocks.RICH_FARMER_ITEM.get()),
                 false
@@ -126,9 +130,15 @@ public final class EasyFdEmiPlugin implements EmiPlugin {
                 richPaddyId,
                 syntheticId("rich_paddy_farmer"),
                 List.of(
-                        Ingredient.of(Items.GLASS_PANE), Ingredient.of(Items.GLASS_PANE), Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.GLASS_PANE), Ingredient.of(ModBlocks.PADDY_FARMER_ITEM.get()), Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.IRON_BLOCK), Ingredient.of(richSoil), Ingredient.of(Items.IRON_BLOCK)
+                        Ingredient.of(Items.GLASS_PANE),
+                        Ingredient.of(Items.GLASS_PANE),
+                        Ingredient.of(Items.GLASS_PANE),
+                        Ingredient.of(Items.GLASS_PANE),
+                        Ingredient.of(ModBlocks.PADDY_FARMER_ITEM.get()),
+                        Ingredient.of(Items.GLASS_PANE),
+                        Ingredient.of(Items.IRON_BLOCK),
+                        Ingredient.of(richSoil),
+                        Ingredient.of(Items.IRON_BLOCK)
                 ),
                 new ItemStack(ModBlocks.RICH_PADDY_FARMER_ITEM.get()),
                 false
@@ -151,7 +161,8 @@ public final class EasyFdEmiPlugin implements EmiPlugin {
 
     private static void registerCutting(EmiRegistry registry) {
         Class<?> categories = load("vectorwing.farmersdelight.integration.emi.FDRecipeCategories");
-        if (categories == null) return;
+        if (categories == null)
+            return;
 
         try {
             var field = categories.getDeclaredField("CUTTING");
