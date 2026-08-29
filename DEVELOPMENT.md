@@ -448,13 +448,13 @@ The project uses ForgeGradle 6 with Java 17.
 
 `build.gradle` intentionally keeps Jade, JEI and EMI as compile-only/API-side dependencies rather than embedding them in the mod JAR.
 
-Windows development launcher:
+Windows build launcher:
 
 ```text
-build-dev.bat
+build.bat
 ```
 
-The batch file delegates to `build-dev.ps1`. The PowerShell helper locates or bootstraps a JDK 17, resolves Gradle `8.8`, runs `clean build --no-daemon --stacktrace --console=plain`, writes `build-dev.log`, and verifies that a runtime JAR appears in `build/libs`.
+The batch file delegates to `build.ps1`. The PowerShell helper locates or bootstraps a JDK 17, resolves Gradle `8.8`, runs `clean build --no-daemon --stacktrace --console=plain`, writes `build.log`, and verifies that a runtime JAR appears in `build/libs`.
 
 ## 24. Forge 1.20.1 backport boundaries
 

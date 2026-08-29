@@ -106,7 +106,15 @@ The Forge port has been compiled successfully with ForgeGradle and validated in-
 
 A **JDK 17** installation is required.
 
-This repository intentionally does not include local Gradle caches or generated build output. With a suitable Gradle installation, run:
+On Windows, use the repository build helper:
+
+```bat
+build.bat
+```
+
+`build.bat` delegates to `build.ps1`, which resolves Java/Gradle, runs a clean build, writes `build.log`, and verifies the runtime JAR.
+
+With a suitable local Gradle installation, you can also run:
 
 ```bash
 gradle clean build
@@ -118,17 +126,7 @@ The finished mod JAR is written to:
 build/libs/
 ```
 
-If you add a Gradle Wrapper to your checkout, the equivalent commands are:
-
-```bash
-./gradlew clean build
-```
-
-or on Windows:
-
-```bat
-gradlew.bat clean build
-```
+If you add a Gradle Wrapper to your checkout, `./gradlew clean build` or `gradlew.bat clean build` are equivalent.
 
 ## Dependencies
 

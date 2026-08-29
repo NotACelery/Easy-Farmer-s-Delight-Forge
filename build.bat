@@ -11,7 +11,7 @@ echo Build de desarrollo
 echo ============================================================
 echo.
 
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0build-dev.ps1"
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0build.ps1"
 set "RC=%ERRORLEVEL%"
 
 echo.
@@ -24,7 +24,7 @@ if "%RC%"=="0" (
     echo ============================================================
     echo BUILD FALLIDO - codigo %RC%
     echo La ventana quedara abierta para que puedas leer el error.
-    echo Log: "%~dp0build-dev.log"
+    echo Log: "%~dp0build.log"
     echo ============================================================
 )
 

@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $ProjectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location -LiteralPath $ProjectDir
-$LogPath = Join-Path $ProjectDir 'build-dev.log'
+$LogPath = Join-Path $ProjectDir 'build.log'
 
 Set-Content -LiteralPath $LogPath -Encoding UTF8 -Value @(
     "Easy Farmer's Delight Compat - Forge 1.20.1 build log"
