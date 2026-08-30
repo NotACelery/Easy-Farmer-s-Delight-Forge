@@ -1,6 +1,6 @@
 # Easy Farmer's Delight Compat — Forge 1.20.1
 
-Current release: **1.3.1** (Forge 1.20.1)
+Current release: **1.3.2** (Forge 1.20.1)
 
 **Easy Farmer's Delight Compat** is an independent, unofficial compatibility addon that brings **Farmer's Delight** farming and cutting mechanics into **Easy Villagers** automation.
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.2 — 2026-08-29
+
+- Fixed Villager Noise Switch and Iron Farm Noise Switch interior lighting next to opaque blocks and local light sources.
+- Both switches now use the same hollow 1/16 shell shape as the compat Farmers, matching the visible enclosure instead of behaving like a logical full cube.
+- Dynamic switch contents now sample surrounding world light while inventory previews continue to use their supplied preview lighting.
+
 ## 1.3.1 — 2026-08-23
 
 - Replaced the mod icon and resource-pack icon with the new in-game screenshot-based artwork.

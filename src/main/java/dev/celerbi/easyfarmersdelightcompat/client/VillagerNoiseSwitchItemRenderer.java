@@ -46,6 +46,7 @@ public final class VillagerNoiseSwitchItemRenderer extends BlockEntityWithoutLev
         Level level = minecraft.level;
         if (level != null) {
             VillagerNoiseSwitchBlockEntity preview = new VillagerNoiseSwitchBlockEntity(BlockPos.ZERO, state);
+            preview.setItemPreview(true);
             preview.setLevel(level);
 
             CompoundTag data = stack.getTagElement("BlockEntityTag");

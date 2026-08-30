@@ -5,14 +5,18 @@ import com.mojang.math.Axis;
 import dev.celerbi.easyfarmersdelightcompat.block.VillagerNoiseSwitchBlock;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.VillagerNoiseSwitchBlockEntity;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.VillagerRenderer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FaceAttachedHorizontalDirectionalBlock;
 import net.minecraft.world.level.block.LeverBlock;
@@ -61,10 +65,14 @@ public final class VillagerNoiseSwitchBlockEntityRenderer
                 ? noiseSwitch.getBlockState().getValue(VillagerNoiseSwitchBlock.FACING)
                 : Direction.SOUTH;
         boolean muted = ClientPreferences.villagersMuted();
+        Level level = noiseSwitch.getLevel();
+        int interiorLight = noiseSwitch.isItemPreview() || level == null
+                ? packedLight
+                : resolveInteriorLight(level, noiseSwitch.getBlockPos(), packedLight);
 
-        renderVillager(noiseSwitch, facing, pose, buffer, packedLight);
-        renderRedstoneCarpet(facing, muted, pose, buffer, packedLight, packedOverlay);
-        renderSwitch(facing, muted, pose, buffer, packedLight, packedOverlay);
+        renderVillager(noiseSwitch, facing, pose, buffer, interiorLight);
+        renderRedstoneCarpet(facing, muted, pose, buffer, interiorLight, packedOverlay);
+        renderSwitch(facing, muted, pose, buffer, interiorLight, packedOverlay);
     }
 
     private void renderVillager(
@@ -139,6 +147,25 @@ public final class VillagerNoiseSwitchBlockEntityRenderer
         pose.translate(0.0D, 1.0D, 0.0D);
         blockRenderer.renderSingleBlock(lever, pose, buffer, packedLight, packedOverlay);
         pose.popPose();
+    }
+
+    private static int resolveInteriorLight(Level level, BlockPos pos, int fallback) {
+        int block = LightTexture.block(fallback);
+        int sky = LightTexture.sky(fallback);
+
+        for (Direction direction : Direction.values()) {
+            int sample = LevelRenderer.getLightColor(level, pos.relative(direction));
+            block = Math.max(block, LightTexture.block(sample));
+            sky = Math.max(sky, LightTexture.sky(sample));
+        }
+
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            int sample = LevelRenderer.getLightColor(level, pos.relative(direction).above());
+            block = Math.max(block, LightTexture.block(sample));
+            sky = Math.max(sky, LightTexture.sky(sample));
+        }
+
+        return LightTexture.pack(block, sky);
     }
 
     private static void applyWorkTransform(PoseStack pose, Direction facing) {

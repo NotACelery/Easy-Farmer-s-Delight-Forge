@@ -19,6 +19,7 @@ public final class VillagerNoiseSwitchBlockEntity extends BlockEntity {
 
     private final NoiseSwitchVillagerAdapter villagerAdapter = new NoiseSwitchVillagerAdapter(this);
     private ItemStack villager = ItemStack.EMPTY;
+    private boolean itemPreview;
 
     public VillagerNoiseSwitchBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.VILLAGER_NOISE_SWITCH.get(), pos, state);
@@ -38,6 +39,14 @@ public final class VillagerNoiseSwitchBlockEntity extends BlockEntity {
             blockEntity.villagerAdapter.flushToOwner();
             blockEntity.syncBlock();
         }
+    }
+
+    public boolean isItemPreview() {
+        return itemPreview;
+    }
+
+    public void setItemPreview(boolean itemPreview) {
+        this.itemPreview = itemPreview;
     }
 
     public NoiseSwitchVillagerAdapter villagerAdapter() {

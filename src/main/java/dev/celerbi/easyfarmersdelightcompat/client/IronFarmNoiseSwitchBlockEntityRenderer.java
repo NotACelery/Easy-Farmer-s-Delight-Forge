@@ -5,11 +5,14 @@ import com.mojang.math.Axis;
 import dev.celerbi.easyfarmersdelightcompat.block.IronFarmNoiseSwitchBlock;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.IronFarmNoiseSwitchBlockEntity;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.IronGolem;
@@ -49,15 +52,19 @@ public final class IronFarmNoiseSwitchBlockEntityRenderer
                 ? noiseSwitch.getBlockState().getValue(IronFarmNoiseSwitchBlock.FACING)
                 : Direction.SOUTH;
         boolean muted = noiseSwitch.hasGolem() && ClientPreferences.ironFarmSoundsMuted();
+        Level level = noiseSwitch.getLevel();
+        int interiorLight = noiseSwitch.isItemPreview() || level == null
+                ? packedLight
+                : resolveInteriorLight(level, noiseSwitch.getBlockPos(), packedLight);
 
         if (noiseSwitch.hasGolem()) {
-            renderGolem(noiseSwitch, facing, pose, buffer, packedLight);
+            renderGolem(noiseSwitch, facing, pose, buffer, interiorLight);
         } else {
-            renderAssembly(noiseSwitch.assemblyStage(), facing, pose, buffer, packedLight, packedOverlay);
+            renderAssembly(noiseSwitch.assemblyStage(), facing, pose, buffer, interiorLight, packedOverlay);
         }
 
-        renderRedstoneCarpet(facing, muted, pose, buffer, packedLight, packedOverlay);
-        renderSwitch(facing, muted, pose, buffer, packedLight, packedOverlay);
+        renderRedstoneCarpet(facing, muted, pose, buffer, interiorLight, packedOverlay);
+        renderSwitch(facing, muted, pose, buffer, interiorLight, packedOverlay);
     }
 
     private void renderAssembly(int stage, Direction facing, PoseStack pose, MultiBufferSource buffer,
@@ -172,6 +179,25 @@ public final class IronFarmNoiseSwitchBlockEntityRenderer
         pose.translate(0.0D, 1.0D, 0.0D);
         blockRenderer.renderSingleBlock(lever, pose, buffer, packedLight, packedOverlay);
         pose.popPose();
+    }
+
+    private static int resolveInteriorLight(Level level, BlockPos pos, int fallback) {
+        int block = LightTexture.block(fallback);
+        int sky = LightTexture.sky(fallback);
+
+        for (Direction direction : Direction.values()) {
+            int sample = LevelRenderer.getLightColor(level, pos.relative(direction));
+            block = Math.max(block, LightTexture.block(sample));
+            sky = Math.max(sky, LightTexture.sky(sample));
+        }
+
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            int sample = LevelRenderer.getLightColor(level, pos.relative(direction).above());
+            block = Math.max(block, LightTexture.block(sample));
+            sky = Math.max(sky, LightTexture.sky(sample));
+        }
+
+        return LightTexture.pack(block, sky);
     }
 
     private static void applyWorkTransform(PoseStack pose, Direction facing) {

@@ -17,9 +17,18 @@ public final class IronFarmNoiseSwitchBlockEntity extends BlockEntity {
 
     private int assemblyStage;
     private boolean hasGolem;
+    private boolean itemPreview;
 
     public IronFarmNoiseSwitchBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.IRON_FARM_NOISE_SWITCH.get(), pos, state);
+    }
+
+    public boolean isItemPreview() {
+        return itemPreview;
+    }
+
+    public void setItemPreview(boolean itemPreview) {
+        this.itemPreview = itemPreview;
     }
 
     public int assemblyStage() {

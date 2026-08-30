@@ -37,6 +37,7 @@ public final class IronFarmNoiseSwitchItemRenderer extends BlockEntityWithoutLev
         blockRenderer.renderSingleBlock(state, pose, buffer, light, overlay);
 
         IronFarmNoiseSwitchBlockEntity preview = new IronFarmNoiseSwitchBlockEntity(BlockPos.ZERO, state);
+        preview.setItemPreview(true);
         Level level = minecraft.level;
         if (level != null) {
             preview.setLevel(level);
