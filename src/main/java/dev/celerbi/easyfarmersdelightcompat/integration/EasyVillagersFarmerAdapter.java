@@ -36,11 +36,23 @@ public final class EasyVillagersFarmerAdapter {
     private static final String MAIN_CLASS = "de.maxhenkel.easyvillagers.Main";
     private static final int DEFAULT_FARM_SPEED = 10;
     private static boolean farmSpeedFallbackWarned;
+    private static boolean farmSpeedResolved;
+    private static boolean farmSpeedResolutionFailed;
+    private static Object farmSpeedValue;
+    private static Method farmSpeedGetMethod;
 
     private final CompatFarmerBlockEntity owner;
     private BlockEntity delegate;
     private Container trackedOutputInventory;
     private IItemHandler trackedItemHandler;
+    private Boolean serverHasVillagerCache;
+    private Villager serverVillagerEntity;
+    private boolean serverCropResolved;
+    private BlockState serverCrop;
+    private Villager clientVisualVillager;
+    private BlockState clientVisualCrop;
+    private boolean clientVisualVillagerResolved;
+    private boolean clientVisualCropResolved;
     private boolean failed;
 
     public EasyVillagersFarmerAdapter(CompatFarmerBlockEntity owner) {
@@ -48,30 +60,58 @@ public final class EasyVillagersFarmerAdapter {
     }
 
     public void reset() {
+        if (clientVisualVillager != null) {
+            clientVisualVillager.setTradingPlayer(null);
+        }
         delegate = null;
         trackedOutputInventory = null;
         trackedItemHandler = null;
+        serverHasVillagerCache = null;
+        serverVillagerEntity = null;
+        serverCropResolved = false;
+        serverCrop = null;
+        clientVisualVillager = null;
+        clientVisualCrop = null;
+        clientVisualVillagerResolved = false;
+        clientVisualCropResolved = false;
         failed = false;
     }
 
     public boolean isVillagerItem(ItemStack stack) {
         try {
-            return Class.forName(VILLAGER_ITEM).isInstance(stack.getItem());
-        } catch (ClassNotFoundException e) {
+            return ReflectionCache.type(VILLAGER_ITEM).isInstance(stack.getItem());
+        } catch (ClassNotFoundException | LinkageError e) {
             fail(e);
             return false;
         }
     }
 
     public boolean hasVillager(RegistryAccess registries) {
+        Level ownerLevel = owner.getLevel();
+        boolean server = ownerLevel != null && !ownerLevel.isClientSide;
+        if (server && serverHasVillagerCache != null) {
+            return serverHasVillagerCache;
+        }
+
         BlockEntity farmer = getDelegate(registries);
         if (farmer == null) {
+            if (server) {
+                serverHasVillagerCache = false;
+            }
             return false;
         }
         try {
-            return (boolean) farmer.getClass().getMethod("hasVillager").invoke(farmer);
+            boolean hasVillager = (boolean) ReflectionCache.publicMethod(farmer.getClass(), "hasVillager")
+                    .invoke(farmer);
+            if (server) {
+                serverHasVillagerCache = hasVillager;
+            }
+            return hasVillager;
         } catch (ReflectiveOperationException e) {
             fail(e);
+            if (server) {
+                serverHasVillagerCache = false;
+            }
             return false;
         }
     }
@@ -82,10 +122,12 @@ public final class EasyVillagersFarmerAdapter {
             return;
         }
         try {
-            Field villagerField = findField(farmer.getClass(), "villager");
-            Field villagerEntityField = findField(farmer.getClass(), "villagerEntity");
+            Field villagerField = ReflectionCache.field(farmer.getClass(), "villager");
+            Field villagerEntityField = ReflectionCache.field(farmer.getClass(), "villagerEntity");
             villagerField.set(farmer, stack.copyWithCount(1));
             villagerEntityField.set(farmer, null);
+            serverHasVillagerCache = true;
+            serverVillagerEntity = null;
 
             Villager villager = getVillagerEntity(registries);
             if (villager != null && villager.getVillagerXp() <= 0 && villager.getVillagerData()
@@ -103,17 +145,19 @@ public final class EasyVillagersFarmerAdapter {
             return ItemStack.EMPTY;
         }
         try {
-            Method getVillager = farmer.getClass().getMethod("getVillager");
+            Method getVillager = ReflectionCache.publicMethod(farmer.getClass(), "getVillager");
             ItemStack result = ((ItemStack) getVillager.invoke(farmer)).copy();
 
-            Field villagerEntityField = findField(farmer.getClass(), "villagerEntity");
+            Field villagerEntityField = ReflectionCache.field(farmer.getClass(), "villagerEntity");
             Object entity = villagerEntityField.get(farmer);
             if (entity instanceof Villager villager) {
                 villager.setTradingPlayer(null);
             }
 
-            findField(farmer.getClass(), "villager").set(farmer, ItemStack.EMPTY);
+            ReflectionCache.field(farmer.getClass(), "villager").set(farmer, ItemStack.EMPTY);
             villagerEntityField.set(farmer, null);
+            serverHasVillagerCache = false;
+            serverVillagerEntity = null;
             return result;
         } catch (ReflectiveOperationException e) {
             fail(e);
@@ -122,13 +166,41 @@ public final class EasyVillagersFarmerAdapter {
     }
 
     public Villager getVillagerEntity(RegistryAccess registries) {
+        Level ownerLevel = owner.getLevel();
+        boolean clientVisual = ownerLevel != null && ownerLevel.isClientSide;
+        if (clientVisual && clientVisualVillagerResolved) {
+            return clientVisualVillager;
+        }
+        if (!clientVisual && serverVillagerEntity != null) {
+            return serverVillagerEntity;
+        }
+        if (!clientVisual && Boolean.FALSE.equals(serverHasVillagerCache)) {
+            return null;
+        }
+
         BlockEntity farmer = getDelegate(registries);
         if (farmer == null) {
+            if (clientVisual) {
+                clientVisualVillagerResolved = true;
+                clientVisualVillager = null;
+            } else {
+                serverHasVillagerCache = false;
+            }
             return null;
         }
         try {
-            Object result = farmer.getClass().getMethod("getVillagerEntity").invoke(farmer);
-            return result instanceof Villager villager ? villager : null;
+            Object result = ReflectionCache.publicMethod(farmer.getClass(), "getVillagerEntity").invoke(farmer);
+            Villager villager = result instanceof Villager value ? value : null;
+            if (clientVisual) {
+                clientVisualVillager = villager;
+                clientVisualVillagerResolved = true;
+            } else {
+                serverVillagerEntity = villager;
+                if (villager != null) {
+                    serverHasVillagerCache = true;
+                }
+            }
+            return villager;
         } catch (ReflectiveOperationException e) {
             fail(e);
             return null;
@@ -136,25 +208,48 @@ public final class EasyVillagersFarmerAdapter {
     }
 
     public boolean advanceVillagerAge(RegistryAccess registries) {
-        BlockEntity farmer = getDelegate(registries);
-        if (farmer == null) {
+        Villager villager = getVillagerEntity(registries);
+        if (villager == null) {
             return false;
         }
-        try {
-            return (boolean) farmer.getClass().getMethod("advanceAge").invoke(farmer);
-        } catch (ReflectiveOperationException e) {
-            fail(e);
-            return false;
-        }
+        int previousAge = villager.getAge();
+        int age = previousAge + 1;
+        villager.setAge(age);
+        return previousAge < 0 && age >= 0;
     }
 
     public BlockState getCrop(RegistryAccess registries) {
+        Level ownerLevel = owner.getLevel();
+        boolean clientVisual = ownerLevel != null && ownerLevel.isClientSide;
+        if (clientVisual && clientVisualCropResolved) {
+            return clientVisualCrop;
+        }
+        if (!clientVisual && serverCropResolved) {
+            return serverCrop;
+        }
+
         BlockEntity farmer = getDelegate(registries);
         if (farmer == null) {
+            if (clientVisual) {
+                clientVisualCropResolved = true;
+                clientVisualCrop = null;
+            } else {
+                serverCropResolved = true;
+                serverCrop = null;
+            }
             return null;
         }
         try {
-            return (BlockState) farmer.getClass().getMethod("getCrop").invoke(farmer);
+            Object result = ReflectionCache.publicMethod(farmer.getClass(), "getCrop").invoke(farmer);
+            BlockState crop = result instanceof BlockState state ? state : null;
+            if (clientVisual) {
+                clientVisualCrop = crop;
+                clientVisualCropResolved = true;
+            } else {
+                serverCrop = crop;
+                serverCropResolved = true;
+            }
+            return crop;
         } catch (ReflectiveOperationException e) {
             fail(e);
             return null;
@@ -175,7 +270,7 @@ public final class EasyVillagersFarmerAdapter {
             return false;
         }
         try {
-            Object result = farmer.getClass().getMethod("isValidSeed", Item.class).invoke(farmer, stack.getItem());
+            Object result = ReflectionCache.publicMethod(farmer.getClass(), "isValidSeed", Item.class).invoke(farmer, stack.getItem());
             return result instanceof Boolean valid && valid;
         } catch (ReflectiveOperationException e) {
             fail(e);
@@ -192,43 +287,12 @@ public final class EasyVillagersFarmerAdapter {
             return false;
         }
         try {
-            Object result = farmer.getClass().getMethod("getSeedCrop", Item.class).invoke(farmer, stack.getItem());
+            Object result = ReflectionCache.publicMethod(farmer.getClass(), "getSeedCrop", Item.class).invoke(farmer, stack.getItem());
             if (!(result instanceof BlockState crop)) {
                 return false;
             }
             setCropState(farmer, crop);
-            owner.setChanged();
             return true;
-        } catch (ReflectiveOperationException e) {
-            fail(e);
-            return false;
-        }
-    }
-
-    public boolean ageCrop(RegistryAccess registries) {
-        BlockEntity farmer = getDelegate(registries);
-        if (farmer == null) {
-            return false;
-        }
-        try {
-            Object villager = farmer.getClass().getMethod("getVillagerEntity").invoke(farmer);
-            Method ageCrop = null;
-            Class<?> current = farmer.getClass();
-            while (current != null && ageCrop == null) {
-                for (Method method : current.getDeclaredMethods()) {
-                    if (method.getName().equals("ageCrop") && method.getParameterCount() == 1) {
-                        ageCrop = method;
-                        break;
-                    }
-                }
-                current = current.getSuperclass();
-            }
-            if (ageCrop == null) {
-                throw new NoSuchMethodException("ageCrop");
-            }
-            ageCrop.setAccessible(true);
-            Object result = ageCrop.invoke(farmer, villager);
-            return result instanceof Boolean changed && changed;
         } catch (ReflectiveOperationException e) {
             fail(e);
             return false;
@@ -252,7 +316,6 @@ public final class EasyVillagersFarmerAdapter {
         BlockEntity farmer = getDelegate(registries);
         if (farmer != null) {
             setCropState(farmer, state);
-            owner.setChanged();
         }
     }
 
@@ -262,9 +325,17 @@ public final class EasyVillagersFarmerAdapter {
             return ItemStack.EMPTY;
         }
         try {
-            Field cropField = findField(farmer.getClass(), "crop");
+            Field cropField = ReflectionCache.field(farmer.getClass(), "crop");
             Object value = cropField.get(farmer);
             cropField.set(farmer, null);
+            Level ownerLevel = owner.getLevel();
+            if (ownerLevel != null && ownerLevel.isClientSide) {
+                clientVisualCrop = null;
+                clientVisualCropResolved = true;
+            } else {
+                serverCrop = null;
+                serverCropResolved = true;
+            }
             if (value instanceof BlockState crop) {
                 return new ItemStack(crop.getBlock());
             }
@@ -284,7 +355,7 @@ public final class EasyVillagersFarmerAdapter {
             return null;
         }
         try {
-            Object result = findField( farmer.getClass(), "itemHandler").get(farmer);
+            Object result = ReflectionCache.field(farmer.getClass(), "itemHandler").get(farmer);
             if (!(result instanceof IItemHandler handler)) {
                 return null;
             }
@@ -306,7 +377,7 @@ public final class EasyVillagersFarmerAdapter {
             return null;
         }
         try {
-            Object result = farmer.getClass().getMethod("getOutputInventory").invoke(farmer);
+            Object result = ReflectionCache.publicMethod(farmer.getClass(), "getOutputInventory").invoke(farmer);
             if (!(result instanceof Container container)) {
                 return null;
             }
@@ -330,8 +401,8 @@ public final class EasyVillagersFarmerAdapter {
             return null;
         }
         try {
-            Class<?> clazz = Class.forName(OUTPUT_CONTAINER);
-            Constructor<?> constructor = clazz.getConstructor(
+            Class<?> clazz = ReflectionCache.type(OUTPUT_CONTAINER);
+            Constructor<?> constructor = ReflectionCache.constructor(clazz,
                     int.class,
                     Inventory.class,
                     Container.class,
@@ -353,41 +424,64 @@ public final class EasyVillagersFarmerAdapter {
     }
 
     public int farmSpeed() {
+        resolveFarmSpeed();
+        if (farmSpeedResolutionFailed || farmSpeedValue == null) {
+            return DEFAULT_FARM_SPEED;
+        }
+
         try {
-            Class<?> main = Class.forName(MAIN_CLASS);
-            Object serverConfig = main.getField("SERVER_CONFIG").get(null);
-            if (serverConfig == null) {
-                warnFarmSpeedFallback(null);
-                return DEFAULT_FARM_SPEED;
-            }
-            Object farmSpeed = serverConfig.getClass().getField("farmSpeed").get(serverConfig);
-            if (farmSpeed instanceof IntSupplier intSupplier) {
+            if (farmSpeedValue instanceof IntSupplier intSupplier) {
                 return Math.max(1, intSupplier.getAsInt());
             }
-            if (farmSpeed instanceof Supplier<?> supplier) {
+            if (farmSpeedValue instanceof Supplier<?> supplier) {
                 Object value = supplier.get();
-                if (value instanceof Number number) {
-                    return Math.max(1, number.intValue());
-                }
+                return value instanceof Number number ? Math.max(1, number.intValue()) : DEFAULT_FARM_SPEED;
             }
-            Object value = farmSpeed.getClass().getMethod("get").invoke(farmSpeed);
-            if (value instanceof Number number) {
-                return Math.max(1, number.intValue());
-            }
+            Object value = farmSpeedGetMethod.invoke(farmSpeedValue);
+            return value instanceof Number number ? Math.max(1, number.intValue()) : DEFAULT_FARM_SPEED;
         } catch (ReflectiveOperationException | RuntimeException e) {
-
+            farmSpeedResolutionFailed = true;
             warnFarmSpeedFallback(e);
             return DEFAULT_FARM_SPEED;
         }
-        warnFarmSpeedFallback(null);
-        return DEFAULT_FARM_SPEED;
     }
 
-    private static void warnFarmSpeedFallback(Exception e) {
+    private static synchronized void resolveFarmSpeed() {
+        if (farmSpeedResolved) {
+            return;
+        }
+        farmSpeedResolved = true;
+        try {
+            Class<?> main = ReflectionCache.type(MAIN_CLASS);
+            Object serverConfig = ReflectionCache.field(main, "SERVER_CONFIG").get(null);
+            if (serverConfig == null) {
+                farmSpeedResolutionFailed = true;
+                warnFarmSpeedFallback(null);
+                return;
+            }
+            farmSpeedValue = ReflectionCache.field(serverConfig.getClass(), "farmSpeed").get(serverConfig);
+            if (farmSpeedValue == null) {
+                farmSpeedResolutionFailed = true;
+                warnFarmSpeedFallback(null);
+                return;
+            }
+            if (!(farmSpeedValue instanceof IntSupplier) && !(farmSpeedValue instanceof Supplier<?>)) {
+                farmSpeedGetMethod = ReflectionCache.publicMethod(farmSpeedValue.getClass(), "get");
+            }
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
+            farmSpeedResolutionFailed = true;
+            warnFarmSpeedFallback(e);
+        }
+    }
+
+    private static void warnFarmSpeedFallback(Throwable e) {
         if (farmSpeedFallbackWarned)
             return;
         farmSpeedFallbackWarned = true;
-        System.err.println("[Easy Farmer's Delight Compat] Could not read Easy Villagers farmer.farm_speed; using default 10 without disabling the Farmer adapter.");
+        System.err.println(
+                "[Easy Farmer's Delight Compat] Could not read Easy Villagers farmer.farm_speed; "
+                        + "using default 10 without disabling the Farmer adapter."
+        );
         if (e != null)
             e.printStackTrace();
     }
@@ -421,8 +515,8 @@ public final class EasyVillagersFarmerAdapter {
 
         try {
             Block easyFarmer = BuiltInRegistries.BLOCK.get(EASY_FARMER_ID);
-            Class<?> clazz = Class.forName(FARMER_TILEENTITY);
-            Constructor<?> constructor = clazz.getConstructor(net.minecraft.core.BlockPos.class, BlockState.class);
+            Class<?> clazz = ReflectionCache.type(FARMER_TILEENTITY);
+            Constructor<?> constructor = ReflectionCache.constructor(clazz, net.minecraft.core.BlockPos.class, BlockState.class);
             delegate = (BlockEntity) constructor.newInstance(owner.getBlockPos(), easyFarmer.defaultBlockState());
             Level level = owner.getLevel();
             if (level != null) {
@@ -438,7 +532,15 @@ public final class EasyVillagersFarmerAdapter {
 
     private void setCropState(BlockEntity farmer, BlockState state) {
         try {
-            findField(farmer.getClass(), "crop").set(farmer, state);
+            ReflectionCache.field(farmer.getClass(), "crop").set(farmer, state);
+            Level ownerLevel = owner.getLevel();
+            if (ownerLevel != null && ownerLevel.isClientSide) {
+                clientVisualCrop = state;
+                clientVisualCropResolved = true;
+            } else {
+                serverCrop = state;
+                serverCropResolved = true;
+            }
         } catch (ReflectiveOperationException e) {
             fail(e);
         }
@@ -470,7 +572,7 @@ public final class EasyVillagersFarmerAdapter {
         public ItemStack removeItem(int slot, int amount) {
             ItemStack removed = delegateContainer.removeItem(slot, amount);
             if (!removed.isEmpty()) {
-                owner.setChanged();
+                owner.onOutputInventoryReduced();
             }
             return removed;
         }
@@ -479,7 +581,7 @@ public final class EasyVillagersFarmerAdapter {
         public ItemStack removeItemNoUpdate(int slot) {
             ItemStack removed = delegateContainer.removeItemNoUpdate(slot);
             if (!removed.isEmpty()) {
-                owner.setChanged();
+                owner.onOutputInventoryReduced();
             }
             return removed;
         }
@@ -487,7 +589,7 @@ public final class EasyVillagersFarmerAdapter {
         @Override
         public void setItem(int slot, ItemStack stack) {
             delegateContainer.setItem(slot, stack);
-            owner.setChanged();
+            owner.onOutputInventoryChanged();
         }
 
         @Override
@@ -498,7 +600,7 @@ public final class EasyVillagersFarmerAdapter {
         @Override
         public void setChanged() {
             delegateContainer.setChanged();
-            owner.setChanged();
+            owner.onOutputInventoryChanged();
         }
 
         @Override
@@ -529,7 +631,7 @@ public final class EasyVillagersFarmerAdapter {
         @Override
         public void clearContent() {
             delegateContainer.clearContent();
-            owner.setChanged();
+            owner.onOutputInventoryReduced();
         }
     }
 
@@ -554,7 +656,7 @@ public final class EasyVillagersFarmerAdapter {
         public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
             ItemStack remainder = delegateHandler.insertItem(slot, stack, simulate);
             if (!simulate && remainder.getCount() != stack.getCount()) {
-                owner.setChanged();
+                owner.onOutputInventoryChanged();
             }
             return remainder;
         }
@@ -563,7 +665,7 @@ public final class EasyVillagersFarmerAdapter {
         public ItemStack extractItem(int slot, int amount, boolean simulate) {
             ItemStack extracted = delegateHandler.extractItem(slot, amount, simulate);
             if (!simulate && !extracted.isEmpty()) {
-                owner.setChanged();
+                owner.onOutputInventoryReduced();
             }
             return extracted;
         }
@@ -579,23 +681,12 @@ public final class EasyVillagersFarmerAdapter {
         }
     }
 
-    private static Field findField(Class<?> type, String name) throws NoSuchFieldException {
-        Class<?> current = type;
-        while (current != null) {
-            try {
-                Field field = current.getDeclaredField(name);
-                field.setAccessible(true);
-                return field;
-            } catch (NoSuchFieldException ignored) {
-                current = current.getSuperclass();
-            }
-        }
-        throw new NoSuchFieldException(name);
-    }
-
-    private void fail(Exception e) {
+    private void fail(Throwable e) {
         if (!failed) {
-            System.err.println("[Easy Farmer's Delight Compat] Easy Villagers Farmer adapter failed; Paddy Farmer integration is disabled for this block entity.");
+            System.err.println(
+                    "[Easy Farmer's Delight Compat] Easy Villagers Farmer adapter failed; "
+                            + "Paddy Farmer integration is disabled for this block entity."
+            );
             e.printStackTrace();
         }
         failed = true;

@@ -2,6 +2,7 @@ package dev.celerbi.easyfarmersdelightcompat.integration.emi;
 
 import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
 import dev.celerbi.easyfarmersdelightcompat.integration.RecipeViewerData;
+import dev.celerbi.easyfarmersdelightcompat.recipe.FarmerUpgradeRecipeDefinitions;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlocks;
 import dev.emi.emi.api.EmiEntrypoint;
 import dev.emi.emi.api.EmiPlugin;
@@ -15,7 +16,6 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.Ingredient;
 
 @EmiEntrypoint
 public final class EasyFdEmiPlugin implements EmiPlugin {
@@ -93,61 +93,30 @@ public final class EasyFdEmiPlugin implements EmiPlugin {
         registry.removeRecipes(richId);
         registry.removeRecipes(richPaddyId);
 
-        Item easyFarmer = item("easy_villagers", "farmer");
-        Item richSoil = item("farmersdelight", "rich_soil");
+        var paddy = FarmerUpgradeRecipeDefinitions.paddy();
+        var rich = FarmerUpgradeRecipeDefinitions.rich();
+        var richPaddy = FarmerUpgradeRecipeDefinitions.richPaddy();
 
         registry.addRecipe(new FarmerUpgradeEmiRecipe(
                 paddyId,
                 syntheticId("paddy_farmer"),
-                List.of(
-                        Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(easyFarmer),
-                        Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.IRON_INGOT),
-                        Ingredient.of(Items.WATER_BUCKET),
-                        Ingredient.of(Items.IRON_INGOT)
-                ),
+                paddy.ingredients(),
                 new ItemStack(ModBlocks.PADDY_FARMER_ITEM.get()),
-                true
+                paddy.waterBucketRemainder()
         ));
-
         registry.addRecipe(new FarmerUpgradeEmiRecipe(
                 richId,
                 syntheticId("rich_farmer"),
-                List.of(
-                        Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(easyFarmer),
-                        Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.IRON_BLOCK),
-                        Ingredient.of(richSoil),
-                        Ingredient.of(Items.IRON_BLOCK)
-                ),
+                rich.ingredients(),
                 new ItemStack(ModBlocks.RICH_FARMER_ITEM.get()),
-                false
+                rich.waterBucketRemainder()
         ));
-
         registry.addRecipe(new FarmerUpgradeEmiRecipe(
                 richPaddyId,
                 syntheticId("rich_paddy_farmer"),
-                List.of(
-                        Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(ModBlocks.PADDY_FARMER_ITEM.get()),
-                        Ingredient.of(Items.GLASS_PANE),
-                        Ingredient.of(Items.IRON_BLOCK),
-                        Ingredient.of(richSoil),
-                        Ingredient.of(Items.IRON_BLOCK)
-                ),
+                richPaddy.ingredients(),
                 new ItemStack(ModBlocks.RICH_PADDY_FARMER_ITEM.get()),
-                false
+                richPaddy.waterBucketRemainder()
         ));
 
         registry.addRecipeHandler(MenuType.CRAFTING, new FarmerUpgradeEmiRecipeHandler());
@@ -159,10 +128,6 @@ public final class EasyFdEmiPlugin implements EmiPlugin {
 
     private static ResourceLocation syntheticId(String path) {
         return new ResourceLocation(EasyFarmersDelightCompat.MOD_ID, "/emi/farmer_upgrade/" + path);
-    }
-
-    private static Item item(String namespace, String path) {
-        return BuiltInRegistries.ITEM.get(new ResourceLocation(namespace, path));
     }
 
     private static void registerCutting(EmiRegistry registry) {

@@ -56,7 +56,7 @@ public enum CutterJadeProvider implements IBlockComponentProvider, IServerDataPr
 
         data.remove(WAITING_TOOL);
         data.remove(WRONG_TOOL);
-        ToolRequirement requirement = cutter.blockingToolRequirement(accessor.getLevel(), tool);
+        ToolRequirement requirement = cutter.pendingToolRequirement(accessor.getLevel());
         if (cutter.hasVillager() && requirement.isRequired()) {
             data.putString(WAITING_TOOL, requirement.name());
             data.putBoolean(WRONG_TOOL, !tool.isEmpty());

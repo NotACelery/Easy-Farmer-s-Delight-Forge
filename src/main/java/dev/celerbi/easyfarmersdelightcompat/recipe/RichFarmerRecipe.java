@@ -23,7 +23,7 @@ public final class RichFarmerRecipe extends ShapedRecipe {
                 category,
                 3,
                 3,
-                ingredients(),
+                FarmerUpgradeRecipeDefinitions.rich().ingredients(),
                 new ItemStack(ModBlocks.RICH_FARMER_ITEM.get()),
                 false);
     }
@@ -38,21 +38,4 @@ public final class RichFarmerRecipe extends ShapedRecipe {
         return ModRecipeSerializers.RICH_FARMER.get();
     }
 
-    private static NonNullList<Ingredient> ingredients() {
-        return NonNullList.of(
-                Ingredient.EMPTY,
-                Ingredient.of(Items.GLASS_PANE),
-                Ingredient.of(Items.GLASS_PANE),
-                Ingredient.of(Items.GLASS_PANE),
-                Ingredient.of(Items.GLASS_PANE),
-                Ingredient.of(item(EASY_FARMER)),
-                Ingredient.of(Items.GLASS_PANE),
-                Ingredient.of(Items.IRON_BLOCK),
-                Ingredient.of(item(RICH_SOIL)),
-                Ingredient.of(Items.IRON_BLOCK));
-    }
-
-    private static Item item(ResourceLocation id) {
-        return BuiltInRegistries.ITEM.get(id);
-    }
 }

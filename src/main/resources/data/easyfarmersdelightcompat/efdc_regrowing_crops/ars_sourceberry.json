@@ -1,0 +1,21 @@
+{
+  "planting": {
+    "item": "ars_nouveau:sourceberry_bush"
+  },
+  "crop_block": "ars_nouveau:sourceberry_bush",
+  "age": {
+    "property": "age",
+    "min": 0,
+    "max": 3,
+    "harvest": 3,
+    "post_harvest": 1
+  },
+  "harvest": {
+    "strategy": "random_item",
+    "item": "ars_nouveau:sourceberry_bush",
+    "min_count": 1,
+    "max_count": 2,
+    "full_age_bonus": 1
+  },
+  "rich_soil": true
+}

@@ -104,8 +104,8 @@ public final class CuttingRecipeResolver {
         ItemStackHandler h = new ItemStackHandler(1);
         h.setStackInSlot(0, input.copyWithCount(1));
 
-        Class<?> c = Class.forName(WRAPPER_CLASS);
-        Constructor<?> ctor = c.getConstructor(net.minecraftforge.items.IItemHandlerModifiable.class);
+        Class<?> c = ReflectionCache.type(WRAPPER_CLASS);
+        Constructor<?> ctor = ReflectionCache.constructor(c, net.minecraftforge.items.IItemHandlerModifiable.class);
         return ctor.newInstance(h);
     }
 
@@ -142,10 +142,11 @@ public final class CuttingRecipeResolver {
         return m != null && Boolean.TRUE.equals(m.invoke(r, input, level));
     }
 
-    private static Method findMethod(Class<?> c, String n, int count) {
-        for (Method m : c.getMethods())
-            if (m.getName().equals(n) && m.getParameterCount() == count)
-                return m;
-        return null;
+    private static Method findMethod(Class<?> type, String name, int count) {
+        try {
+            return ReflectionCache.publicMethodByArity(type, name, count);
+        } catch (NoSuchMethodException ignored) {
+            return null;
+        }
     }
 }

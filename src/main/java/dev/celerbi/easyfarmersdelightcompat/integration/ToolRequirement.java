@@ -5,6 +5,7 @@ import net.minecraft.world.item.ItemStack;
 public enum ToolRequirement {
     NONE,
     KNIFE,
+    HOE,
     AXE,
     KNIFE_OR_AXE;
 
@@ -16,18 +17,22 @@ public enum ToolRequirement {
         return switch (this) {
             case NONE -> true;
             case KNIFE -> FarmerToolSupport.isKnife(stack);
+            case HOE -> FarmerToolSupport.isHoe(stack);
             case AXE -> FarmerToolSupport.isAxe(stack);
             case KNIFE_OR_AXE -> FarmerToolSupport.isKnife(stack) || FarmerToolSupport.isAxe(stack);
         };
     }
 
     public static ToolRequirement from(boolean knife, boolean axe) {
-        if (knife && axe)
+        if (knife && axe) {
             return KNIFE_OR_AXE;
-        if (knife)
+        }
+        if (knife) {
             return KNIFE;
-        if (axe)
+        }
+        if (axe) {
             return AXE;
+        }
         return NONE;
     }
 }

@@ -46,6 +46,11 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
     private static final String SUGAR_CANE_AGE = "SugarCaneAge";
     private static final String HARVEST_READY = "HarvestReady";
     private static final String WAITING_TOOL = "WaitingTool";
+    private static final String ATTACHED = "Attached";
+    private static final String LOWER_HOST = "LowerHost";
+    private static final String UPPER_HOST = "UpperHost";
+    private static final String LOWER_OCCUPIED = "LowerOccupied";
+    private static final String UPPER_OCCUPIED = "UpperOccupied";
 
     private static final ResourceLocation RICE = new ResourceLocation("farmersdelight", "rice");
     private static final ResourceLocation BUDDING_TOMATOES = new ResourceLocation("farmersdelight",
@@ -75,6 +80,12 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
         if (status.getBoolean(PADDY_SAND)) {
             appendSugarCane(tooltip, status);
             appendRichSoil(tooltip, status, null);
+            appendWaitingTool(tooltip, status);
+            return;
+        }
+
+        if (status.getBoolean(ATTACHED)) {
+            appendAttached(tooltip, status);
             appendWaitingTool(tooltip, status);
             return;
         }
@@ -149,6 +160,12 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
         status.putInt(SUGAR_CANE_HEIGHT, farmer.sugarCaneHeight());
         status.putInt(SUGAR_CANE_AGE, farmer.sugarCaneAge());
 
+        if (farmer.hasAttachedSetup()) {
+            status.putBoolean(ATTACHED, true);
+            appendAttachedLevelStatus(status, farmer, 0, LOWER_HOST, LOWER_OCCUPIED);
+            appendAttachedLevelStatus(status, farmer, 1, UPPER_HOST, UPPER_OCCUPIED);
+        }
+
         ToolRequirement requirement = farmer.currentToolRequirement();
         ItemStack tool = farmer.getHarvestTool();
         if (requirement.isRequired()) {
@@ -167,6 +184,55 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
             status.putInt(MAX_AGE, ageInfo.maxAge());
         }
         return status;
+    }
+
+    private static void appendAttached(ITooltip tooltip, CompoundTag status) {
+        appendAttachedLevel(tooltip, status, LOWER_HOST, LOWER_OCCUPIED,
+                "jade.easyfarmersdelightcompat.attached.lower");
+        appendAttachedLevel(tooltip, status, UPPER_HOST, UPPER_OCCUPIED,
+                "jade.easyfarmersdelightcompat.attached.upper");
+    }
+
+    private static void appendAttachedLevel(
+            ITooltip tooltip,
+            CompoundTag status,
+            String hostKey,
+            String occupiedKey,
+            String translationKey
+    ) {
+        String hostId = status.getString(hostKey);
+        if (hostId.isEmpty()) {
+            return;
+        }
+        ResourceLocation id = ResourceLocation.tryParse(hostId);
+        Block block = id == null ? null : BuiltInRegistries.BLOCK.get(id);
+        if (block == null || block == Blocks.AIR) {
+            return;
+        }
+        int occupied = Math.max(0, Math.min(4, status.getInt(occupiedKey)));
+        tooltip.add(Component.translatable(translationKey, block.getName(), occupied)
+                .withStyle(ChatFormatting.GRAY));
+    }
+
+    private static void appendAttachedLevelStatus(
+            CompoundTag status,
+            CompatFarmerBlockEntity farmer,
+            int levelIndex,
+            String hostKey,
+            String occupiedKey
+    ) {
+        BlockState host = farmer.attachedHostState(levelIndex);
+        if (host == null || host.isAir()) {
+            return;
+        }
+        status.putString(hostKey, BuiltInRegistries.BLOCK.getKey(host.getBlock()).toString());
+        int occupied = 0;
+        for (int faceIndex = 0; faceIndex < farmer.attachedFaceCount(); faceIndex++) {
+            if (!farmer.attachedCropState(levelIndex, faceIndex).isAir()) {
+                occupied++;
+            }
+        }
+        status.putInt(occupiedKey, occupied);
     }
 
     private static void appendSugarCane(ITooltip tooltip, CompoundTag status) {
@@ -257,6 +323,7 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
             return;
         String key = switch (waiting) {
             case "KNIFE" -> "jade.easyfarmersdelightcompat.waiting.knife";
+            case "HOE" -> "jade.easyfarmersdelightcompat.waiting.hoe";
             case "AXE" -> "jade.easyfarmersdelightcompat.waiting.axe";
             case "KNIFE_OR_AXE" -> "jade.easyfarmersdelightcompat.waiting.knife_or_axe";
             default -> null;

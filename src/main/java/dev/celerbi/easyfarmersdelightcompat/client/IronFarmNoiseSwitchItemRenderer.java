@@ -42,7 +42,8 @@ public final class IronFarmNoiseSwitchItemRenderer extends BlockEntityWithoutLev
         if (level != null) {
             preview.setLevel(level);
             CompoundTag data = stack.getTagElement("BlockEntityTag");
-            if (data != null && !data.isEmpty()) {preview.load(data);
+            if (data != null && !data.isEmpty()) {
+            preview.load(data);
             }
         }
 

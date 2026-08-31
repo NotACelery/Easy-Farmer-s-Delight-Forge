@@ -601,3 +601,93 @@ Every `snownee.jade.*` import must remain under `integration/jade`. Core gamepla
 Development snapshots may move or retire source/resource files. Extracting a newer snapshot over an older working tree does not delete paths that disappeared from the archive, so stale Java can still be compiled and stale resources can still be packaged.
 
 When a release changes file paths, the snapshot must include a cleanup helper for the retired paths and the normal build helper must run it before Gradle. During the current 1.4.0 development line this removes stale pre-regularization `compat/jade` sources and the shipped legacy `cutter_logs.json` whitelist when snapshots are overlaid onto older working trees. The runtime compatibility fallback for external datapacks using `easyfarmersdelightcompat:cutter_logs` remains intentionally supported in code.
+
+### Rich Soil stem cadence in 1.4.0-dev.5
+
+Virtual Rich Soil stem acceleration is inspected once per one-second Farmer cadence instead of once per server tick. The implementation preserves the old twenty-tick opportunity window by sampling a Binomial(20, p) count, where `p` is the former per-tick random-selection probability multiplied by Farmer's Delight's live Rich Soil boost chance. Each sampled success keeps the original `2..5` age increment, but the accumulated result is written and synchronized once. This removes repeated crop/reflection work and packet churn without silently capping the old window to a single possible boost.
+
+### Reflection caching in 1.4.0-dev.6
+
+Runtime reflection discovery is centralized in `ReflectionCache`. Class, method, field and constructor lookups are cached by runtime shape, including negative results, so a missing optional/upstream signature is not rediscovered in hot tick or work-probe paths. The Farmer and Cutter Easy Villagers adapters, Farmer's Delight Rich Soil configuration bridge, cutting recipe bridge and virtual Bone Meal lookup all reuse cached handles. Dynamic config values are still read from their live supplier/config object; only discovery is cached.
+
+### Client visual caching in 1.4.0-dev.7
+
+Farmer crop and contained-Villager visual state is cached only on the logical client. `EasyVillagersFarmerAdapter.reset()` invalidates both caches, and BlockEntity `loadAdditional` already calls that reset whenever fresh synchronized NBT arrives. Server gameplay reads remain live and are not served from the visual cache. Cutter Villager rendering likewise retains the already-created Villager entity until its stored Villager state resets. The Farmer renderer also resolves its static Farmer's Delight block references once per renderer instance instead of repeating registry lookups every frame.
+
+NeoForge also fixes a duplicated Tomato Rope conditional that could leave `PoseStack.pushPose()` unmatched when a Tomato had no Rope installed.
+
+### Stateful recipe viewer transfer in 1.4.0-dev.8
+
+Paddy/Rich/Rich Paddy upgrade layouts now come from `FarmerUpgradeRecipeDefinitions`, which is consumed by both the gameplay recipe classes and the EMI presentation layer. EMI no longer performs its own sequence of manual `PICKUP`/`QUICK_MOVE` clicks. The handler implements EMI's `StandardRecipeHandler`, allowing EMI 1.1.24's standard recipe filler to choose and move the actual inventory stacks (including their components/NBT) while its built-in fill planning handles the grid. JEI remains on its standard crafting transfer path and continues to see the gameplay recipes directly.
+
+### Attached-log Cocoa core in 1.4.0-dev.9
+
+The Rich Farmer now stores two independent virtual host levels, each with four deterministic face slots in North, South, East, West order. The persisted format stores host block IDs plus crop ID and age per occupied face, rather than Cocoa-only booleans, so later attached-crop definitions can reuse the same world state. Cocoa accepts the vanilla Jungle Logs host tag, uses Cocoa Beans as the planting item, grows each face independently on the one-second Farmer cadence, may receive Rich Soil growth acceleration, and uses vanilla mature Cocoa loot without multiplying drops. Mature faces use the Phase 2 event-driven output waiting path. Shift-right-click teardown follows the top-down contract: planted items on the upper level are returned together, then the upper host, then the same two steps for the lower level.
+
+## 24. 1.4.0-dev.10 attached-crop data layer
+
+Attached side-grown crops are loaded from server datapacks under `data/<namespace>/efdc_attached_crops/*.json`. Definitions are gameplay truth and may select a planting item or item tag, a rendered crop block, a host block or block tag, age/facing properties, mature/post-harvest ages, block-loot harvesting, Rich Soil eligibility and an optional tool category. Invalid definitions are skipped without consuming player items. Missing optional direct registry entries (for example Ars Nouveau when absent) cause that definition to be skipped safely.
+
+The built-in Cocoa mapping and all four Ars Nouveau Archfruit mappings use this same data layer. No Ars classes, models or textures are linked or copied by EFDC. Attached-crop NBT stores enough render identity (`Crop`, property names, age and actual planting item) for existing state to remain visible/dismantlable even if a datapack mapping later disappears.
+
+### Regrowing ground crops in 1.4.0-dev.11
+
+Rich Farmer ground crops that behave like pickable bushes use a separate data-driven family under
+`data/<namespace>/efdc_regrowing_crops/*.json`. This family is intentionally explicit: EFDC does not infer support
+from `BushBlock` or another broad superclass.
+
+A regrowing definition declares its planting item/tag, rendered crop block, integer age property, growth range,
+harvest age, post-harvest age, harvest item/count semantics, and whether Rich Soil acceleration is allowed.
+The selected definition id and exact planting item are persisted so tagged definitions can still dismantle safely.
+
+The built-in Ars Nouveau Sourceberry definition waits for age `3`, rolls the upstream full-age yield of `2..3`
+Sourceberries, and resets the virtual bush to age `1` instead of destroying/replanting it. Rich Soil may accelerate
+the age progression but never changes the berry roll.
+
+### Phase 7 presentation in 1.4.0-dev.12
+
+The Rich Farmer screen keeps its original output and Harvest Tool slot indices. Attached host/crop state is rendered
+in a separate informational panel with one row per host level and N/S/E/W face positions, so virtual planting state
+is not confused with inventory storage.
+
+Jade summarizes each installed host using the owning block's translated name plus occupied face count. It does not
+dump internal NBT or per-face debug data.
+
+JEI/EMI continue to consume `RecipeViewerData`. The vanilla Cocoa guide is always available as the reference case;
+when attached/regrowing data definitions are present in the runtime definition registries, viewer guide entries are
+derived from those same definitions instead of restating host/planting rules in viewer code. Dynamic Cutter axe/log
+enumeration remains bounded and does not create one hardcoded category per wood family.
+
+### Harvest wake/sleep model in 1.4.0-dev.13
+
+Harvest retries are no longer requested by every output mutation or every generic `setChanged()` call.
+A visible Farmer state change marks harvest readiness as potentially changed; the actual ready-state scan runs once on the next server tick.
+Blocked harvests remember the reason that can unblock them:
+
+- output-space waits wake only after output is reduced and the cached failed drop set can fit;
+- tool waits wake when the Harvest Tool changes;
+- villager waits wake when a stored baby becomes an adult or another visible villager state change occurs;
+- load/reload performs one reconciliation attempt.
+
+When output capacity blocks a harvest, EFDC stores a transient copy of the already-computed drops. Later extraction checks reuse those drops instead of re-reading the crop, rebuilding loot context, or rolling loot again. A fast path counts completely empty output slots and skips the stacking simulation when those slots alone guarantee enough capacity.
+
+The Easy Villagers adapter now owns delegate mutation only. The Farmer BlockEntity owns persistence/client synchronization, avoiding duplicate BlockEntity syncs for one crop transition. Stable server-side villager/crop references are cached and invalidated on adapter reset or explicit mutation.
+
+## 1.4.0-dev.14 Cutter and secondary hot-path optimization
+
+This checkpoint extends the 1.4.0 scheduler cleanup beyond the Rich/Paddy Farmer:
+
+- The Cutter now parks completely while idle instead of rechecking villager, tool and four input slots every server tick.
+- A Cutter parked on full output wakes only when output is actually reduced.
+- Input/tool mutations wake work planning; output insertion does not.
+- One Cutter operation batches input consumption, output insertion and tool damage into a single visible BlockEntity sync.
+- The redundant post-simulation output-capacity pass was removed from the Cutter operation path.
+- Cutter villager aging no longer invokes Easy Villagers `advanceAge` through reflection every tick; the cached Villager entity is advanced directly and only the baby-to-adult transition wakes/syncs work state.
+- Normal Cutter villager persistence is flushed once per second without a client BlockEntity update.
+- Jade reuses a cached pending Cutter tool requirement until input/tool state changes.
+- The Cutter renderer resolves the Farmer's Delight cutting board once per renderer instance and reuses one display-input lookup per frame.
+- Villager Noise Switch age persistence is marked dirty once per second instead of every server tick, while baby-to-adult synchronization remains immediate.
+- Easy Mob Farm display-entity sound muting now uses identity membership checks rather than repeated `Map.containsValue` scans.
+
+The remaining expensive Cutter recipe lookup still scans the RecipeManager. It is now only reached after a relevant wake or at operation resolution rather than while the Cutter is sleeping. A RecipeType-indexed resolver should only be introduced after cross-loader compilation confirms the exact 1.20.1 Forge and 1.21.1 NeoForge RecipeManager APIs.
+

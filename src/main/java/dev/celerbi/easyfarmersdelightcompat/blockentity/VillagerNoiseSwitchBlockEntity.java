@@ -31,14 +31,12 @@ public final class VillagerNoiseSwitchBlockEntity extends BlockEntity {
             return;
 
         boolean becameAdult = blockEntity.villagerAdapter.advanceAge();
-        blockEntity.setChanged();
-        if (level.getGameTime() % 20L == 0L) {
+        if (becameAdult || level.getGameTime() % 20L == 0L) {
             blockEntity.villagerAdapter.flushToOwner();
+            blockEntity.setChanged();
         }
-        if (becameAdult) {
-            blockEntity.villagerAdapter.flushToOwner();
+        if (becameAdult)
             blockEntity.syncBlock();
-        }
     }
 
     public boolean isItemPreview() {

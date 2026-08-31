@@ -12,6 +12,7 @@ public final class EasyMobFarmSoundController {
     private static final String ENTITY_MAP_FIELD = "entityMap";
 
     private static final Map<Entity, Boolean> ORIGINAL_SILENT_STATE = new IdentityHashMap<>();
+    private static final Map<Entity, Boolean> LIVE_DISPLAY_ENTITIES = new IdentityHashMap<>();
     private static Field entityMapField;
     private static boolean reflectionResolved;
 
@@ -43,21 +44,23 @@ public final class EasyMobFarmSoundController {
             return;
         }
 
+        LIVE_DISPLAY_ENTITIES.clear();
+        for (Object value : displayEntities.values()) {
+            if (value instanceof Entity entity)
+                LIVE_DISPLAY_ENTITIES.put(entity, Boolean.TRUE);
+        }
+
         ORIGINAL_SILENT_STATE.entrySet().removeIf(entry -> {
-            if (displayEntities.containsValue(entry.getKey())) {
+            if (LIVE_DISPLAY_ENTITIES.containsKey(entry.getKey()))
                 return false;
-            }
             entry.getKey().setSilent(entry.getValue());
             return true;
         });
-        for (Object value : displayEntities.values()) {
-            if (!(value instanceof Entity entity)) {
-                continue;
-            }
+
+        for (Entity entity : LIVE_DISPLAY_ENTITIES.keySet()) {
             ORIGINAL_SILENT_STATE.putIfAbsent(entity, entity.isSilent());
-            if (!entity.isSilent()) {
+            if (!entity.isSilent())
                 entity.setSilent(true);
-            }
         }
     }
 

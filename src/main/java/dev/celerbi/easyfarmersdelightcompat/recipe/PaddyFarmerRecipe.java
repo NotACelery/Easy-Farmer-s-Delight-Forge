@@ -20,7 +20,7 @@ public final class PaddyFarmerRecipe extends ShapedRecipe {
                 category,
                 3,
                 3,
-                ingredients(),
+                FarmerUpgradeRecipeDefinitions.paddy().ingredients(),
                 new ItemStack(ModBlocks.PADDY_FARMER_ITEM.get()),
                 false);
     }
@@ -35,21 +35,4 @@ public final class PaddyFarmerRecipe extends ShapedRecipe {
         return ModRecipeSerializers.PADDY_FARMER.get();
     }
 
-    private static NonNullList<Ingredient> ingredients() {
-        return NonNullList.of(
-                Ingredient.EMPTY,
-                Ingredient.of(Items.GLASS_PANE),
-                Ingredient.of(Items.GLASS_PANE),
-                Ingredient.of(Items.GLASS_PANE),
-                Ingredient.of(Items.GLASS_PANE),
-                Ingredient.of(item(EASY_FARMER)),
-                Ingredient.of(Items.GLASS_PANE),
-                Ingredient.of(Items.IRON_INGOT),
-                Ingredient.of(Items.WATER_BUCKET),
-                Ingredient.of(Items.IRON_INGOT));
-    }
-
-    private static Item item(ResourceLocation id) {
-        return BuiltInRegistries.ITEM.get(id);
-    }
 }

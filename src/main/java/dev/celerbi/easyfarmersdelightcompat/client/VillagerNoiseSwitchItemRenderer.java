@@ -50,7 +50,8 @@ public final class VillagerNoiseSwitchItemRenderer extends BlockEntityWithoutLev
             preview.setLevel(level);
 
             CompoundTag data = stack.getTagElement("BlockEntityTag");
-            if (data != null && !data.isEmpty()) {preview.load(data);
+            if (data != null && !data.isEmpty()) {
+            preview.load(data);
             }
 
             BlockEntityRenderer<VillagerNoiseSwitchBlockEntity> renderer =

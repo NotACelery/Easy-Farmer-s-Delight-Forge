@@ -75,6 +75,10 @@ public final class RichFarmerMenu extends AbstractContainerMenu {
         }
     }
 
+    public BlockPos blockPos() {
+        return blockPos;
+    }
+
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
         if (index < 0 || index >= slots.size())

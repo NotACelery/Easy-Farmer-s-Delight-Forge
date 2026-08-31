@@ -16,7 +16,8 @@ public final class AxeActionResolver {
     public enum Action { STRIP, SCRAPE, WAX_OFF }
     public record Result(Action action, ItemStack output, SoundEvent sound) {}
 
-    private AxeActionResolver() {}
+    private AxeActionResolver() {
+    }
 
     public static Optional<Result> resolve(ItemStack input, ItemStack tool) {
         if (input == null || input.isEmpty() || !FarmerToolSupport.isAxe(tool)
