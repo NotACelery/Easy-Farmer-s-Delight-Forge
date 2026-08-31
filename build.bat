@@ -11,6 +11,14 @@ echo Build de desarrollo
 echo ============================================================
 echo.
 
+if exist "cleanup-1.4.0-migration.bat" (
+    call "cleanup-1.4.0-migration.bat"
+    if errorlevel 1 (
+        echo ERROR: Fallo la limpieza de archivos obsoletos previos a 1.4.0.
+        exit /b 1
+    )
+)
+
 powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0build.ps1"
 set "RC=%ERRORLEVEL%"
 

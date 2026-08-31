@@ -47,7 +47,7 @@ public final class CutterItem extends BlockItem {
         Block variant = CutterLogVariant.fromStack(stack);
         tooltip.add(Component.translatable(
                         "tooltip.easyfarmersdelightcompat.cutter.variant",
-                        Component.translatable(CutterLogVariant.translationKey(variant)))
+                        variant.getName())
                 .withStyle(ChatFormatting.GRAY));
     }
 

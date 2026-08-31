@@ -14,9 +14,11 @@ public final class ClientPreferences {
     private static final String FILE_NAME = "easyfarmersdelightcompat-client.properties";
     private static final String KEY_VILLAGERS_MUTED = "villagersMuted";
     private static final String KEY_IRON_FARM_SOUNDS_MUTED = "ironFarmSoundsMuted";
+    private static final String KEY_EASY_MOB_FARM_SOUNDS_MUTED = "easyMobFarmSoundsMuted";
     private static boolean loaded;
     private static boolean villagersMuted;
     private static boolean ironFarmSoundsMuted;
+    private static boolean easyMobFarmSoundsMuted;
 
     private ClientPreferences() {
     }
@@ -53,12 +55,29 @@ public final class ClientPreferences {
         save();
     }
 
+    public static synchronized boolean easyMobFarmSoundsMuted() {
+        ensureLoaded();
+        return easyMobFarmSoundsMuted;
+    }
+
+    public static synchronized boolean toggleEasyMobFarmSoundsMuted() {
+        setEasyMobFarmSoundsMuted(!easyMobFarmSoundsMuted());
+        return easyMobFarmSoundsMuted;
+    }
+
+    public static synchronized void setEasyMobFarmSoundsMuted(boolean muted) {
+        ensureLoaded();
+        easyMobFarmSoundsMuted = muted;
+        save();
+    }
+
     private static void ensureLoaded() {
         if (loaded)
             return;
         loaded = true;
         villagersMuted = false;
         ironFarmSoundsMuted = false;
+        easyMobFarmSoundsMuted = false;
         Path path = configPath();
         if (!Files.isRegularFile(path))
             return;
@@ -67,9 +86,12 @@ public final class ClientPreferences {
             properties.load(in);
             villagersMuted = Boolean.parseBoolean(properties.getProperty(KEY_VILLAGERS_MUTED, "false"));
             ironFarmSoundsMuted = Boolean.parseBoolean(properties.getProperty(KEY_IRON_FARM_SOUNDS_MUTED, "false"));
+            easyMobFarmSoundsMuted = Boolean.parseBoolean(
+                    properties.getProperty(KEY_EASY_MOB_FARM_SOUNDS_MUTED, "false"));
         } catch (IOException e) {
             villagersMuted = false;
             ironFarmSoundsMuted = false;
+            easyMobFarmSoundsMuted = false;
             System.err.println("[Easy Farmer's Delight Compat] Failed to load client preferences: " + e.getMessage());
         }
     }
@@ -81,6 +103,7 @@ public final class ClientPreferences {
         Properties properties = new Properties();
         properties.setProperty(KEY_VILLAGERS_MUTED, Boolean.toString(villagersMuted));
         properties.setProperty(KEY_IRON_FARM_SOUNDS_MUTED, Boolean.toString(ironFarmSoundsMuted));
+        properties.setProperty(KEY_EASY_MOB_FARM_SOUNDS_MUTED, Boolean.toString(easyMobFarmSoundsMuted));
         try {
             if (parent != null)
                 Files.createDirectories(parent);

@@ -1,16 +1,17 @@
 # Easy Farmer's Delight Compat — Forge 1.20.1
 
-Current release: **1.3.2** (Forge 1.20.1)
+Current development: **1.4.0-dev.2** (Forge 1.20.1)
 
 **Easy Farmer's Delight Compat** is an independent, unofficial compatibility addon that brings **Farmer's Delight** farming and cutting mechanics into **Easy Villagers** automation.
 
-> **Backport notice:** this repository is the **Forge / Minecraft 1.20.1 backport** of Easy Farmer's Delight Compat.  
+> **Backport notice:** this repository is the **Forge / Minecraft 1.20.1 backport** of Easy Farmer's Delight Compat.
 > The main edition targets **NeoForge / Minecraft 1.21.1** and is maintained separately at:
 > https://github.com/NotACelery/Easy-Farmer-s-Delight-Compat
 
 The Forge edition keeps the same gameplay goals and feature set wherever the 1.20.1 versions of the dependencies allow it, while using the native Forge 1.20.1 APIs and data formats.
 
 For implementation architecture, persistence invariants, compatibility boundaries and regression checks, see [`DEVELOPMENT.md`](DEVELOPMENT.md).
+For third-party interoperability and licensing boundaries, see [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
 ## Target versions
 
@@ -56,6 +57,8 @@ Compatible Farmer variants can use the appropriate harvest tools for special cro
 
 The **Cutter** automates Farmer's Delight Cutting Board recipes while following the 1.20.1 recipe behavior.
 
+Its work surface accepts any unstripped base log exposed through Minecraft's standard log tags. Modded woods therefore work without hardcoded compatibility when their source mod follows the standard tags.
+
 - Dedicated villager-powered machine.
 - Input, tool and output handling.
 - Knife/tool requirements are respected.
@@ -75,6 +78,14 @@ The **Iron Farm Noise Switch** uses the former Iron Block recipe and must be ass
 Once assembled, right-clicking toggles a persistent client-local mute that cancels only Zombie Ambient and Iron Golem Hurt/Death sounds emitted from the exact position of Easy Villagers Iron Farm blocks. Normal Zombies and Iron Golems remain audible.
 
 The Iron Farm Noise Switch is always non-stackable and preserves its assembly/Golem state when mined. Its Lever and Redstone presentation is client-personal and emits no real Redstone.
+
+### Easy Mob Farm Noise Switch
+
+When **Easy Mob Farm** is installed, the addon registers an additional Noise Switch. If Easy Mob Farm is absent, this block/item is not registered and does not appear in the Creative inventory, recipes, Jade, JEI or EMI.
+
+Its recipe uses five Glass Panes around a Lever, with a Copper Block, Mossy Cobblestone and Redstone Block across the bottom row. After placement, insert six Rotten Flesh one at a time to assemble a decorative Zombie in the order right leg, left leg, torso, right arm, left arm and head.
+
+The completed switch toggles a persistent client-local mute only for the synthetic display entities created from Easy Mob Farm capture cards. Real world mobs remain untouched. The decorative Zombie is a rendered vanilla model rather than a spawned entity, and the block uses the same corrected hollow enclosure/light sampling as the other Noise Switches.
 
 ### Recipe viewer and HUD integrations
 
@@ -100,7 +111,7 @@ This edition is a source-level backport, not a loader shim. The original NeoForg
 - 1.20.1 datapack directory names and resource formats.
 - Java 21-only code paths replaced with Java 17-compatible equivalents.
 
-The Forge port has been compiled successfully with ForgeGradle and validated in-game, including Farmer recipes/upgrades, harvest tools and Fortune behavior, Villager Noise Switch functionality, Cutter processing and Cutting Board outputs.
+The archived Forge **1.4.0-dev.1 development checkpoint** has been validated in-game, including Farmer recipes/upgrades, harvest tools, Cutter processing and all three Noise Switch families. The current **1.4.0-dev** line changes presentation/integration boundaries and generic Cutter log discovery, so it must receive a fresh regression pass before release.
 
 ## Building from source
 

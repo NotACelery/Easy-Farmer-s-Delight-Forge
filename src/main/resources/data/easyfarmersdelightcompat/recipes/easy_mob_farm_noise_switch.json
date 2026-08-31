@@ -1,0 +1,44 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:mod_loaded",
+          "modid": "easy_mob_farm"
+        }
+      ],
+      "recipe": {
+        "type": "minecraft:crafting_shaped",
+        "category": "misc",
+        "pattern": [
+          "GGG",
+          "GLG",
+          "CMR"
+        ],
+        "key": {
+          "G": {
+            "item": "minecraft:glass_pane"
+          },
+          "L": {
+            "item": "minecraft:lever"
+          },
+          "C": {
+            "item": "minecraft:copper_block"
+          },
+          "M": {
+            "item": "minecraft:mossy_cobblestone"
+          },
+          "R": {
+            "item": "minecraft:redstone_block"
+          }
+        },
+        "result": {
+          "item": "easyfarmersdelightcompat:easy_mob_farm_noise_switch",
+          "count": 1
+        },
+        "show_notification": true
+      }
+    }
+  ]
+}

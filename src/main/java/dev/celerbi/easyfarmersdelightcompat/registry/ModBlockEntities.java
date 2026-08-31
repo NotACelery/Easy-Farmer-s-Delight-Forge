@@ -2,6 +2,7 @@ package dev.celerbi.easyfarmersdelightcompat.registry;
 
 import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.*;
+import dev.celerbi.easyfarmersdelightcompat.compat.easymobfarm.EasyMobFarmCompat;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.*;
@@ -43,6 +44,14 @@ public final class ModBlockEntities {
                                     IronFarmNoiseSwitchBlockEntity::new,
                                     ModBlocks.IRON_FARM_NOISE_SWITCH.get())
                             .build(null));
+
+    public static final RegistryObject<BlockEntityType<EasyMobFarmNoiseSwitchBlockEntity>>
+            EASY_MOB_FARM_NOISE_SWITCH = EasyMobFarmCompat.isLoaded() ? BLOCK_ENTITIES.register(
+                    "easy_mob_farm_noise_switch",
+                    () -> BlockEntityType.Builder.of(
+                                    EasyMobFarmNoiseSwitchBlockEntity::new,
+                                    ModBlocks.EASY_MOB_FARM_NOISE_SWITCH.get())
+                            .build(null)) : null;
 
     private ModBlockEntities() {
     }

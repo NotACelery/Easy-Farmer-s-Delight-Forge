@@ -57,6 +57,12 @@ public final class EasyFdEmiPlugin implements EmiPlugin {
         registry.addWorkstation(RICH_FARMER_HARVEST, EmiStack.of(ModBlocks.RICH_FARMER_ITEM.get()));
 
         registry.addWorkstation(CUTTER_AXE, EmiStack.of(ModBlocks.CUTTER_ITEM.get()));
+        if (ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM != null) {
+            registry.addWorkstation(
+                    BLOCK_GUIDE,
+                    EmiStack.of(ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM.get())
+            );
+        }
 
         registerFarmerUpgradeTransfers(registry);
         registerCutting(registry);
@@ -73,7 +79,7 @@ public final class EasyFdEmiPlugin implements EmiPlugin {
         for (var info : RecipeViewerData.cutterAxeActions()) {
             registry.addRecipe(new CutterAxeEmiRecipe(info));
         }
-        for (var info : RecipeViewerData.BLOCK_GUIDES) {
+        for (var info : RecipeViewerData.blockGuides()) {
             registry.addRecipe(new BlockGuideEmiRecipe(info));
         }
     }

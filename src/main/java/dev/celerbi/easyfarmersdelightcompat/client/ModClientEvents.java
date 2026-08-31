@@ -1,6 +1,7 @@
 package dev.celerbi.easyfarmersdelightcompat.client;
 
 import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
+import dev.celerbi.easyfarmersdelightcompat.compat.easymobfarm.EasyMobFarmCompat;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlockEntities;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlocks;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModMenus;
@@ -30,6 +31,10 @@ public final class ModClientEvents {
                 VillagerNoiseSwitchBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.IRON_FARM_NOISE_SWITCH.get(),
                 IronFarmNoiseSwitchBlockEntityRenderer::new);
+        if (EasyMobFarmCompat.isLoaded() && ModBlockEntities.EASY_MOB_FARM_NOISE_SWITCH != null) {
+            event.registerBlockEntityRenderer(ModBlockEntities.EASY_MOB_FARM_NOISE_SWITCH.get(),
+                    EasyMobFarmNoiseSwitchBlockEntityRenderer::new);
+        }
     }
 
     @SubscribeEvent

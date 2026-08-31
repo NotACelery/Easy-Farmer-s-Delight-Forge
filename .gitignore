@@ -86,3 +86,6 @@ $RECYCLE.BIN/
 !gradle/wrapper/gradle-wrapper.properties
 !gradlew
 !gradlew.bat
+
+# Internal development planning
+/DEV_1.4.0_ROADMAP.md

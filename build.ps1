@@ -3,6 +3,18 @@ $ProjectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location -LiteralPath $ProjectDir
 $LogPath = Join-Path $ProjectDir 'build.log'
 
+$obsoletePaths = @(
+    'src\main\java\dev\celerbi\easyfarmersdelightcompat\compat\jade',
+    'src\main\resources\data\easyfarmersdelightcompat\tags\item\cutter_logs.json',
+    'src\main\resources\data\easyfarmersdelightcompat\tags\items\cutter_logs.json'
+)
+foreach ($relativePath in $obsoletePaths) {
+    $obsoletePath = Join-Path $ProjectDir $relativePath
+    if (Test-Path -LiteralPath $obsoletePath) {
+        Remove-Item -LiteralPath $obsoletePath -Recurse -Force
+    }
+}
+
 Set-Content -LiteralPath $LogPath -Encoding UTF8 -Value @(
     "Easy Farmer's Delight Compat - Forge 1.20.1 build log"
     "Started: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"

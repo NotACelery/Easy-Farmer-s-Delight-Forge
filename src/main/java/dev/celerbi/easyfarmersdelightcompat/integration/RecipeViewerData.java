@@ -1,6 +1,7 @@
 package dev.celerbi.easyfarmersdelightcompat.integration;
 
 import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
+import dev.celerbi.easyfarmersdelightcompat.compat.easymobfarm.EasyMobFarmCompat;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlockEntities;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlocks;
 import java.util.ArrayList;
@@ -294,6 +295,40 @@ public final class RecipeViewerData {
     private RecipeViewerData() {
     }
 
+    public static List<BlockGuideInfo> blockGuides() {
+        if (!EasyMobFarmCompat.isLoaded()
+                || ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM == null
+                || ModBlockEntities.EASY_MOB_FARM_NOISE_SWITCH == null) {
+            return BLOCK_GUIDES;
+        }
+
+        List<BlockGuideInfo> guides = new ArrayList<>(BLOCK_GUIDES);
+        guides.add(new BlockGuideInfo(
+                id("block_guide/easy_mob_farm_noise_switch"),
+                Component.translatable("easyfarmersdelightcompat.viewer.guide.easy_mob_farm_noise_switch.title"),
+                List.of(
+                        catalystPreview(
+                                Ingredient.of(ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM.get()),
+                                emptyEasyMobFarmNoiseSwitch(),
+                                "easyfarmersdelightcompat.viewer.label.machine"
+                        ),
+                        inputPreview(
+                                Ingredient.of(Items.ROTTEN_FLESH),
+                                new ItemStack(Items.ROTTEN_FLESH, 6),
+                                "easyfarmersdelightcompat.viewer.label.rotten_flesh"
+                        ),
+                        outputPreview(
+                                Ingredient.of(ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM.get()),
+                                completedEasyMobFarmNoiseSwitch(),
+                                Component.translatable(
+                                        "easyfarmersdelightcompat.viewer.guide.easy_mob_farm_noise_switch.completed")
+                        )
+                ),
+                lines("easyfarmersdelightcompat.viewer.guide.easy_mob_farm_noise_switch", 3)
+        ));
+        return List.copyOf(guides);
+    }
+
     public static List<CutterAxeInfo> cutterAxeActions() {
         Ingredient axes = Ingredient.of(ItemTags.AXES);
 
@@ -384,6 +419,18 @@ public final class RecipeViewerData {
         data.putInt("AssemblyStage", 4);
         data.putBoolean("HasGolem", true);
         BlockItem.setBlockEntityData(stack, ModBlockEntities.IRON_FARM_NOISE_SWITCH.get(), data);
+        return stack;
+    }
+
+    private static ItemStack emptyEasyMobFarmNoiseSwitch() {
+        return new ItemStack(ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM.get());
+    }
+
+    private static ItemStack completedEasyMobFarmNoiseSwitch() {
+        ItemStack stack = emptyEasyMobFarmNoiseSwitch();
+        CompoundTag data = new CompoundTag();
+        data.putInt("AssemblyStage", 6);
+        BlockItem.setBlockEntityData(stack, ModBlockEntities.EASY_MOB_FARM_NOISE_SWITCH.get(), data);
         return stack;
     }
 

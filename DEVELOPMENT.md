@@ -6,9 +6,9 @@ The source intentionally keeps inline comments to a minimum. Cross-class behavio
 
 ## 1. Project scope
 
-Easy Farmer's Delight Compat is an independent compatibility addon between Easy Villagers and Farmer's Delight. It adds three Farmer variants, an automated Cutter, two client-local noise controls, and optional in-game documentation through Jade, JEI and EMI.
+Easy Farmer's Delight Compat is an independent compatibility addon between Easy Villagers and Farmer's Delight. It adds three Farmer variants, an automated Cutter, three client-local noise controls, and optional in-game documentation through Jade, JEI and EMI.
 
-Current release line:
+Current development line:
 
 - Minecraft: `1.20.1`
 - Forge baseline: `47.4.23`
@@ -16,15 +16,17 @@ Current release line:
 - Java: `17`
 - Easy Villagers minimum: `1.1.39`
 - Farmer's Delight minimum: `1.3.3`
-- Mod version: `1.3.2`
+- Mod version: `1.4.0-dev.2`
 
 Optional integrations:
 
 - Jade
 - JEI
 - EMI
+- Easy Mob Farm
 - Ars Nouveau
 - Argentum
+- Pale Garden - Update and other standard-tagged wood mods through generic log discovery
 
 ## 2. Source tree
 
@@ -39,6 +41,7 @@ World interaction and block-level state:
 - `CutterBlock` — Cutter placement, interaction, state preservation and menu access.
 - `VillagerNoiseSwitchBlock` — physical Villager Noise Switch interactions.
 - `IronFarmNoiseSwitchBlock` — Iron Farm Noise Switch assembly and interaction.
+- `EasyMobFarmNoiseSwitchBlock` — optional Easy Mob Farm Noise Switch assembly and interaction.
 
 ### `blockentity`
 
@@ -48,6 +51,7 @@ Persistent machine state and server-side work:
 - `CutterBlockEntity` — Cutter inventory, Villager state, work planning, processing and automation handlers.
 - `VillagerNoiseSwitchBlockEntity` — stored Villager state for the Villager Noise Switch.
 - `IronFarmNoiseSwitchBlockEntity` — Iron Block assembly stage and completed Golem state.
+- `EasyMobFarmNoiseSwitchBlockEntity` — Rotten Flesh assembly stage and completed decorative Zombie state.
 
 ### `integration`
 
@@ -70,7 +74,7 @@ Compatibility boundaries and viewer-neutral domain data:
 
 Viewer-specific rendering and recipe-transfer adapters. Gameplay rules do not originate here.
 
-### `compat/jade`
+### `integration/jade`
 
 Read-only machine diagnostics for Jade. Providers surface state that already exists in gameplay classes; they do not own gameplay behavior.
 
@@ -381,6 +385,16 @@ The sound must also:
 
 Real Zombies and real Iron Golems elsewhere are unaffected.
 
+### Easy Mob Farm optional Noise Switch
+
+The Easy Mob Farm integration is deliberately soft-linked. `EasyMobFarmCompat` checks the `easy_mob_farm` mod id before `ModBlocks` and `ModBlockEntities` register the optional switch. All creative-tab, renderer, Jade and viewer registration is guarded by the same availability state, and recipe/advancement JSON uses the loader's mod-loaded condition.
+
+The six Rotten Flesh assembly stages are persistent BlockEntity state. Rendering uses a dedicated vanilla `ZombieModel` with individual `ModelPart.visible` flags, so no real Zombie entity is spawned. The order is right leg, left leg, torso, right arm, left arm, head.
+
+Sound control is client-only. `EasyMobFarmSoundController` reflectively reads Easy Mob Farm's client renderer cache only while the dependency is present, records each display entity's original silent flag, forces only those cached display entities silent while the preference is enabled, then restores the original values when disabled. No world entity is searched for or modified.
+
+The block must retain `.noOcclusion()`, the six-wall 1/16 hollow `VoxelShape`, `getShadeBrightness() == 1.0F`, and the same max-neighbour `resolveInteriorLight` algorithm as the corrected existing Noise Switch renderers. Inventory previews bypass world light sampling and use the supplied packed light.
+
 ## 18. Rendering
 
 Placed machines and stateful inventory items use dedicated renderers.
@@ -405,6 +419,7 @@ Jade providers expose diagnostics such as:
 - Cutter progress and output information;
 - Villager Noise Switch local status;
 - Iron Farm Noise Switch assembly and local status.
+- Easy Mob Farm Noise Switch assembly and local status.
 
 Diagnostics must use non-destructive probes. In particular, Cutter diagnostics must never execute a random cutting recipe merely to display what could happen.
 
@@ -434,7 +449,7 @@ Farmer upgrade recipes are real gameplay recipes rather than viewer-only approxi
 
 The source Farmer's meaningful state is preserved through the upgrade path.
 
-The Cutter recipe also persists the selected compatible log/bamboo material as its Cutter variant.
+The Cutter recipe persists the selected compatible base-log registry id as its Cutter variant.
 
 ## 22. Optional integrations
 
@@ -547,3 +562,42 @@ After viewer changes:
 - viewer probes do not consume RNG;
 - stateful Farmer recipe transfer still uses the exact inventory stack;
 - Jade remains diagnostic only.
+
+## 28. Third-party resource boundary
+
+Third-party projects are compatibility targets, not resource sources for this addon. Registry identifiers, tags and runtime interoperability are allowed compatibility inputs; foreign models, textures, GUI images and bundled binaries are not part of this project's resources.
+
+The Easy Villagers boundary is especially strict because its public distribution is All Rights Reserved. `assets/easyfarmersdelightcompat` must not use `easy_villagers:*` model parents, textures or GUI backgrounds. The local `machine_cage` model and the Farmer enclosure geometry use project/vanilla resources while preserving block IDs, block entity types, NBT and existing-world compatibility.
+
+Farmer's Delight content may still be referenced by registry id and runtime resource id where the separately installed dependency owns and supplies that resource. No Farmer's Delight binary is embedded. Easy Mob Farm, Ars Nouveau, Argentum and Pale Garden Update remain separate optional works and are never copied into this JAR.
+
+`THIRD_PARTY_NOTICES.md` is the user-facing inventory of these relationships and must be kept current when a new compatibility target is added.
+
+## 29. Generic Cutter log variants
+
+The Cutter defaults to Oak and stores only `CutterLog`, the registry id of the selected work-surface block. Existing 1.4.0 items therefore remain valid. Missing/invalid stored ids fall back to Oak rather than invalidating the item or block entity.
+
+A valid new work surface must:
+
+- be a `BlockItem`;
+- belong to Minecraft's standard item or block `logs` tag;
+- not use the conventional `stripped_` prefix;
+- not represent a full-bark `*_wood` or `*_hyphae` block.
+
+The recipe viewer ingredient is driven by the standard item log tag, while the custom recipe performs authoritative base-log validation against both standard item and block log tags. This deliberately avoids per-mod allowlists. Ars Nouveau Archwood, Pale Garden Update Pale Oak and future correctly tagged woods are discovered without source-mod imports or asset copies.
+
+The historical `easyfarmersdelightcompat:cutter_logs` item tag remains accepted as a compatibility fallback for existing datapacks, but the addon no longer ships a hardcoded whitelist for that tag. New integrations should use Minecraft's standard log tags.
+
+Tooltips and Jade use `Block#getName()` for the stored block, so translation ownership remains with the mod that registered the log. The Cutter renderer asks Minecraft to render the installed block normally; it does not copy its model or texture.
+
+## 30. Jade integration boundary
+
+Every `snownee.jade.*` import must remain under `integration/jade`. Core gameplay, persistence, rendering and menu classes must not require Jade classes.
+
+`EfdcJadePlugin` owns registration only. Feature-specific providers own tooltip/data adaptation. Jade stays an optional compile-only dependency and is never embedded in the addon JAR. Removing Jade from a client must not affect registry creation, world loading or gameplay behavior.
+
+## 30. Snapshot overlay hygiene
+
+Development snapshots may move or retire source/resource files. Extracting a newer snapshot over an older working tree does not delete paths that disappeared from the archive, so stale Java can still be compiled and stale resources can still be packaged.
+
+When a release changes file paths, the snapshot must include a cleanup helper for the retired paths and the normal build helper must run it before Gradle. During the current 1.4.0 development line this removes stale pre-regularization `compat/jade` sources and the shipped legacy `cutter_logs.json` whitelist when snapshots are overlaid onto older working trees. The runtime compatibility fallback for external datapacks using `easyfarmersdelightcompat:cutter_logs` remains intentionally supported in code.

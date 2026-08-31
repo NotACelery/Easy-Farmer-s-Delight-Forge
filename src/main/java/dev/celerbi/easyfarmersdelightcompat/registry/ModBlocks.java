@@ -2,6 +2,7 @@ package dev.celerbi.easyfarmersdelightcompat.registry;
 
 import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
 import dev.celerbi.easyfarmersdelightcompat.block.*;
+import dev.celerbi.easyfarmersdelightcompat.compat.easymobfarm.EasyMobFarmCompat;
 import dev.celerbi.easyfarmersdelightcompat.item.*;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -43,6 +44,11 @@ public final class ModBlocks {
             "iron_farm_noise_switch",
             () -> new IronFarmNoiseSwitchBlock(props()));
 
+    public static final RegistryObject<EasyMobFarmNoiseSwitchBlock> EASY_MOB_FARM_NOISE_SWITCH =
+            EasyMobFarmCompat.isLoaded() ? BLOCKS.register(
+                    "easy_mob_farm_noise_switch",
+                    () -> new EasyMobFarmNoiseSwitchBlock(props())) : null;
+
     public static final RegistryObject<CutterItem> CUTTER_ITEM = ITEMS.register(
             "cutter",
             () -> new CutterItem(CUTTER.get(), new Item.Properties()));
@@ -58,6 +64,13 @@ public final class ModBlocks {
             () -> new IronFarmNoiseSwitchItem(
                     IRON_FARM_NOISE_SWITCH.get(),
                     new Item.Properties().stacksTo(1)));
+
+    public static final RegistryObject<EasyMobFarmNoiseSwitchItem> EASY_MOB_FARM_NOISE_SWITCH_ITEM =
+            EasyMobFarmCompat.isLoaded() ? ITEMS.register(
+                    "easy_mob_farm_noise_switch",
+                    () -> new EasyMobFarmNoiseSwitchItem(
+                            EASY_MOB_FARM_NOISE_SWITCH.get(),
+                            new Item.Properties().stacksTo(1))) : null;
 
     public static final RegistryObject<CompatFarmerItem> PADDY_FARMER_ITEM = ITEMS.register(
             "paddy_farmer",

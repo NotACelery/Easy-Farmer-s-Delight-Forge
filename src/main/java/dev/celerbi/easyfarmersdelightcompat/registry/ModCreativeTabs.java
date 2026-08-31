@@ -1,6 +1,7 @@
 package dev.celerbi.easyfarmersdelightcompat.registry;
 
 import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
+import dev.celerbi.easyfarmersdelightcompat.compat.easymobfarm.EasyMobFarmCompat;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.*;
@@ -24,6 +25,9 @@ public final class ModCreativeTabs {
                         o.accept(ModBlocks.CUTTER_ITEM.get());
                         o.accept(ModBlocks.VILLAGER_NOISE_SWITCH_ITEM.get());
                         o.accept(ModBlocks.IRON_FARM_NOISE_SWITCH_ITEM.get());
+                        if (EasyMobFarmCompat.isLoaded() && ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM != null) {
+                            o.accept(ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM.get());
+                        }
                     })
                     .build());
 

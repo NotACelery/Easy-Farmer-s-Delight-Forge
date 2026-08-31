@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.4.0-dev.2 — unreleased
+
+### Development build hygiene
+
+- Added migration cleanup for obsolete pre-regularization development files when a snapshot is overlaid onto an existing working tree.
+- Build helpers now remove the retired `compat/jade` source directory and old shipped `cutter_logs.json` whitelist before compilation, preventing stale Java/resources from surviving a package move.
+- No gameplay, registry, NBT or world-data behavior changed from dev.1.
+
+### Interoperability and asset-boundary cleanup
+
+- Removed every direct Easy Villagers model, texture and GUI asset reference from Easy Farmer's Delight Compat resources. Existing block IDs, block entities, NBT and world data remain unchanged.
+- Added a project-owned `machine_cage` model built from vanilla resources for the Cutter and Noise Switch family, while existing Farmer models now use vanilla frame textures.
+- Replaced the three Easy Villagers-backed container backgrounds with project-rendered GUI panels that preserve the existing slot coordinates and gameplay layout.
+- Moved all Jade API code under `integration/jade` and reduced `EfdcJadePlugin` to registration only; Jade remains optional and compile-only.
+- Added `THIRD_PARTY_NOTICES.md` documenting dependency ownership, license boundaries and the fact that third-party binaries/assets are not redistributed.
+
+### Generic Cutter wood variants
+
+- Replaced the hardcoded vanilla Cutter wood whitelist with Minecraft's standard `logs` tag plus runtime filtering for unstripped base logs.
+- Kept the historical `easyfarmersdelightcompat:cutter_logs` tag as a compatibility fallback for datapacks that extended it, without shipping the old hardcoded whitelist.
+- Modded logs such as Ars Nouveau Archwood and Pale Garden Update Pale Oak can become Cutter work surfaces automatically when their source mod exposes them through the standard log tag.
+- Cutter items continue storing only the selected block registry ID. Existing pre-regularization 1.4.0-dev.1 Cutter items remain compatible and Oak remains the safe fallback if a stored modded log is unavailable.
+- Cutter tooltip and Jade output now use the source block's own translated name instead of addon-maintained wood-name translations.
+
+## 1.4.0-dev.1 — internal development checkpoint — 2026-08-30
+
+- Added the optional Easy Mob Farm Noise Switch, registered only when `easy_mob_farm` is installed.
+- Added the five-Glass-Pane recipe with Lever, Copper Block, Mossy Cobblestone and Redstone Block.
+- Added six-step Rotten Flesh Zombie assembly: right leg, left leg, torso, right arm, left arm and head.
+- Completed switches toggle a persistent client-local mute only for Easy Mob Farm's card-display mobs; real world mobs remain untouched.
+- Added state-preserving item previews, Jade status, JEI/EMI Block Guide support and the same corrected hollow-shape/interior-light handling used by the existing Noise Switches.
+
 ## 1.3.2 — 2026-08-29
 
 - Fixed Villager Noise Switch and Iron Farm Noise Switch interior lighting next to opaque blocks and local light sources.
