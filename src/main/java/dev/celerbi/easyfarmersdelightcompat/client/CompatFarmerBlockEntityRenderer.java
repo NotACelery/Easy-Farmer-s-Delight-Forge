@@ -231,12 +231,16 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         renderBlockState(baseCrop, poseStack, buffer, combinedLight, combinedOverlay);
 
         if (farmer.ropeCount() >= 1) {
-            renderTomatoSection(1, farmer.ropeOneProgress(), tomatoOnRopeBlock, tomatoBlock, poseStack, buffer, combinedLight,
-                    combinedOverlay);
+            renderTomatoSection(
+                    1, farmer.ropeOneProgress(), tomatoOnRopeBlock, tomatoBlock,
+                    poseStack, buffer, combinedLight, combinedOverlay
+            );
         }
         if (farmer.ropeCount() >= 2) {
-            renderTomatoSection(2, farmer.ropeTwoProgress(), tomatoOnRopeBlock, tomatoBlock, poseStack, buffer, combinedLight,
-                    combinedOverlay);
+            renderTomatoSection(
+                    2, farmer.ropeTwoProgress(), tomatoOnRopeBlock, tomatoBlock,
+                    poseStack, buffer, combinedLight, combinedOverlay
+            );
         }
         poseStack.popPose();
     }

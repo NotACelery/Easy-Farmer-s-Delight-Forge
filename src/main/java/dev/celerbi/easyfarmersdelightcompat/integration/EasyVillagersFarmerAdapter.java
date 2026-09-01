@@ -6,6 +6,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -43,7 +44,7 @@ public final class EasyVillagersFarmerAdapter {
 
     private final CompatFarmerBlockEntity owner;
     private BlockEntity delegate;
-    private Container trackedOutputInventory;
+    private DirtyTrackingContainer trackedOutputInventory;
     private IItemHandler trackedItemHandler;
     private Boolean serverHasVillagerCache;
     private Villager serverVillagerEntity;
@@ -270,7 +271,8 @@ public final class EasyVillagersFarmerAdapter {
             return false;
         }
         try {
-            Object result = ReflectionCache.publicMethod(farmer.getClass(), "isValidSeed", Item.class).invoke(farmer, stack.getItem());
+            Method isValidSeed = ReflectionCache.publicMethod(farmer.getClass(), "isValidSeed", Item.class);
+            Object result = isValidSeed.invoke(farmer, stack.getItem());
             return result instanceof Boolean valid && valid;
         } catch (ReflectiveOperationException e) {
             fail(e);
@@ -287,7 +289,8 @@ public final class EasyVillagersFarmerAdapter {
             return false;
         }
         try {
-            Object result = ReflectionCache.publicMethod(farmer.getClass(), "getSeedCrop", Item.class).invoke(farmer, stack.getItem());
+            Method getSeedCrop = ReflectionCache.publicMethod(farmer.getClass(), "getSeedCrop", Item.class);
+            Object result = getSeedCrop.invoke(farmer, stack.getItem());
             if (!(result instanceof BlockState crop)) {
                 return false;
             }
@@ -479,7 +482,7 @@ public final class EasyVillagersFarmerAdapter {
             return;
         farmSpeedFallbackWarned = true;
         System.err.println(
-                "[Easy Farmer's Delight Compat] Could not read Easy Villagers farmer.farm_speed; "
+                "[Easy Farmer's Delight] Could not read Easy Villagers farmer.farm_speed; "
                         + "using default 10 without disabling the Farmer adapter."
         );
         if (e != null)
@@ -516,7 +519,7 @@ public final class EasyVillagersFarmerAdapter {
         try {
             Block easyFarmer = BuiltInRegistries.BLOCK.get(EASY_FARMER_ID);
             Class<?> clazz = ReflectionCache.type(FARMER_TILEENTITY);
-            Constructor<?> constructor = ReflectionCache.constructor(clazz, net.minecraft.core.BlockPos.class, BlockState.class);
+            Constructor<?> constructor = ReflectionCache.constructor(clazz, BlockPos.class, BlockState.class);
             delegate = (BlockEntity) constructor.newInstance(owner.getBlockPos(), easyFarmer.defaultBlockState());
             Level level = owner.getLevel();
             if (level != null) {
@@ -548,9 +551,12 @@ public final class EasyVillagersFarmerAdapter {
 
     private final class DirtyTrackingContainer implements Container {
         private final Container delegateContainer;
+        private final ItemStack[] previousContents;
 
         private DirtyTrackingContainer(Container delegateContainer) {
             this.delegateContainer = delegateContainer;
+            previousContents = new ItemStack[delegateContainer.getContainerSize()];
+            refreshSnapshot();
         }
 
         @Override
@@ -571,25 +577,21 @@ public final class EasyVillagersFarmerAdapter {
         @Override
         public ItemStack removeItem(int slot, int amount) {
             ItemStack removed = delegateContainer.removeItem(slot, amount);
-            if (!removed.isEmpty()) {
-                owner.onOutputInventoryReduced();
-            }
+            notifyOwnerFromSnapshot();
             return removed;
         }
 
         @Override
         public ItemStack removeItemNoUpdate(int slot) {
             ItemStack removed = delegateContainer.removeItemNoUpdate(slot);
-            if (!removed.isEmpty()) {
-                owner.onOutputInventoryReduced();
-            }
+            notifyOwnerFromSnapshot();
             return removed;
         }
 
         @Override
         public void setItem(int slot, ItemStack stack) {
             delegateContainer.setItem(slot, stack);
-            owner.onOutputInventoryChanged();
+            notifyOwnerFromSnapshot();
         }
 
         @Override
@@ -600,7 +602,7 @@ public final class EasyVillagersFarmerAdapter {
         @Override
         public void setChanged() {
             delegateContainer.setChanged();
-            owner.onOutputInventoryChanged();
+            notifyOwnerFromSnapshot();
         }
 
         @Override
@@ -631,7 +633,42 @@ public final class EasyVillagersFarmerAdapter {
         @Override
         public void clearContent() {
             delegateContainer.clearContent();
-            owner.onOutputInventoryReduced();
+            notifyOwnerFromSnapshot();
+        }
+
+        private void notifyOwnerFromSnapshot() {
+            boolean capacityIncreased = false;
+            for (int slot = 0; slot < previousContents.length; slot++) {
+                ItemStack previous = previousContents[slot];
+                ItemStack current = delegateContainer.getItem(slot);
+                if (outputCapacityIncreased(previous, current)) {
+                    capacityIncreased = true;
+                }
+            }
+            refreshSnapshot();
+
+            if (capacityIncreased) {
+                owner.onOutputInventoryReduced();
+            } else {
+                owner.onOutputInventoryChanged();
+            }
+        }
+
+        private void refreshSnapshot() {
+            for (int slot = 0; slot < previousContents.length; slot++) {
+                previousContents[slot] = delegateContainer.getItem(slot).copy();
+            }
+        }
+
+        private static boolean outputCapacityIncreased(ItemStack previous, ItemStack current) {
+            if (previous.isEmpty()) {
+                return false;
+            }
+            if (current.isEmpty()) {
+                return true;
+            }
+            return ItemStack.isSameItemSameTags(previous, current)
+                    && current.getCount() < previous.getCount();
         }
     }
 
@@ -657,6 +694,7 @@ public final class EasyVillagersFarmerAdapter {
             ItemStack remainder = delegateHandler.insertItem(slot, stack, simulate);
             if (!simulate && remainder.getCount() != stack.getCount()) {
                 owner.onOutputInventoryChanged();
+                refreshTrackedOutputSnapshot();
             }
             return remainder;
         }
@@ -666,6 +704,7 @@ public final class EasyVillagersFarmerAdapter {
             ItemStack extracted = delegateHandler.extractItem(slot, amount, simulate);
             if (!simulate && !extracted.isEmpty()) {
                 owner.onOutputInventoryReduced();
+                refreshTrackedOutputSnapshot();
             }
             return extracted;
         }
@@ -681,10 +720,16 @@ public final class EasyVillagersFarmerAdapter {
         }
     }
 
+    private void refreshTrackedOutputSnapshot() {
+        if (trackedOutputInventory != null) {
+            trackedOutputInventory.refreshSnapshot();
+        }
+    }
+
     private void fail(Throwable e) {
         if (!failed) {
             System.err.println(
-                    "[Easy Farmer's Delight Compat] Easy Villagers Farmer adapter failed; "
+                    "[Easy Farmer's Delight] Easy Villagers Farmer adapter failed; "
                             + "Paddy Farmer integration is disabled for this block entity."
             );
             e.printStackTrace();

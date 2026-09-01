@@ -16,7 +16,7 @@ foreach ($relativePath in $obsoletePaths) {
 }
 
 Set-Content -LiteralPath $LogPath -Encoding UTF8 -Value @(
-    "Easy Farmer's Delight Compat - Forge 1.20.1 build log"
+    "Easy Farmer's Delight - Forge 1.20.1 build log"
     "Started: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
     "Project: $ProjectDir"
 )
@@ -179,7 +179,7 @@ try {
 
     $libs = Join-Path $ProjectDir 'build\libs'
     if (-not (Test-Path -LiteralPath $libs -PathType Container)) { throw 'Gradle termino sin error, pero build\libs no existe.' }
-    $jar = Get-ChildItem -LiteralPath $libs -Filter '*.jar' -File | Where-Object { $_.Name -notmatch '(sources|javadoc|dev|shadow)' } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    $jar = Get-ChildItem -LiteralPath $libs -Filter '*.jar' -File | Where-Object { $_.Name -notmatch '-(sources|javadoc|shadow)\.jar$' } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
     if (-not $jar) { throw 'No encontre el JAR runtime en build\libs.' }
     Write-Log "JAR generado: $($jar.FullName)"
     exit 0

@@ -253,6 +253,45 @@ public final class AttachedCropDefinition {
         return item == null ? ItemStack.EMPTY : new ItemStack(item);
     }
 
+    public Block canonicalHostBlock() {
+        if (hostBlockId != null) {
+            return BuiltInRegistries.BLOCK.get(hostBlockId);
+        }
+        if (hostBlockTag == null) {
+            return Blocks.AIR;
+        }
+
+        return BuiltInRegistries.BLOCK.stream()
+                .filter(block -> block != Blocks.AIR && block.defaultBlockState().is(hostBlockTag))
+                .sorted((left, right) -> {
+                    int leftRank = hostPreference(left);
+                    int rightRank = hostPreference(right);
+                    if (leftRank != rightRank) {
+                        return Integer.compare(leftRank, rightRank);
+                    }
+                    ResourceLocation leftId = BuiltInRegistries.BLOCK.getKey(left);
+                    ResourceLocation rightId = BuiltInRegistries.BLOCK.getKey(right);
+                    return leftId.toString().compareTo(rightId.toString());
+                })
+                .findFirst()
+                .orElse(Blocks.AIR);
+    }
+
+    private static int hostPreference(Block block) {
+        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
+        String path = id.getPath();
+        if (path.startsWith("stripped_")) {
+            return 4;
+        }
+        if (path.endsWith("_log") || path.endsWith("_stem")) {
+            return 0;
+        }
+        if (path.endsWith("_wood") || path.endsWith("_hyphae")) {
+            return 2;
+        }
+        return 1;
+    }
+
     private static JsonObject requireObject(JsonObject parent, String key) {
         if (!parent.has(key) || !parent.get(key).isJsonObject()) {
             throw new JsonParseException("missing object: " + key);

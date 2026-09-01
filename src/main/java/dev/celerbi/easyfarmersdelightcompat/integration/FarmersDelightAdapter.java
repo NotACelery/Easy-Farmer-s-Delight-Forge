@@ -57,7 +57,7 @@ public final class FarmersDelightAdapter {
     private static void fail(Throwable error) {
         if (!failed) {
             System.err.println(
-                    "[Easy Farmer's Delight Compat] Could not read Farmer's Delight Rich Soil configuration; "
+                    "[Easy Farmer's Delight] Could not read Farmer's Delight Rich Soil configuration; "
                             + "Rich Soil acceleration is disabled."
             );
             if (error != null) {

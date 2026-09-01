@@ -41,12 +41,12 @@ public final class RegrowingCropReloadListener extends SimpleJsonResourceReloadL
                             loaded.put(id, definition);
                         }
                     } catch (RuntimeException exception) {
-                        System.err.println("[Easy Farmer's Delight Compat] Skipping invalid regrowing-crop definition "
+                        System.err.println("[Easy Farmer's Delight] Skipping invalid regrowing-crop definition "
                                 + id + ": " + exception.getMessage());
                     }
                 });
         RegrowingCropDefinitions.replace(loaded);
-        System.out.println("[Easy Farmer's Delight Compat] Loaded " + loaded.size()
+        System.out.println("[Easy Farmer's Delight] Loaded " + loaded.size()
                 + " regrowing-crop definition(s).");
     }
 }

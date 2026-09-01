@@ -1,10 +1,10 @@
 package dev.celerbi.easyfarmersdelightcompat.block;
 
 import dev.celerbi.easyfarmersdelightcompat.blockentity.CompatFarmerBlockEntity;
-import dev.celerbi.easyfarmersdelightcompat.registry.ModBlockEntities;
 import dev.celerbi.easyfarmersdelightcompat.integration.FarmerToolSupport;
 import dev.celerbi.easyfarmersdelightcompat.menu.PaddyFarmerMenu;
 import dev.celerbi.easyfarmersdelightcompat.menu.RichFarmerMenu;
+import dev.celerbi.easyfarmersdelightcompat.registry.ModBlockEntities;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -169,6 +169,16 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
+
+        if (!player.isShiftKeyDown() && variant.isRich() && !variant.isAquatic()
+                && farmer.shouldWarnIncompatibleAttachedCrop(heldItem)) {
+            if (!level.isClientSide) {
+                player.displayClientMessage(Component.translatable(
+                        "message.easyfarmersdelightcompat.attached_crop.incompatible_host"), true);
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        }
+
         if (player.isShiftKeyDown() && variant.isAquatic()) {
             if (farmer.hasPaddySand()) {
                 if (!level.isClientSide) {

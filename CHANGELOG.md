@@ -1,41 +1,79 @@
 # Changelog
 
-## 1.4.0-dev.2 — unreleased
+## 1.4.0 — 2026-08-31
 
-### Development build hygiene
+**Release boundary:** 1.3.2 was the last public release before this update and contained the Noise Switch lighting/shape fix. The 1.4.0 delta starts with the Easy Mob Farm Noise Switch and includes every subsequent change documented in this section.
 
-- Added migration cleanup for obsolete pre-regularization development files when a snapshot is overlaid onto an existing working tree.
-- Build helpers now remove the retired `compat/jade` source directory and old shipped `cutter_logs.json` whitelist before compilation, preventing stale Java/resources from surviving a package move.
-- No gameplay, registry, NBT or world-data behavior changed from dev.1.
+## Major farming expansion
 
-### Interoperability and asset-boundary cleanup
+- Added **Rich Farmer Log Mode** with two independent host logs and up to eight attached crop faces.
+- Added vanilla **Cocoa** support with the correct Jungle Log-only planting rule.
+- Added explicit optional **Ars Nouveau** support for:
+  - Magebloom;
+  - Sourceberry;
+  - Bombegranate on Blazing Archwood;
+  - Mendosteen on Flourishing Archwood;
+  - Frostaya on Cascading Archwood;
+  - Bastion Fruit on Vexing Archwood.
+- Attached crops respect their host family just like Cocoa: incompatible logs reject the seed instead of consuming it.
+- Lower and upper host logs can be different, allowing two attached-crop families in one Rich Farmer.
+- Added data-driven attached-crop and regrowing-crop definition systems for future datapack/mod interoperability.
+- Added **Sweet Berry Bush** and **Sourceberry** regrowing behavior: mature harvest resets the bush to its post-harvest age instead of destroying/replanting it.
+- Rich Soil accelerates supported normal, Tomato, bush and attached-crop growth without directly multiplying drops.
+- Rich Paddy continues to accelerate Rice; **Sugar Cane intentionally receives no Rich Soil speed bonus**.
 
-- Removed every direct Easy Villagers model, texture and GUI asset reference from Easy Farmer's Delight Compat resources. Existing block IDs, block entities, NBT and world data remain unchanged.
-- Added a project-owned `machine_cage` model built from vanilla resources for the Cutter and Noise Switch family, while existing Farmer models now use vanilla frame textures.
-- Replaced the three Easy Villagers-backed container backgrounds with project-rendered GUI panels that preserve the existing slot coordinates and gameplay layout.
-- Moved all Jade API code under `integration/jade` and reduced `EfdcJadePlugin` to registration only; Jade remains optional and compile-only.
-- Added `THIRD_PARTY_NOTICES.md` documenting dependency ownership, license boundaries and the fact that third-party binaries/assets are not redistributed.
+## Farmer quality of life
 
-### Generic Cutter wood variants
+- Farmer items now show the planted crop in their inventory tooltip.
+- Mixed attached-crop Farmers show each distinct stored crop, making configured machines easy to sort before placement.
+- Changed the Creative tab icon to **Rich Farmer**.
+- Added the `/farm` operator/QA command for creating configured Farmer grids with villager, crop and setup arguments.
+- `/farm` supports Tomato `rope=0..2`, Paddy Sugar Cane `sand`, and attached-crop `logs=1..2` setup.
 
-- Replaced the hardcoded vanilla Cutter wood whitelist with Minecraft's standard `logs` tag plus runtime filtering for unstripped base logs.
-- Kept the historical `easyfarmersdelightcompat:cutter_logs` tag as a compatibility fallback for datapacks that extended it, without shipping the old hardcoded whitelist.
-- Modded logs such as Ars Nouveau Archwood and Pale Garden Update Pale Oak can become Cutter work surfaces automatically when their source mod exposes them through the standard log tag.
-- Cutter items continue storing only the selected block registry ID. Existing pre-regularization 1.4.0-dev.1 Cutter items remain compatible and Oak remains the safe fallback if a stored modded log is unavailable.
-- Cutter tooltip and Jade output now use the source block's own translated name instead of addon-maintained wood-name translations.
+## Performance and reliability
 
-## 1.4.0-dev.1 — internal development checkpoint — 2026-08-30
+- Reworked Farmer harvest scheduling around event-driven sleep/wake states instead of repeated blocked-work polling.
+- Output-full harvests wake when capacity actually increases, including manual GUI extraction and automated extraction.
+- Pending blocked drops are reused where possible instead of rerolling loot.
+- Mixed attached crops harvest independently: one blocked fruit type no longer freezes another fruit that still fits in output.
+- Tool-blocked and villager-blocked Farmers wake only on relevant state changes.
+- Optimized Rich Soil cadence, reflection lookup caching, villager/crop caching and renderer-side stable lookups.
+- Cutter idle/full-output work is parked until a relevant inventory/tool/villager event occurs.
+- Dense Farmer arrays now avoid the previous background work cost; the remaining extreme-density FPS impact is primarily visible-model rendering and benefits from normal Minecraft occlusion culling.
 
-- Added the optional Easy Mob Farm Noise Switch, registered only when `easy_mob_farm` is installed.
-- Added the five-Glass-Pane recipe with Lever, Copper Block, Mossy Cobblestone and Redstone Block.
-- Added six-step Rotten Flesh Zombie assembly: right leg, left leg, torso, right arm, left arm and head.
-- Completed switches toggle a persistent client-local mute only for Easy Mob Farm's card-display mobs; real world mobs remain untouched.
-- Added state-preserving item previews, Jade status, JEI/EMI Block Guide support and the same corrected hollow-shape/interior-light handling used by the existing Noise Switches.
+## Cutter expansion
+
+- Cutter work surfaces are now **dynamic** instead of a hardcoded vanilla wood list.
+- Any compatible unstripped base log/stem from any mod can work when it participates in Minecraft's standard log tags.
+- Modded Cutter items persist the exact selected log registry ID.
+- The Cutter renders the owning mod's real block model, preserving native textures and animations such as Crimson/Warped stems and Ars Nouveau Archwood.
+- Cutter tooltips/Jade use the source block's translated name.
+- Existing Oak/default Cutter behavior remains compatible, with Oak as the safe fallback when a saved external log disappears.
+
+## Noise Switches and integrations
+
+- Added the optional **Easy Mob Farm Noise Switch** with six-stage Rotten Flesh Zombie assembly and client-local display-mob muting.
+- Kept Villager and Iron Farm Noise Switch state client-local and narrowly scoped to their intended sounds/entities.
+- Expanded Jade/JEI/EMI guidance for Farmer tools, crops, attached hosts, Cutter behavior and Noise Switches.
+- Optional integrations remain absent-safe.
+
+## Project identity and resources
+
+- Renamed the public project to **Easy Farmer's Delight** to reflect that it is now an expansion rather than only a compatibility layer.
+- The technical namespace remains `easyfarmersdelightcompat` to preserve existing worlds, registry IDs and NBT.
+- Build artifacts now use `easy-farmers-delight` in their filename.
+- Machine resources no longer depend on Easy Villagers visual assets; dynamic Villagers/crops/logs are rendered from their owning game/mod resources instead of redistributing those assets.
+
+## Scope note
+
+- **Bamboo is not treated as a Farmer crop in 1.4.0.** Its vertical structural growth remains outside the implemented crop families.
+
+---
 
 ## 1.3.2 — 2026-08-29
 
 - Fixed Villager Noise Switch and Iron Farm Noise Switch interior lighting next to opaque blocks and local light sources.
-- Both switches now use the same hollow 1/16 shell shape as the compat Farmers, matching the visible enclosure instead of behaving like a logical full cube.
+- Both switches now use the same hollow 1/16 shell shape as Easy Farmer's Delight Farmer enclosures, matching the visible enclosure instead of behaving like a logical full cube.
 - Dynamic switch contents now sample surrounding world light while inventory previews continue to use their supplied preview lighting.
 
 ## 1.3.1 — 2026-08-23

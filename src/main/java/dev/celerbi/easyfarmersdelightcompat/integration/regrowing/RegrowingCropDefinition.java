@@ -163,10 +163,6 @@ public final class RegrowingCropDefinition {
         return cropBlockId;
     }
 
-    public ResourceLocation cropBlockId() {
-        return cropBlockId;
-    }
-
     public String ageProperty() {
         return ageProperty;
     }

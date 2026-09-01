@@ -9,7 +9,10 @@ import dev.celerbi.easyfarmersdelightcompat.integration.regrowing.RegrowingCropD
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlockEntities;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlocks;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -21,6 +24,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
 public final class RecipeViewerData {
 
@@ -337,7 +342,8 @@ public final class RecipeViewerData {
                                     Ingredient.of(ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM.get()),
                                     completedEasyMobFarmNoiseSwitch(),
                                     Component.translatable(
-                                            "easyfarmersdelightcompat.viewer.guide.easy_mob_farm_noise_switch.completed")
+                                            "easyfarmersdelightcompat.viewer.guide.easy_mob_farm_noise_switch.completed"
+                                    )
                             )
                     ),
                     lines("easyfarmersdelightcompat.viewer.guide.easy_mob_farm_noise_switch", 3)
@@ -359,7 +365,10 @@ public final class RecipeViewerData {
             List<ItemStack> planting = matchingItems(definition::matchesPlanting, 16);
             List<ItemStack> hosts = matchingBlocks(definition::matchesHost, 16);
             Block crop = BuiltInRegistries.BLOCK.get(definition.cropBlockId());
-            if (planting.isEmpty() || hosts.isEmpty() || crop == null || crop == net.minecraft.world.level.block.Blocks.AIR) {
+            if (planting.isEmpty()
+                    || hosts.isEmpty()
+                    || crop == null
+                    || crop == Blocks.AIR) {
                 continue;
             }
 
@@ -393,7 +402,7 @@ public final class RecipeViewerData {
         for (RegrowingCropDefinition definition : viewerRegrowingDefinitions()) {
             List<ItemStack> planting = matchingItems(definition::matchesPlanting, 16);
             Block crop = BuiltInRegistries.BLOCK.get(definition.cropBlockId());
-            if (planting.isEmpty() || crop == null || crop == net.minecraft.world.level.block.Blocks.AIR) {
+            if (planting.isEmpty() || crop == null || crop == Blocks.AIR) {
                 continue;
             }
 
@@ -423,7 +432,7 @@ public final class RecipeViewerData {
     }
 
     private static List<AttachedCropDefinition> viewerAttachedDefinitions() {
-        java.util.LinkedHashMap<ResourceLocation, AttachedCropDefinition> definitions = new java.util.LinkedHashMap<>();
+        LinkedHashMap<ResourceLocation, AttachedCropDefinition> definitions = new LinkedHashMap<>();
         for (AttachedCropDefinition definition : AttachedCropDefinitions.all()) {
             definitions.put(definition.id(), definition);
         }
@@ -436,7 +445,7 @@ public final class RecipeViewerData {
     }
 
     private static List<RegrowingCropDefinition> viewerRegrowingDefinitions() {
-        java.util.LinkedHashMap<ResourceLocation, RegrowingCropDefinition> definitions = new java.util.LinkedHashMap<>();
+        LinkedHashMap<ResourceLocation, RegrowingCropDefinition> definitions = new LinkedHashMap<>();
         for (RegrowingCropDefinition definition : RegrowingCropDefinitions.all()) {
             definitions.put(definition.id(), definition);
         }
@@ -445,7 +454,7 @@ public final class RecipeViewerData {
     }
 
     private static void loadBundledAttachedDefinition(
-            java.util.Map<ResourceLocation, AttachedCropDefinition> definitions,
+            Map<ResourceLocation, AttachedCropDefinition> definitions,
             String path
     ) {
         ResourceLocation id = id(path);
@@ -472,7 +481,7 @@ public final class RecipeViewerData {
     }
 
     private static void loadBundledRegrowingDefinition(
-            java.util.Map<ResourceLocation, RegrowingCropDefinition> definitions,
+            Map<ResourceLocation, RegrowingCropDefinition> definitions,
             String path
     ) {
         ResourceLocation id = id(path);
@@ -499,7 +508,7 @@ public final class RecipeViewerData {
     }
 
     private static List<ItemStack> matchingItems(
-            java.util.function.Predicate<ItemStack> predicate,
+            Predicate<ItemStack> predicate,
             int limit
     ) {
         List<ItemStack> result = new ArrayList<>();
@@ -517,7 +526,7 @@ public final class RecipeViewerData {
     }
 
     private static List<ItemStack> matchingBlocks(
-            java.util.function.Predicate<net.minecraft.world.level.block.state.BlockState> predicate,
+            Predicate<BlockState> predicate,
             int limit
     ) {
         List<ItemStack> result = new ArrayList<>();

@@ -6,8 +6,8 @@ set "NO_PAUSE=0"
 if /I "%~1"=="--no-pause" set "NO_PAUSE=1"
 
 echo ============================================================
-echo Easy Farmer's Delight Compat - Forge 1.20.1
-echo Build de desarrollo
+echo Easy Farmer's Delight - Forge 1.20.1
+echo Build 1.4.0
 echo ============================================================
 echo.
 

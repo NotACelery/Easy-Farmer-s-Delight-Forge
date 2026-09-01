@@ -12,6 +12,7 @@ import dev.celerbi.easyfarmersdelightcompat.registry.ModBlockEntities;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -35,7 +36,6 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
-import javax.annotation.Nullable;
 import net.minecraftforge.items.ItemStackHandler;
 
 public final class CutterBlockEntity extends BlockEntity {

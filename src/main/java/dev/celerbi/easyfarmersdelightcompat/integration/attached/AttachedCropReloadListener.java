@@ -41,12 +41,12 @@ public final class AttachedCropReloadListener extends SimpleJsonResourceReloadLi
                             loaded.put(id, definition);
                         }
                     } catch (RuntimeException exception) {
-                        System.err.println("[Easy Farmer's Delight Compat] Skipping invalid attached-crop definition "
+                        System.err.println("[Easy Farmer's Delight] Skipping invalid attached-crop definition "
                                 + id + ": " + exception.getMessage());
                     }
                 });
         AttachedCropDefinitions.replace(loaded);
-        System.out.println("[Easy Farmer's Delight Compat] Loaded " + loaded.size()
+        System.out.println("[Easy Farmer's Delight] Loaded " + loaded.size()
                 + " attached-crop definition(s).");
     }
 }

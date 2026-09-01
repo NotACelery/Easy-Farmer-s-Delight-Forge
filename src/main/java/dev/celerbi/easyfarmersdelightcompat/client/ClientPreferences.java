@@ -92,7 +92,7 @@ public final class ClientPreferences {
             villagersMuted = false;
             ironFarmSoundsMuted = false;
             easyMobFarmSoundsMuted = false;
-            System.err.println("[Easy Farmer's Delight Compat] Failed to load client preferences: " + e.getMessage());
+            System.err.println("[Easy Farmer's Delight] Failed to load client preferences: " + e.getMessage());
         }
     }
 
@@ -108,7 +108,7 @@ public final class ClientPreferences {
             if (parent != null)
                 Files.createDirectories(parent);
             try (OutputStream out = Files.newOutputStream(temp)) {
-                properties.store(out, "Easy Farmer's Delight Compat client preferences");
+                properties.store(out, "Easy Farmer's Delight client preferences");
             }
             try {
                 Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
@@ -116,7 +116,7 @@ public final class ClientPreferences {
                 Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (IOException e) {
-            System.err.println("[Easy Farmer's Delight Compat] Failed to save client preferences: " + e.getMessage());
+            System.err.println("[Easy Farmer's Delight] Failed to save client preferences: " + e.getMessage());
             try {
                 Files.deleteIfExists(temp);
             } catch (IOException ignoredAgain) {

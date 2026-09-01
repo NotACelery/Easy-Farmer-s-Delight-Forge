@@ -35,6 +35,13 @@ public final class AttachedCropDefinitions {
         return all().stream().anyMatch(definition -> definition.matchesHost(host));
     }
 
+    public static boolean isPlantingItem(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+        return all().stream().anyMatch(definition -> definition.matchesPlanting(stack));
+    }
+
     public static Optional<AttachedCropDefinition> findPlanting(ItemStack stack, BlockState host) {
         return all().stream()
                 .filter(definition -> definition.matchesPlanting(stack) && definition.matchesHost(host))

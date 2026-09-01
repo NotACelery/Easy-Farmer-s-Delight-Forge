@@ -1,13 +1,18 @@
 package dev.celerbi.easyfarmersdelightcompat.recipe;
 
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlockEntities;
-import net.minecraft.nbt.*;
-import net.minecraft.world.item.*;
+import java.util.HashSet;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
 
 final class RecipeUtil {
-    private static final String BLOCK_ENTITY_TAG = "BlockEntityTag", DISPLAY_TAG = "display";
+    private static final String BLOCK_ENTITY_TAG = "BlockEntityTag";
+    private static final String DISPLAY_TAG = "display";
 
     private RecipeUtil() {
     }
@@ -21,15 +26,18 @@ final class RecipeUtil {
         result.setCount(1);
 
         CompoundTag sourceTag = source.getTag();
-        if (sourceTag != null && sourceTag.contains(DISPLAY_TAG, Tag.TAG_COMPOUND))
+        if (sourceTag != null && sourceTag.contains(DISPLAY_TAG, Tag.TAG_COMPOUND)) {
             result.addTagElement(DISPLAY_TAG, sourceTag.getCompound(DISPLAY_TAG).copy());
+        }
 
         CompoundTag data = source.getTagElement(BLOCK_ENTITY_TAG);
-        if (hasMeaningful(data))
+        if (hasMeaningful(data)) {
             BlockItem.setBlockEntityData(
                     result,
                     ModBlockEntities.COMPAT_FARMER.get(),
-                    data.copy());
+                    data.copy()
+            );
+        }
 
         return result;
     }
@@ -39,17 +47,19 @@ final class RecipeUtil {
     }
 
     private static boolean hasMeaningful(CompoundTag data) {
-        if (data == null || data.isEmpty())
+        if (data == null || data.isEmpty()) {
             return false;
+        }
 
-        CompoundTag c = data.copy();
-        for (String k : new String[] {"id", "x", "y", "z"})
-            c.remove(k);
+        CompoundTag copy = data.copy();
+        for (String key : new String[] {"id", "x", "y", "z"}) {
+            copy.remove(key);
+        }
 
-        stripEmptyContainers(c);
-        c.remove("EfdcSchema");
+        stripEmptyContainers(copy);
+        copy.remove("EfdcSchema");
 
-        for (String k : new String[] {
+        for (String key : new String[] {
                 "EfdcPaddyGrowth",
                 "EfdcBaseProgress",
                 "EfdcRopeOneProgress",
@@ -58,26 +68,29 @@ final class RecipeUtil {
                 "EfdcSugarCaneHeight",
                 "EfdcSugarCaneAge"
         }) {
-            if (c.contains(k, Tag.TAG_ANY_NUMERIC) && c.getInt(k) == 0)
-                c.remove(k);
+            if (copy.contains(key, Tag.TAG_ANY_NUMERIC) && copy.getInt(key) == 0) {
+                copy.remove(key);
+            }
         }
 
-        for (String k : new String[] {"EfdcFruitReady", "EfdcPaddySand"}) {
-            if (c.contains(k, Tag.TAG_ANY_NUMERIC) && !c.getBoolean(k))
-                c.remove(k);
+        for (String key : new String[] {"EfdcFruitReady", "EfdcPaddySand"}) {
+            if (copy.contains(key, Tag.TAG_ANY_NUMERIC) && !copy.getBoolean(key)) {
+                copy.remove(key);
+            }
         }
 
-        stripEmptyContainers(c);
-        return !c.isEmpty();
+        stripEmptyContainers(copy);
+        return !copy.isEmpty();
     }
 
     private static void stripEmptyContainers(CompoundTag tag) {
-        for (String key : new java.util.HashSet<>(tag.getAllKeys())) {
+        for (String key : new HashSet<>(tag.getAllKeys())) {
             Tag value = tag.get(key);
-            if (value instanceof CompoundTag compound && compound.isEmpty())
+            if (value instanceof CompoundTag compound && compound.isEmpty()) {
                 tag.remove(key);
-            else if (value instanceof ListTag list && list.isEmpty())
+            } else if (value instanceof ListTag list && list.isEmpty()) {
                 tag.remove(key);
+            }
         }
     }
 }

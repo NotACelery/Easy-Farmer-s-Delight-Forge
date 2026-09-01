@@ -1,6 +1,8 @@
 package dev.celerbi.easyfarmersdelightcompat.integration;
 
 import dev.celerbi.easyfarmersdelightcompat.blockentity.CutterBlockEntity;
+import java.lang.reflect.Constructor;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.npc.Villager;
@@ -101,8 +103,8 @@ public final class CutterVillagerAdapter {
         try {
             Block easyFarmer = BuiltInRegistries.BLOCK.get(EASY_FARMER_ID);
             Class<?> clazz = ReflectionCache.type(FARMER_TILEENTITY);
-            Constructor<?> ctor = ReflectionCache.constructor(clazz, net.minecraft.core.BlockPos.class, BlockState.class);
-            delegate = (BlockEntity) ctor.newInstance(owner.getBlockPos(), easyFarmer.defaultBlockState());
+            Constructor<?> constructor = ReflectionCache.constructor(clazz, BlockPos.class, BlockState.class);
+            delegate = (BlockEntity) constructor.newInstance(owner.getBlockPos(), easyFarmer.defaultBlockState());
             if (level != null)
                 delegate.setLevel(level);
             ReflectionCache.field(clazz, "villager").set(delegate, owner.getStoredVillager().copyWithCount(1));

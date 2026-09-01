@@ -1,165 +1,280 @@
-# Easy Farmer's Delight Compat — Forge 1.20.1
+# Easy Farmer's Delight — Forge 1.20.1
 
-Current development: **1.4.0-dev.2** (Forge 1.20.1)
+Current release: **1.4.0** (Minecraft 1.20.1 / Forge 47.4.x / Java 17)
 
-**Easy Farmer's Delight Compat** is an independent, unofficial compatibility addon that brings **Farmer's Delight** farming and cutting mechanics into **Easy Villagers** automation.
 
-> **Backport notice:** this repository is the **Forge / Minecraft 1.20.1 backport** of Easy Farmer's Delight Compat.
-> The main edition targets **NeoForge / Minecraft 1.21.1** and is maintained separately at:
-> https://github.com/NotACelery/Easy-Farmer-s-Delight-Compat
 
-The Forge edition keeps the same gameplay goals and feature set wherever the 1.20.1 versions of the dependencies allow it, while using the native Forge 1.20.1 APIs and data formats.
+**Easy Farmer's Delight** is an independent, unofficial expansion for **Easy Villagers** and **Farmer's Delight**.
+It extends villager-powered farming beyond normal field crops with Paddy farming, Rich Soil mechanics, attached-log
+fruit, regrowing bushes, dynamic Cutting Board automation and client-local sound controls.
 
-For implementation architecture, persistence invariants, compatibility boundaries and regression checks, see [`DEVELOPMENT.md`](DEVELOPMENT.md).
-For third-party interoperability and licensing boundaries, see [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+> This project is not affiliated with or endorsed by the authors of Easy Villagers, Farmer's Delight, Ars Nouveau,
+> Easy Mob Farm, Jade, JEI, EMI or other supported mods.
 
-## Target versions
+> **World compatibility:** the public project name is **Easy Farmer's Delight**, but the technical mod/registry
+> namespace remains `easyfarmersdelightcompat`. Existing registered blocks/items, BlockEntity IDs, NBT keys, recipes
+> and saved worlds therefore retain their established identity.
 
-- Minecraft **1.20.1**
-- Forge **47.2.0+**
-- Development baseline: Forge **47.4.23**
-- Java / JDK **17**
-- Easy Villagers **1.1.39+**
-- Farmer's Delight **1.3.3+**
+For the complete crop matrix and host rules, see **[SUPPORTED_CROPS.md](SUPPORTED_CROPS.md)**.
+For architecture and persistence details, see **[DEVELOPMENT.md](DEVELOPMENT.md)**.
+For third-party interoperability/resource boundaries, see **[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)**.
 
-Optional integrations:
+## Main features
 
-- Jade 11.x
-- JEI 15.x
-- EMI 1.1.x for Minecraft 1.20.1
+- **Paddy Farmer** for Farmer's Delight Rice and Sand-based Sugar Cane.
+- **Rich Farmer** with Rich Soil, Harvest Tools, Tomatoes/Rope, Mushroom Colonies, Melon/Pumpkin, regrowing bushes
+  and attached-log crops.
+- **Rich Paddy Farmer** combining the Paddy lifecycle with Rich Soil acceleration for Rice.
+- **Rich Farmer Log Mode** with two independent host logs and up to 8 attached crop faces.
+- Built-in optional **Ars Nouveau** support for Magebloom, Sourceberry and all four Archfruits.
+- Optional **Argentum** seed integration through the normal villager seed tag.
+- **Cutter** automation for Farmer's Delight Cutting Board recipes plus Axe transformations.
+- Dynamic Cutter work surfaces for **any compatible unstripped base log from any mod** that follows Minecraft's
+  standard log tags; the selected block is rendered using its own source model/texture/animation.
+- **Villager Noise Switch**, **Iron Farm Noise Switch**, and optional **Easy Mob Farm Noise Switch**.
+- Optional **Jade**, **JEI**, and **EMI** integrations.
+- `/farm` operator command for reproducible configured Farmer grids.
+- Event-driven Farmer/Cutter standby designed to avoid repeated blocked-work polling.
 
-## Features
+## Farmer variants
 
-### Farmer variants
+### Paddy Farmer
 
-- **Paddy Farmer**
-  - Farmer's Delight Rice support, including the full rice crop cycle.
-  - Sugar Cane support.
-- **Rich Farmer**
-  - Rich Soil accelerated farming.
-  - Tomato and rope handling.
-  - Mushroom Colony support.
-  - Compatible crop automation.
-- **Rich Paddy Farmer**
-  - Paddy Farmer behavior combined with Rich Soil acceleration.
-- Farmer machine data is preserved when upgrading variants.
-- Empty Farmer items can stack normally, while Farmers carrying villager or inventory state are kept non-stackable.
+The Paddy Farmer handles crop lifecycles that need a flooded/specialized enclosure.
 
-### Harvest tools
+**Rice** is inserted directly and follows the complete Farmer's Delight Rice lifecycle.
 
-Compatible Farmer variants can use the appropriate harvest tools for special crops.
+**Sugar Cane** requires an empty Paddy Farmer, then Sand, then Sugar Cane. It grows to three blocks high and
+harvests only the upper sections, leaving the base planted. Sugar Cane is deliberately **not** accelerated by Rich
+Soil, including in a Rich Paddy Farmer.
 
-- Farmer's Delight Knives are supported through the Forge knife tag.
-- Hoes and Fortune-enchanted tools retain their intended harvesting behavior.
-- Tool durability, Fortune effects and break behavior are preserved.
+### Rich Farmer
 
-### Cutter
+The Rich Farmer keeps the normal Easy Villagers crop route and adds specialized mechanics:
 
-The **Cutter** automates Farmer's Delight Cutting Board recipes while following the 1.20.1 recipe behavior.
+- Rich Soil acceleration where allowed by Farmer's Delight.
+- Tomatoes with 0–2 independent Rope sections.
+- Red/Brown Mushroom Colonies.
+- Melon/Pumpkin virtual stem + fruit handling.
+- Sweet Berry Bush and Ars Nouveau Sourceberry regrowth.
+- Cocoa on Jungle Logs.
+- Ars Nouveau Bombegranate, Mendosteen, Frostaya and Bastion fruit on their matching Archwood host families.
+- Two independently selectable attached host logs, allowing mixed crops in one Farmer.
 
-Its work surface accepts any unstripped base log exposed through Minecraft's standard log tags. Modded woods therefore work without hardcoded compatibility when their source mod follows the standard tags.
+The base Easy Villagers Farmer itself is not modified to gain these special mechanics.
 
-- Dedicated villager-powered machine.
-- Input, tool and output handling.
-- Knife/tool requirements are respected.
-- Fortune-aware Cutting Board outputs.
-- Cutting recipe sounds.
-- Axe transformations such as stripping, scraping and wax removal where applicable.
-- Machine contents and villager state are preserved correctly.
+### Rich Paddy Farmer
+
+The Rich Paddy Farmer keeps Paddy Rice/Sugar Cane behavior and adds the Harvest Tool slot. Rich Soil speeds Rice,
+but **not Sugar Cane**.
+
+## Harvest Tools
+
+Rich Farmer and Rich Paddy Farmer expose a protected Harvest Tool slot.
+
+| Tool | Use |
+| --- | --- |
+| **Knife** | Required for mature Mushroom Colonies; optional for Rich Paddy Rice |
+| **Hoe** | Optional for compatible normal crops and Tomatoes; may carry Fortune into real crop loot |
+| **Axe** | Required for mature Melons/Pumpkins |
+
+A tool is only consumed/damaged when the relevant mechanic says it should be. Blocked output does not consume the
+crop or damage the tool.
+
+## Attached log crops
+
+A Rich Farmer can install a **lower** and **upper** host log. Each one has four horizontal crop faces, giving up to
+8 independently growing attached crops.
+
+The host check is strict and data-driven:
+
+- Cocoa Beans require `minecraft:jungle_logs`.
+- Bombegranate Pod requires `ars_nouveau:blazing_logs`.
+- Mendosteen Pod requires `ars_nouveau:flourishing_logs`.
+- Frostaya Pod requires `ars_nouveau:cascading_logs`.
+- Bastion Pod requires `ars_nouveau:vexing_logs`.
+
+Just like vanilla Cocoa, putting the right seed against the wrong log does not plant it. The same rule extends to
+modded attached crops. Lower and upper logs can be different, so one Rich Farmer can grow two attached-crop families
+at once.
+
+Sneak-use dismantles in this order: upper crops → upper log → lower crops → lower log.
+
+See [SUPPORTED_CROPS.md](SUPPORTED_CROPS.md) for the complete behavior, Rich Soil rules and datapack format.
+
+## Regrowing bushes
+
+Sweet Berry Bushes and Ars Nouveau Sourceberry are explicit data-driven regrowing crops. Mature bushes are picked
+and reset to their post-harvest age instead of being destroyed and replanted. Rich Soil can accelerate their growth
+but does not directly increase the harvest roll.
+
+## Ars Nouveau support
+
+Ars Nouveau is optional and is never classloaded as a hard dependency for crop support. When installed, Easy
+Farmer's Delight explicitly supports:
+
+- **Magebloom** through the normal seed/crop path.
+- **Sourceberry** through the regrowing-bush system.
+- **Bombegranate**, **Mendosteen**, **Frostaya**, and **Bastion Fruit** through attached-log definitions.
+- Ars Nouveau **Archwood logs as Cutter work surfaces** when they participate in the standard Minecraft log tags.
+- Source Ars models/textures/animations are rendered by Minecraft directly; they are not copied into this project.
+
+## Cutter
+
+The Cutter is a villager-powered automated Farmer's Delight Cutting Board.
+
+It has 4 input slots, a protected Cutting Tool slot, and 4 output slots. It processes real Farmer's Delight Cutting
+recipes and can also perform familiar Axe transformations such as log stripping, Copper scraping and wax removal.
+
+### Universal modded-log work surfaces
+
+The Cutter does not maintain a hardcoded wood whitelist. Its crafting/work-surface ingredient accepts any
+**unstripped base log/stem** exposed through Minecraft's standard log tags, plus the historical addon tag as a
+legacy datapack fallback.
+
+This means compatible logs from other mods can work automatically. The selected log registry ID is saved on the
+Cutter item/BlockEntity. The renderer asks Minecraft to draw that actual block, so animated/connected/source-specific
+visuals remain owned by and rendered from the original mod. Ars Nouveau Archwood and vanilla Crimson/Warped stems
+therefore keep their source appearance and animation.
+
+Stripped variants, `_wood` blocks and `_hyphae` blocks are intentionally excluded as Cutter base work surfaces.
+If a saved modded log no longer exists, Oak Log is the safe fallback.
+
+## Event-driven performance model
+
+Farmer and Cutter blocked-work paths are designed to sleep instead of polling expensive state every tick.
+
+- Mature harvest blocked by **output** waits for a real output-capacity increase.
+- Harvest blocked by a **tool** wakes when the Harvest Tool changes.
+- Harvest blocked by a **baby villager** wakes when the stored villager becomes adult or relevant state changes.
+- Attached crop faces are independent: one blocked fruit type cannot freeze a different mature fruit that still fits
+  in the shared output inventory.
+- Pending output drops are reused where possible instead of rerolling loot after every failed capacity check.
+- Cutter idle/full-output states similarly park until an input/tool/output/villager event can actually change work.
+
+A NeoForge stress test with **513 Rich Farmers** showed normal 100–120 FPS while the machines remained loaded but
+fully occluded, with the remaining slowdown tied primarily to rendering hundreds of visible villager/crop models.
+
+## Farmer item state and tooltips
+
+Machine items preserve meaningful stored state when mined. Empty Farmers can stack; stateful Farmers are kept
+individual so contents cannot be duplicated.
+
+Hovering an Easy Farmer's Delight Farmer item shows its planted crop. Mixed attached-crop Farmers show each distinct
+stored crop, making configured machines easy to organize before placement.
+
+## `/farm` operator command
+
+Coordinates use vanilla **X Y Z** order:
+
+```text
+/farm <from> <to> <farm> <villager:true|false> <crop-or-none> [extra]
+```
+
+Supported Farmer names:
+
+- `paddy_farmer`
+- `rich_farmer`
+- `rich_paddy_farmer`
+- full legacy registry IDs are also accepted
+
+Optional setup argument:
+
+- `rope=0`, `rope=1`, `rope=2` — Tomato Rope count.
+- `sand` — Paddy/Rich Paddy Sugar Cane mode.
+- `logs=1`, `logs=2` — attached-log crops; omitted attached setup defaults to one canonical compatible log.
+
+Example:
+
+```text
+/farm -18 129 -21 17 129 -57 rich_farmer true farmersdelight:tomato_seeds rope=2
+```
+
+The full target region and Farmer/crop combination are validated before placement. Vanilla `/fill` is untouched.
+
+## Noise Switch family
 
 ### Villager Noise Switch
 
-A client-local **Villager Noise Switch** is included for controlling villager sounds without altering the stored villager or machine behavior. Its recipe and internal pedestal now use an Emerald Block to distinguish it from the Iron Farm variant. Like its Iron Farm sibling, the Villager Noise Switch is always non-stackable.
+Stores an Easy Villagers Villager and toggles a persistent **client-local** Villager voice preference. It does not
+create a real Redstone signal.
 
 ### Iron Farm Noise Switch
 
-The **Iron Farm Noise Switch** uses the former Iron Block recipe and must be assembled after placement with four additional Iron Blocks, followed by a Carved Pumpkin. The four blocks appear inside in the vanilla Iron Golem construction order before the pumpkin permanently completes the miniature Golem.
-
-Once assembled, right-clicking toggles a persistent client-local mute that cancels only Zombie Ambient and Iron Golem Hurt/Death sounds emitted from the exact position of Easy Villagers Iron Farm blocks. Normal Zombies and Iron Golems remain audible.
-
-The Iron Farm Noise Switch is always non-stackable and preserves its assembly/Golem state when mined. Its Lever and Redstone presentation is client-personal and emits no real Redstone.
+After placement, insert four Iron Blocks and then a Carved Pumpkin to assemble the permanent miniature Iron Golem.
+The switch mutes only the synthetic Zombie Ambient / Iron Golem Hurt / Iron Golem Death sounds emitted from the exact
+position of Easy Villagers Iron Farms. Real Zombies and Iron Golems remain audible.
 
 ### Easy Mob Farm Noise Switch
 
-When **Easy Mob Farm** is installed, the addon registers an additional Noise Switch. If Easy Mob Farm is absent, this block/item is not registered and does not appear in the Creative inventory, recipes, Jade, JEI or EMI.
+Registered only when **Easy Mob Farm** is installed. Insert six Rotten Flesh to assemble the decorative vanilla
+Zombie model. The completed switch mutes only Easy Mob Farm's captured-mob display entities for the local client;
+real world mobs are unchanged.
 
-Its recipe uses five Glass Panes around a Lever, with a Copper Block, Mossy Cobblestone and Redstone Block across the bottom row. After placement, insert six Rotten Flesh one at a time to assemble a decorative Zombie in the order right leg, left leg, torso, right arm, left arm and head.
+All Noise Switch assembly/state data is preserved when mined.
 
-The completed switch toggles a persistent client-local mute only for the synthetic display entities created from Easy Mob Farm capture cards. Real world mobs remain untouched. The decorative Zombie is a rendered vanilla model rather than a spawned entity, and the block uses the same corrected hollow enclosure/light sampling as the other Noise Switches.
+## JEI, EMI and Jade
 
-### Recipe viewer and HUD integrations
+These integrations are optional.
 
-Optional support is included for:
+- JEI/EMI show Farmer harvesting/Harvest Tool guidance and contextual Block Guide pages.
+- Farmer upgrade transfer uses the real gameplay recipes/state-preserving behavior.
+- Cutter remains exposed as a Farmer's Delight Cutting workstation/catalyst where appropriate.
+- Jade reports crop/growth state, attached host occupancy, Harvest Tool blockers, Paddy/Sugar Cane state, Cutter
+  status and Noise Switch state/assembly progress.
+- Optional integrations are isolated so their absence does not classload unavailable APIs.
 
-- **Jade**
-- **JEI**
-- **EMI**
+## Visual/resource independence
 
-These integrations expose machine contents, harvest tools, outputs and custom recipe information without making the optional mods hard dependencies.
+Easy Farmer's Delight does not redistribute Easy Villagers models, textures or GUI images. Its machine enclosure
+resources are project/vanilla based, while dynamic contents deliberately ask Minecraft to render the original
+Villager/crop/log model from the owning game/mod.
 
-## Forge 1.20.1 backport notes
+This is why modded logs and animated stems can keep their native appearance without Easy Farmer's Delight copying
+those assets.
 
-This edition is a source-level backport, not a loader shim. The original NeoForge 1.21.1 implementation was adapted to Minecraft 1.20.1 conventions, including:
+## Bamboo scope
 
-- NeoForge registries, events and menu hooks → Forge equivalents.
-- Data Components → classic `BlockEntityTag` / NBT persistence.
-- NeoForge item capabilities → Forge `ForgeCapabilities.ITEM_HANDLER` and `LazyOptional`.
-- Minecraft 1.21 crafting APIs → 1.20.1 crafting containers and serializers.
-- Farmer's Delight 1.20.1 Cutting Board recipe API and tool matching.
-- `forge:tools/knives` for knife compatibility.
-- Farmer's Delight 1.20.1 `tomatoes_on_rope` behavior.
-- 1.20.1 datapack directory names and resource formats.
-- Java 21-only code paths replaced with Java 17-compatible equivalents.
+Bamboo is **not a supported Farmer crop** in 1.4.0. Its vertical structural growth is outside the crop families
+implemented by this release. Bamboo Block can still participate in Cutter Axe/log behavior if exposed through the
+standard game transformation/tag systems.
 
-The archived Forge **1.4.0-dev.1 development checkpoint** has been validated in-game, including Farmer recipes/upgrades, harvest tools, Cutter processing and all three Noise Switch families. The current **1.4.0-dev** line changes presentation/integration boundaries and generic Cutter log discovery, so it must receive a fresh regression pass before release.
+## Requirements
+
+Required:
+
+- Minecraft **1.20.1**
+- Forge **47.2.0+** (development baseline 47.4.23)
+- Easy Villagers **1.1.39+**
+- Farmer's Delight **1.3.3+**
+
+Optional:
+
+- Ars Nouveau
+- Argentum
+- Easy Mob Farm
+- Jade 11.x
+- JEI 15.x
+- EMI 1.1.x
+
+Install Easy Farmer's Delight on both client and server for multiplayer gameplay. Client-only viewer/HUD mods remain
+optional.
 
 ## Building from source
 
-A **JDK 17** installation is required.
+Java **17** is required.
 
-On Windows, use the repository build helper:
+Windows:
 
-```bat
+```text
 build.bat
 ```
 
-`build.bat` delegates to `build.ps1`, which resolves Java/Gradle, runs a clean build, writes `build.log`, and verifies the runtime JAR.
+The helper delegates to `build.ps1`, resolves a JDK 17/Gradle environment, performs a clean build, writes
+`build.log` and verifies that a runtime JAR exists. A normal local Gradle build is also supported.
 
-With a suitable local Gradle installation, you can also run:
+The runtime JAR is written to `build/libs/` and uses **easy-farmers-delight** in its filename.
 
-```bash
-gradle clean build
-```
+## License
 
-The finished mod JAR is written to:
-
-```text
-build/libs/
-```
-
-If you add a Gradle Wrapper to your checkout, `./gradlew clean build` or `gradlew.bat clean build` are equivalent.
-
-## Dependencies
-
-The mod depends on:
-
-- **Easy Villagers**
-- **Farmer's Delight**
-- **Forge**
-
-Jade, JEI and EMI integrations are optional.
-
-Dependency mods are not redistributed as part of this repository or inside the built JAR.
-
-## Project status
-
-The Forge 1.20.1 branch is maintained as a dedicated backport. Changes from the NeoForge 1.21.1 edition may require loader- and version-specific adaptation instead of being copied directly.
-
-## Disclaimer and attribution
-
-This is an **independent, unofficial compatibility project**. It is not affiliated with, endorsed by, or maintained by the authors of Easy Villagers or Farmer's Delight.
-
-- **Easy Villagers** — henkelmax
-- **Farmer's Delight** — vectorwing
-
-Their names, APIs and game content are referenced solely for interoperability.
+Copyright © 2026 Celerbi. All rights reserved.
