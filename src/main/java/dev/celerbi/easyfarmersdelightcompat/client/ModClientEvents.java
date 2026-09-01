@@ -1,18 +1,19 @@
 package dev.celerbi.easyfarmersdelightcompat.client;
 
 import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
+import dev.celerbi.easyfarmersdelightcompat.compat.easymobfarm.EasyMobFarmCompat;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlockEntities;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlocks;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModMenus;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
-import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 @EventBusSubscriber(modid = EasyFarmersDelightCompat.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -30,6 +31,10 @@ public final class ModClientEvents {
                 VillagerNoiseSwitchBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.IRON_FARM_NOISE_SWITCH.get(),
                 IronFarmNoiseSwitchBlockEntityRenderer::new);
+        if (EasyMobFarmCompat.isLoaded() && ModBlockEntities.EASY_MOB_FARM_NOISE_SWITCH != null) {
+            event.registerBlockEntityRenderer(ModBlockEntities.EASY_MOB_FARM_NOISE_SWITCH.get(),
+                    EasyMobFarmNoiseSwitchBlockEntityRenderer::new);
+        }
     }
 
     @SubscribeEvent

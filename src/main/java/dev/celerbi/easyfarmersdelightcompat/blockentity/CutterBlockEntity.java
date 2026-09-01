@@ -9,8 +9,10 @@ import dev.celerbi.easyfarmersdelightcompat.integration.FarmerToolSupport;
 import dev.celerbi.easyfarmersdelightcompat.integration.OutputSimulator;
 import dev.celerbi.easyfarmersdelightcompat.integration.ToolRequirement;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlockEntities;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -34,13 +36,18 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
-import javax.annotation.Nullable;
 import net.minecraftforge.items.ItemStackHandler;
 
 public final class CutterBlockEntity extends BlockEntity {
-    public static final int PROCESS_TICKS = 10, INPUT_SLOTS = 4, OUTPUT_SLOTS = 4;
-    private static final String KEY_VILLAGER = "CutterVillager", KEY_TOOL = "CutterTool", KEY_INPUT = "CutterInput",
-            KEY_OUTPUT = "CutterOutput", KEY_PROGRESS = "CutterProgress";
+    public static final int PROCESS_TICKS = 10;
+    public static final int INPUT_SLOTS = 4;
+    public static final int OUTPUT_SLOTS = 4;
+
+    private static final String KEY_VILLAGER = "CutterVillager";
+    private static final String KEY_TOOL = "CutterTool";
+    private static final String KEY_INPUT = "CutterInput";
+    private static final String KEY_OUTPUT = "CutterOutput";
+    private static final String KEY_PROGRESS = "CutterProgress";
     private final CutterVillagerAdapter villagerAdapter = new CutterVillagerAdapter(this);
     private ItemStack villager = ItemStack.EMPTY;
     private Block logVariant = Blocks.OAK_LOG;
@@ -49,6 +56,10 @@ public final class CutterBlockEntity extends BlockEntity {
     private boolean itemPreview;
     private boolean workPlanDirty = true;
     private boolean workPlanAvailable;
+    private boolean waitingForOutputSpace;
+    private boolean mutatingWorkContents;
+    private boolean pendingToolRequirementDirty = true;
+    private ToolRequirement cachedPendingToolRequirement = ToolRequirement.NONE;
 
     private final ItemStackHandler tool = new ItemStackHandler(1) {
         @Override
@@ -64,7 +75,7 @@ public final class CutterBlockEntity extends BlockEntity {
         @Override
         protected void onContentsChanged(int slot) {
             if (!loadingState)
-                onWorkContentsChanged();
+                onInputOrToolContentsChanged();
         }
     };
 
@@ -72,7 +83,7 @@ public final class CutterBlockEntity extends BlockEntity {
         @Override
         protected void onContentsChanged(int slot) {
             if (!loadingState)
-                onWorkContentsChanged();
+                onInputOrToolContentsChanged();
         }
     };
 
@@ -80,7 +91,15 @@ public final class CutterBlockEntity extends BlockEntity {
         @Override
         protected void onContentsChanged(int slot) {
             if (!loadingState)
-                onWorkContentsChanged();
+                onOutputContentsChanged();
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            ItemStack extracted = super.extractItem(slot, amount, simulate);
+            if (!simulate && !loadingState && !extracted.isEmpty())
+                onOutputReduced();
+            return extracted;
         }
     };
 
@@ -97,15 +116,23 @@ public final class CutterBlockEntity extends BlockEntity {
 
     public static void serverTick(ServerLevel level, BlockPos pos, BlockState state, CutterBlockEntity cutter) {
         if (cutter.hasVillager()) {
-            cutter.villagerAdapter.advanceAge();
-            if (level.getGameTime() % 20L == 0L) {
+            boolean becameAdult = cutter.villagerAdapter.advanceAge();
+            if (becameAdult) {
                 cutter.villagerAdapter.flushToOwner();
-                cutter.syncBlock();
+                cutter.invalidateWorkPlan();
+                cutter.setChangedAndSync();
+            } else if (level.getGameTime() % 20L == 0L) {
+                cutter.villagerAdapter.flushToOwner();
+                cutter.setChanged();
             }
         }
 
+        if (cutter.progress == 0 && !cutter.workPlanDirty && !cutter.workPlanAvailable)
+            return;
+
         if (!cutter.hasBasicWorkPrerequisites() || !cutter.hasProcessableWork(level)) {
             cutter.setProgress(0);
+            cutter.parkUntilContentsChange();
             return;
         }
 
@@ -114,10 +141,8 @@ public final class CutterBlockEntity extends BlockEntity {
             return;
 
         cutter.setProgress(0);
-        if (!cutter.tryProcess(level)) {
-
+        if (!cutter.tryProcess(level))
             cutter.parkUntilContentsChange();
-        }
     }
 
     private boolean hasBasicWorkPrerequisites() {
@@ -160,6 +185,7 @@ public final class CutterBlockEntity extends BlockEntity {
     private void invalidateWorkPlan() {
         workPlanDirty = true;
         workPlanAvailable = false;
+        waitingForOutputSpace = false;
     }
 
     private void parkUntilContentsChange() {
@@ -167,23 +193,50 @@ public final class CutterBlockEntity extends BlockEntity {
         workPlanAvailable = false;
     }
 
-    private void onWorkContentsChanged() {
+    private void invalidatePendingToolRequirement() {
+        pendingToolRequirementDirty = true;
+        cachedPendingToolRequirement = ToolRequirement.NONE;
+    }
+
+    private void onInputOrToolContentsChanged() {
+        if (mutatingWorkContents)
+            return;
         invalidateWorkPlan();
+        invalidatePendingToolRequirement();
         setChangedAndSync();
+    }
+
+    private void onOutputContentsChanged() {
+        if (!mutatingWorkContents)
+            setChanged();
+    }
+
+    private void onOutputReduced() {
+        if (mutatingWorkContents || !waitingForOutputSpace)
+            return;
+        invalidateWorkPlan();
     }
 
     private boolean tryProcess(ServerLevel level) {
         ItemStack equipped = tool.getStackInSlot(0);
         int fortune = fortuneLevel(level, equipped);
+        boolean blockedByOutput = false;
+
         for (int slot = 0; slot < input.getSlots(); slot++) {
             ItemStack source = input.getStackInSlot(slot);
             if (source.isEmpty())
                 continue;
-            Optional<CuttingRecipeResolver.Result> cutting = CuttingRecipeResolver.resolve(level, source, equipped,
-                    fortune);
+
+            Optional<CuttingRecipeResolver.Result> cutting = CuttingRecipeResolver.resolve(
+                    level,
+                    source,
+                    equipped,
+                    fortune
+            );
             if (cutting.isPresent()) {
-                var result = cutting.get();
+                CuttingRecipeResolver.Result result = cutting.get();
                 if (OutputSimulator.canFitAll(output, result.outputs())) {
+                    waitingForOutputSpace = false;
                     return completeOperation(
                             level,
                             slot,
@@ -191,45 +244,81 @@ public final class CutterBlockEntity extends BlockEntity {
                             result.sound().orElse(SoundEvents.VILLAGER_WORK_BUTCHER)
                     );
                 }
+                blockedByOutput = true;
                 continue;
             }
+
             Optional<AxeActionResolver.Result> axe = AxeActionResolver.resolve(source, equipped);
             if (axe.isPresent()) {
-                var result = axe.get();
+                AxeActionResolver.Result result = axe.get();
                 List<ItemStack> results = List.of(result.output());
                 if (OutputSimulator.canFitAll(output, results)) {
+                    waitingForOutputSpace = false;
                     return completeOperation(level, slot, results, result.sound());
                 }
+                blockedByOutput = true;
             }
         }
+
+        waitingForOutputSpace = blockedByOutput;
         return false;
     }
 
     private boolean completeOperation(ServerLevel level, int inputSlot, List<ItemStack> results, SoundEvent sound) {
-        if (!OutputSimulator.canFitAll(output, results))
-            return false;
         ItemStack source = input.getStackInSlot(inputSlot);
         if (source.isEmpty())
             return false;
-        source.shrink(1);
-        input.setStackInSlot(inputSlot, source);
-        if (!OutputSimulator.insertAll(output, results)) {
-            source.grow(1);
+
+        ItemStack sourceBefore = source.copy();
+        List<ItemStack> outputBefore = snapshotHandler(output);
+
+        mutatingWorkContents = true;
+        try {
+            source.shrink(1);
             input.setStackInSlot(inputSlot, source);
-            return false;
-        }
-        ItemStack equipped = tool.getStackInSlot(0);
-        if (!equipped.isEmpty() && equipped.isDamageableItem()) {
-            if (
-            equipped.hurt(1, level.random, null)) {
-                equipped.shrink(1); level.playSound(null, worldPosition, SoundEvents.ITEM_BREAK,
-                    SoundSource.BLOCKS, .8F, 1F);
+
+            if (!OutputSimulator.insertAllAfterSuccessfulSimulation(output, results)) {
+                input.setStackInSlot(inputSlot, sourceBefore);
+                restoreHandler(output, outputBefore);
+                return false;
             }
-            tool.setStackInSlot(0, equipped);
+
+            ItemStack equipped = tool.getStackInSlot(0);
+            if (!equipped.isEmpty() && equipped.isDamageableItem()) {
+                if (equipped.hurt(1, level.random, null)) {
+                    equipped.shrink(1);
+                    level.playSound(
+                            null,
+                            worldPosition,
+                            SoundEvents.ITEM_BREAK,
+                            SoundSource.BLOCKS,
+                            .8F,
+                            1F
+                    );
+                }
+                tool.setStackInSlot(0, equipped);
+            }
+        } finally {
+            mutatingWorkContents = false;
         }
+
         level.playSound(null, worldPosition, sound, SoundSource.BLOCKS, .8F, 1F);
+        invalidateWorkPlan();
+        invalidatePendingToolRequirement();
         setChangedAndSync();
         return true;
+    }
+
+    private static List<ItemStack> snapshotHandler(ItemStackHandler handler) {
+        List<ItemStack> snapshot = new ArrayList<>(handler.getSlots());
+        for (int slot = 0; slot < handler.getSlots(); slot++)
+            snapshot.add(handler.getStackInSlot(slot).copy());
+        return snapshot;
+    }
+
+    private static void restoreHandler(ItemStackHandler handler, List<ItemStack> snapshot) {
+        for (int slot = 0; slot < handler.getSlots(); slot++)
+            handler.setStackInSlot(slot, snapshot.get(slot).copy());
     }
 
     private static int fortuneLevel(ServerLevel level, ItemStack stack) {
@@ -278,10 +367,8 @@ public final class CutterBlockEntity extends BlockEntity {
     }
 
     public void updateVillagerFromAdapter(ItemStack stack) {
-        if (stack != null && !stack.isEmpty()) {
+        if (stack != null && !stack.isEmpty())
             villager = stack.copyWithCount(1);
-            setChanged();
-        }
     }
 
     public CutterVillagerAdapter villagerAdapter() {
@@ -343,7 +430,11 @@ public final class CutterBlockEntity extends BlockEntity {
     }
 
     public ToolRequirement pendingToolRequirement(Level level) {
-        return blockingToolRequirement(level, tool.getStackInSlot(0));
+        if (!pendingToolRequirementDirty)
+            return cachedPendingToolRequirement;
+        cachedPendingToolRequirement = blockingToolRequirement(level, tool.getStackInSlot(0));
+        pendingToolRequirementDirty = false;
+        return cachedPendingToolRequirement;
     }
 
     public ToolRequirement blockingToolRequirement(Level level, ItemStack equipped) {
@@ -351,7 +442,8 @@ public final class CutterBlockEntity extends BlockEntity {
             return ToolRequirement.NONE;
         List<ItemStack> knives = FarmerToolSupport.representativeKnives();
         List<ItemStack> axes = FarmerToolSupport.representativeAxes();
-        boolean knife = false, axe = false;
+        boolean knife = false;
+        boolean axe = false;
         for (int slot = 0; slot < input.getSlots(); slot++) {
             ItemStack source = input.getStackInSlot(slot);
             if (source.isEmpty())
@@ -421,6 +513,7 @@ public final class CutterBlockEntity extends BlockEntity {
         progress = Math.max(0, Math.min(PROCESS_TICKS, tag.getInt(KEY_PROGRESS)));
         villagerAdapter.reset();
         invalidateWorkPlan();
+        invalidatePendingToolRequirement();
     }
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction side) {

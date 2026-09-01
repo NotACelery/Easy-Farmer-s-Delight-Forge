@@ -58,7 +58,8 @@ public final class CutterItemRenderer extends BlockEntityWithoutLevelRenderer {
             preview.setItemPreview(true);
 
             CompoundTag data = stack.getTagElement("BlockEntityTag");
-            if (data != null && !data.isEmpty()) {preview.load(data);
+            if (data != null && !data.isEmpty()) {
+            preview.load(data);
                 preview.setItemPreview(true);
             }
 

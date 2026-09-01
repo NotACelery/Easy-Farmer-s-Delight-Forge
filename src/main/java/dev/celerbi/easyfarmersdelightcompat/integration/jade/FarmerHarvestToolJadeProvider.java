@@ -1,4 +1,4 @@
-package dev.celerbi.easyfarmersdelightcompat.compat.jade;
+package dev.celerbi.easyfarmersdelightcompat.integration.jade;
 
 import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.CompatFarmerBlockEntity;

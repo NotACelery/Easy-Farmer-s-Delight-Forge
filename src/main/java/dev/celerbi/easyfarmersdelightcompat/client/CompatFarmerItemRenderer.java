@@ -52,7 +52,8 @@ public final class CompatFarmerItemRenderer extends BlockEntityWithoutLevelRende
             preview.setItemPreview(true);
 
             CompoundTag data = stack.getTagElement("BlockEntityTag");
-            if (data != null && !data.isEmpty()) {preview.load(data);
+            if (data != null && !data.isEmpty()) {
+            preview.load(data);
                 preview.setItemPreview(true);
             }
 

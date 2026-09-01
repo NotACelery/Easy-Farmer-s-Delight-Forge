@@ -5,13 +5,11 @@ import java.lang.reflect.Method;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.npc.Villager;
-import net.minecraft.world.item.*;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 public final class NoiseSwitchVillagerAdapter {
-    private static final ResourceLocation VILLAGER_ITEM_ID = new ResourceLocation(
-            "easy_villagers",
-            "villager");
+    private static final ResourceLocation VILLAGER_ITEM_ID = new ResourceLocation("easy_villagers", "villager");
 
     private final VillagerNoiseSwitchBlockEntity owner;
     private Villager cachedVillager;
@@ -22,8 +20,9 @@ public final class NoiseSwitchVillagerAdapter {
     }
 
     public void reset() {
-        if (cachedVillager != null)
+        if (cachedVillager != null) {
             cachedVillager.setTradingPlayer(null);
+        }
         cachedVillager = null;
         failed = false;
     }
@@ -35,76 +34,83 @@ public final class NoiseSwitchVillagerAdapter {
     }
 
     public Villager getVillagerEntity() {
-        if (failed || owner.getStoredVillager().isEmpty())
+        if (failed || owner.getStoredVillager().isEmpty()) {
             return null;
+        }
 
         Level level = owner.getLevel();
-        if (level == null)
+        if (level == null) {
             return null;
-        if (cachedVillager != null && cachedVillager.level() == level)
+        }
+        if (cachedVillager != null && cachedVillager.level() == level) {
             return cachedVillager;
+        }
 
         try {
             ItemStack source = owner.getStoredVillager();
-            Method m = source.getItem().getClass().getMethod(
-                    "getVillager",
-                    Level.class,
-                    ItemStack.class);
-            Object o = m.invoke(source.getItem(), level, source);
-            if (!(o instanceof Villager v))
+            Method getVillager = source.getItem().getClass().getMethod("getVillager", Level.class, ItemStack.class);
+            Object result = getVillager.invoke(source.getItem(), level, source);
+            if (!(result instanceof Villager villager)) {
                 throw new IllegalStateException("Easy Villagers getVillager did not return a Villager");
-            return cachedVillager = v;
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
-            fail(e);
+            }
+            cachedVillager = villager;
+            return villager;
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
+            fail(error);
             return null;
         }
     }
 
     public boolean advanceAge() {
-        Villager v = getVillagerEntity();
-        if (v == null)
+        Villager villager = getVillagerEntity();
+        if (villager == null) {
             return false;
+        }
 
-        int old = v.getAge();
-        v.setAge(old + 1);
-        return old < 0 && v.getAge() >= 0;
+        int previousAge = villager.getAge();
+        villager.setAge(previousAge + 1);
+        return previousAge < 0 && villager.getAge() >= 0;
     }
 
     public void flushToOwner() {
-        if (failed || cachedVillager == null || owner.getStoredVillager().isEmpty())
+        if (failed || cachedVillager == null || owner.getStoredVillager().isEmpty()) {
             return;
+        }
 
         try {
             ItemStack updated = owner.getStoredVillager();
-            Method chosen = null;
+            Method setVillager = null;
 
-            for (Method m : updated.getItem().getClass().getMethods())
-                if (m.getName().equals("setVillager")
-                        && m.getParameterCount() == 2
-                        && m.getParameterTypes()[0] == ItemStack.class
-                        && m.getParameterTypes()[1].isInstance(cachedVillager)) {
-                    chosen = m;
+            for (Method method : updated.getItem().getClass().getMethods()) {
+                if (method.getName().equals("setVillager")
+                        && method.getParameterCount() == 2
+                        && method.getParameterTypes()[0] == ItemStack.class
+                        && method.getParameterTypes()[1].isInstance(cachedVillager)) {
+                    setVillager = method;
                     break;
                 }
+            }
 
-            if (chosen == null)
+            if (setVillager == null) {
                 throw new NoSuchMethodException("setVillager");
+            }
 
-            chosen.invoke(updated.getItem(), updated, cachedVillager);
+            setVillager.invoke(updated.getItem(), updated, cachedVillager);
             owner.updateVillagerFromAdapter(updated);
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
-            fail(e);
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
+            fail(error);
         }
     }
 
-    private void fail(Throwable e) {
+    private void fail(Throwable error) {
         if (!failed) {
-            System.err.println("[Easy Farmer's Delight Compat] Easy Villagers VillagerItem adapter failed.");
-            e.printStackTrace();
+            System.err.println("[Easy Farmer's Delight] Easy Villagers VillagerItem adapter failed.");
+            error.printStackTrace();
         }
         failed = true;
-        if (cachedVillager != null)
+        if (cachedVillager != null) {
             cachedVillager.setTradingPlayer(null);
+        }
         cachedVillager = null;
     }
 }

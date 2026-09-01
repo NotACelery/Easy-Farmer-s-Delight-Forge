@@ -75,19 +75,26 @@ public final class RichFarmerMenu extends AbstractContainerMenu {
         }
     }
 
+    public BlockPos blockPos() {
+        return blockPos;
+    }
+
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        if (index < 0 || index >= slots.size())
+        if (index < 0 || index >= slots.size()) {
             return ItemStack.EMPTY;
+        }
         Slot slot = slots.get(index);
-        if (!slot.hasItem())
+        if (!slot.hasItem()) {
             return ItemStack.EMPTY;
+        }
         ItemStack stack = slot.getItem();
         ItemStack original = stack.copy();
 
         if (index < PLAYER_START) {
-            if (!moveItemStackTo(stack, PLAYER_START, PLAYER_END, true))
+            if (!moveItemStackTo(stack, PLAYER_START, PLAYER_END, true)) {
                 return ItemStack.EMPTY;
+            }
         } else if (FarmerToolSupport.isHarvestTool(stack) && toolContainer.getItem(0).isEmpty()) {
             toolContainer.setItem(0, stack.copyWithCount(1));
             stack.shrink(1);
@@ -95,17 +102,19 @@ public final class RichFarmerMenu extends AbstractContainerMenu {
             return ItemStack.EMPTY;
         }
 
-        if (stack.isEmpty())
+        if (stack.isEmpty()) {
             slot.setByPlayer(ItemStack.EMPTY);
-        else
+        } else {
             slot.setChanged();
+        }
         return original;
     }
 
     @Override
     public boolean stillValid(Player player) {
-        if (player.distanceToSqr(blockPos.getX() + .5, blockPos.getY() + .5, blockPos.getZ() + .5) > 64)
+        if (player.distanceToSqr(blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5) > 64) {
             return false;
+        }
         BlockEntity be = player.level().getBlockEntity(blockPos);
         return be instanceof CompatFarmerBlockEntity farmer && farmer.variant().isRich();
     }
@@ -134,11 +143,13 @@ public final class RichFarmerMenu extends AbstractContainerMenu {
 
         @Override
         public ItemStack removeItem(int slot, int amount) {
-            if (slot != 0 || amount <= 0 || farmer == null)
+            if (slot != 0 || amount <= 0 || farmer == null) {
                 return ItemStack.EMPTY;
+            }
             ItemStack current = farmer.getHarvestTool();
-            if (current.isEmpty())
+            if (current.isEmpty()) {
                 return ItemStack.EMPTY;
+            }
             int removedCount = Math.min(amount, current.getCount());
             ItemStack removed = current.copyWithCount(removedCount);
             current.shrink(removedCount);
@@ -148,24 +159,28 @@ public final class RichFarmerMenu extends AbstractContainerMenu {
 
         @Override
         public ItemStack removeItemNoUpdate(int slot) {
-            if (slot != 0 || farmer == null)
+            if (slot != 0 || farmer == null) {
                 return ItemStack.EMPTY;
+            }
             ItemStack current = farmer.getHarvestTool();
-            if (!current.isEmpty())
+            if (!current.isEmpty()) {
                 farmer.setHarvestTool(ItemStack.EMPTY);
+            }
             return current;
         }
 
         @Override
         public void setItem(int slot, ItemStack stack) {
-            if (slot == 0 && farmer != null)
+            if (slot == 0 && farmer != null) {
                 farmer.setHarvestTool(stack);
+            }
         }
 
         @Override
         public void setChanged() {
-            if (farmer != null)
+            if (farmer != null) {
                 farmer.setChanged();
+            }
         }
 
         @Override
@@ -180,9 +195,9 @@ public final class RichFarmerMenu extends AbstractContainerMenu {
 
         @Override
         public void clearContent() {
-            if (farmer != null)
+            if (farmer != null) {
                 farmer.setHarvestTool(ItemStack.EMPTY);
+            }
         }
     }
-
 }

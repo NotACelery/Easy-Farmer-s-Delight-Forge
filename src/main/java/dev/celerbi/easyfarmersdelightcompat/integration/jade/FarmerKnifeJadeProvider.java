@@ -1,4 +1,4 @@
-package dev.celerbi.easyfarmersdelightcompat.compat.jade;
+package dev.celerbi.easyfarmersdelightcompat.integration.jade;
 
 @Deprecated(forRemoval = true)
 final class FarmerKnifeJadeProvider {

@@ -3,9 +3,9 @@ package dev.celerbi.easyfarmersdelightcompat.item;
 import dev.celerbi.easyfarmersdelightcompat.client.VillagerNoiseSwitchItemRenderer;
 import java.util.function.Consumer;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 

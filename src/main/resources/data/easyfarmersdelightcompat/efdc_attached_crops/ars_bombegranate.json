@@ -1,0 +1,20 @@
+{
+  "planting": {
+    "item": "ars_nouveau:bombegranate_pod"
+  },
+  "crop_block": "ars_nouveau:bombegranate_pod",
+  "host": {
+    "tag": "ars_nouveau:blazing_logs"
+  },
+  "age": {
+    "property": "age",
+    "min": 0,
+    "max": 2,
+    "mature": 2,
+    "post_harvest": 0
+  },
+  "facing_property": "facing",
+  "loot_strategy": "block_loot",
+  "rich_soil": true,
+  "tool": "none"
+}

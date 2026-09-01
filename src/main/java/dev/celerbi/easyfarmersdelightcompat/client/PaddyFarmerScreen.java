@@ -4,14 +4,11 @@ import dev.celerbi.easyfarmersdelightcompat.menu.PaddyFarmerMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 public final class PaddyFarmerScreen extends AbstractContainerScreen<PaddyFarmerMenu> {
-    private static final ResourceLocation BACKGROUND = new ResourceLocation("easy_villagers",
-            "textures/gui/container/output.png");
-    public PaddyFarmerScreen(PaddyFarmerMenu menu, Inventory inv, Component title) {
-        super(menu, inv, title);
+    public PaddyFarmerScreen(PaddyFarmerMenu menu, Inventory inventory, Component title) {
+        super(menu, inventory, title);
         imageWidth = 176;
         imageHeight = 133;
         inventoryLabelY = 40;
@@ -19,13 +16,15 @@ public final class PaddyFarmerScreen extends AbstractContainerScreen<PaddyFarmer
     }
 
     @Override
-    public void render(GuiGraphics g, int mx, int my, float pt) {
-        super.render(g, mx, my, pt);
-        renderTooltip(g, mx, my);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.render(graphics, mouseX, mouseY, partialTick);
+        renderTooltip(graphics, mouseX, mouseY);
     }
 
     @Override
-    protected void renderBg(GuiGraphics g, float pt, int mx, int my) {
-        g.blit(BACKGROUND, leftPos, topPos, 0, 0, imageWidth, imageHeight);
+    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+        ClientScreenStyle.panel(graphics, leftPos, topPos, imageWidth, imageHeight);
+        ClientScreenStyle.row(graphics, leftPos + 52, topPos + 20, 4);
+        ClientScreenStyle.playerInventory(graphics, leftPos + 8, topPos + 51);
     }
 }

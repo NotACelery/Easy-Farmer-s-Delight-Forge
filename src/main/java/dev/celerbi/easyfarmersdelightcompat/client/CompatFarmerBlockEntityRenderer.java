@@ -64,10 +64,19 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
     private static final float FRUIT_RIGHT_CENTER = 1.0F / 6.0F;
     private static final float CROP_LOCAL_Z = 2.0F / 16.0F;
     private static final float VILLAGER_LOCAL_Z = -4.0F / 16.0F;
+    private static final float ATTACHED_LOG_SCALE = 0.26F;
+    private static final float ATTACHED_LOG_LOCAL_Z = 2.0F / 16.0F;
+    private static final float ATTACHED_LOG_BOTTOM_Y = 1.0F / 16.0F;
 
     private final Minecraft minecraft;
     private final BlockRenderDispatcher blockRenderer;
     private final VillagerRenderer villagerRenderer;
+    private final Block riceCropBlock;
+    private final Block ricePaniclesBlock;
+    private final Block buddingTomatoBlock;
+    private final Block tomatoBlock;
+    private final Block tomatoOnRopeBlock;
+    private final Block richSoilBlock;
 
     public CompatFarmerBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
         this.minecraft = Minecraft.getInstance();
@@ -82,6 +91,17 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
                 minecraft.font
         );
         this.villagerRenderer = new VillagerRenderer(entityContext);
+        this.riceCropBlock = BuiltInRegistries.BLOCK.get(RICE_CROP_ID);
+        this.ricePaniclesBlock = BuiltInRegistries.BLOCK.get(RICE_PANICLES_ID);
+        this.buddingTomatoBlock = BuiltInRegistries.BLOCK.get(BUDDING_TOMATO_ID);
+        this.tomatoBlock = BuiltInRegistries.BLOCK.get(TOMATO_CROP_ID);
+        Block ropeBlock = BuiltInRegistries.BLOCK.get(TOMATO_ON_ROPE_ID);
+        if (ropeBlock == Blocks.AIR) {
+            ropeBlock = BuiltInRegistries.BLOCK.get(LEGACY_HANGING_TOMATO_ID);
+        }
+        this.tomatoOnRopeBlock = ropeBlock;
+        Block configuredRichSoil = BuiltInRegistries.BLOCK.get(RICH_SOIL_ID);
+        this.richSoilBlock = configuredRichSoil == Blocks.AIR ? Blocks.DIRT : configuredRichSoil;
     }
 
     @Override
@@ -111,6 +131,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         }
         renderVillager(farmer, registries, direction, poseStack, buffer, interiorLight);
         renderCrop(farmer, registries, direction, poseStack, buffer, interiorLight, combinedOverlay);
+        renderAttachedCrops(farmer, direction, poseStack, buffer, interiorLight, combinedOverlay);
     }
 
     private void renderVillager(
@@ -157,8 +178,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
             return;
         }
 
-        ResourceLocation cropId = BuiltInRegistries.BLOCK.getKey(crop.getBlock());
-        if (farmer.variant().isAquatic() && RICE_CROP_ID.equals(cropId)) {
+        if (farmer.variant().isAquatic() && crop.getBlock() == riceCropBlock) {
             renderRice(farmer, direction, poseStack, buffer, combinedLight, combinedOverlay, crop);
         } else if (isTomatoState(crop)) {
             renderTomato(farmer, direction, poseStack, buffer, combinedLight, combinedOverlay, crop);
@@ -186,11 +206,10 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         renderBlockState(lowerState, poseStack, buffer, combinedLight, combinedOverlay);
 
         if (farmer.paddyGrowth() >= 4) {
-            Block paniclesBlock = BuiltInRegistries.BLOCK.get(RICE_PANICLES_ID);
-            if (paniclesBlock != Blocks.AIR) {
+            if (ricePaniclesBlock != Blocks.AIR) {
                 poseStack.pushPose();
                 poseStack.translate(0D, 1D, 0D);
-                BlockState panicles = withAge(paniclesBlock.defaultBlockState(), farmer.paddyGrowth() - 4);
+                BlockState panicles = withAge(ricePaniclesBlock.defaultBlockState(), farmer.paddyGrowth() - 4);
                 renderBlockState(panicles, poseStack, buffer, combinedLight, combinedOverlay);
                 poseStack.popPose();
             }
@@ -211,19 +230,17 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         applyCropTransform(poseStack, direction, TOMATO_STACK_SCALE);
         renderBlockState(baseCrop, poseStack, buffer, combinedLight, combinedOverlay);
 
-        Block tomatoOnRope = BuiltInRegistries.BLOCK.get(TOMATO_ON_ROPE_ID);
-        if (tomatoOnRope == Blocks.AIR) {
-            tomatoOnRope = BuiltInRegistries.BLOCK.get(LEGACY_HANGING_TOMATO_ID);
-        }
-        Block tomato = BuiltInRegistries.BLOCK.get(TOMATO_CROP_ID);
-
         if (farmer.ropeCount() >= 1) {
-            renderTomatoSection(1, farmer.ropeOneProgress(), tomatoOnRope, tomato, poseStack, buffer, combinedLight,
-                    combinedOverlay);
+            renderTomatoSection(
+                    1, farmer.ropeOneProgress(), tomatoOnRopeBlock, tomatoBlock,
+                    poseStack, buffer, combinedLight, combinedOverlay
+            );
         }
         if (farmer.ropeCount() >= 2) {
-            renderTomatoSection(2, farmer.ropeTwoProgress(), tomatoOnRope, tomato, poseStack, buffer, combinedLight,
-                    combinedOverlay);
+            renderTomatoSection(
+                    2, farmer.ropeTwoProgress(), tomatoOnRopeBlock, tomatoBlock,
+                    poseStack, buffer, combinedLight, combinedOverlay
+            );
         }
         poseStack.popPose();
     }
@@ -260,9 +277,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
             int combinedLight,
             int combinedOverlay
     ) {
-        Block platform = farmer.variant().isRich() ? BuiltInRegistries.BLOCK.get(RICH_SOIL_ID) : Blocks.DIRT;
-        if (platform == Blocks.AIR)
-            platform = Blocks.DIRT;
+        Block platform = farmer.variant().isRich() ? richSoilBlock : Blocks.DIRT;
         poseStack.pushPose();
 
         applyScaledBlockTransform(
@@ -388,6 +403,62 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         }
     }
 
+    private void renderAttachedCrops(
+            CompatFarmerBlockEntity farmer,
+            Direction direction,
+            PoseStack poseStack,
+            MultiBufferSource buffer,
+            int combinedLight,
+            int combinedOverlay
+    ) {
+        if (!farmer.supportsAttachedCrops() || !farmer.hasAttachedSetup()) {
+            return;
+        }
+
+        for (int levelIndex = 0; levelIndex < farmer.attachedLevelCount(); levelIndex++) {
+            BlockState host = farmer.attachedHostState(levelIndex);
+            if (host.isAir()) {
+                continue;
+            }
+
+            float bottomY = ATTACHED_LOG_BOTTOM_Y + (levelIndex * ATTACHED_LOG_SCALE);
+            poseStack.pushPose();
+            applyScaledBlockTransform(
+                    poseStack,
+                    direction,
+                    0.0F,
+                    ATTACHED_LOG_LOCAL_Z,
+                    bottomY,
+                    ATTACHED_LOG_SCALE,
+                    ATTACHED_LOG_SCALE,
+                    ATTACHED_LOG_SCALE
+            );
+            renderBlockState(host, poseStack, buffer, combinedLight, combinedOverlay);
+            poseStack.popPose();
+
+            for (int faceIndex = 0; faceIndex < farmer.attachedFaceCount(); faceIndex++) {
+                BlockState crop = farmer.attachedCropState(levelIndex, faceIndex);
+                if (crop.isAir()) {
+                    continue;
+                }
+                Direction face = farmer.attachedFace(faceIndex);
+                poseStack.pushPose();
+                applyScaledBlockTransform(
+                        poseStack,
+                        direction,
+                        face.getStepX() * ATTACHED_LOG_SCALE,
+                        ATTACHED_LOG_LOCAL_Z + (face.getStepZ() * ATTACHED_LOG_SCALE),
+                        bottomY,
+                        ATTACHED_LOG_SCALE,
+                        ATTACHED_LOG_SCALE,
+                        ATTACHED_LOG_SCALE
+                );
+                renderBlockState(crop, poseStack, buffer, combinedLight, combinedOverlay);
+                poseStack.popPose();
+            }
+        }
+    }
+
     private static void applyCropTransform(PoseStack poseStack, Direction direction, float scale) {
         applyScaledBlockTransform(
                 poseStack,
@@ -449,9 +520,9 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         return state.is(Blocks.MELON_STEM) || state.is(Blocks.PUMPKIN_STEM);
     }
 
-    private static boolean isTomatoState(BlockState state) {
-        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
-        return BUDDING_TOMATO_ID.equals(id) || TOMATO_CROP_ID.equals(id);
+    private boolean isTomatoState(BlockState state) {
+        Block block = state.getBlock();
+        return block == buddingTomatoBlock || block == tomatoBlock;
     }
 
     private static BlockState withBooleanProperty(BlockState state, String propertyName, boolean value) {

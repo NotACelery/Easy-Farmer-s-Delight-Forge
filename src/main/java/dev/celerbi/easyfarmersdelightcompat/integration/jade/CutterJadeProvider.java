@@ -1,8 +1,7 @@
-package dev.celerbi.easyfarmersdelightcompat.compat.jade;
+package dev.celerbi.easyfarmersdelightcompat.integration.jade;
 
 import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.CutterBlockEntity;
-import dev.celerbi.easyfarmersdelightcompat.integration.CutterLogVariant;
 import dev.celerbi.easyfarmersdelightcompat.integration.ToolRequirement;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +56,7 @@ public enum CutterJadeProvider implements IBlockComponentProvider, IServerDataPr
 
         data.remove(WAITING_TOOL);
         data.remove(WRONG_TOOL);
-        ToolRequirement requirement = cutter.blockingToolRequirement(accessor.getLevel(), tool);
+        ToolRequirement requirement = cutter.pendingToolRequirement(accessor.getLevel());
         if (cutter.hasVillager() && requirement.isRequired()) {
             data.putString(WAITING_TOOL, requirement.name());
             data.putBoolean(WRONG_TOOL, !tool.isEmpty());
@@ -87,7 +86,7 @@ public enum CutterJadeProvider implements IBlockComponentProvider, IServerDataPr
             if (block != null) {
                 tooltip.add(Component.translatable(
                         "jade.easyfarmersdelightcompat.cutter.variant",
-                        Component.translatable(CutterLogVariant.translationKey(block))
+                        block.getName()
                 ));
             }
         }

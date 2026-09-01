@@ -1,7 +1,6 @@
 {
-    "parent": "easy_villagers:block/farm",
-    "textures": {
-        "front": "minecraft:block/emerald_block",
-        "back": "minecraft:block/emerald_block"
-    }
+  "parent": "easyfarmersdelightcompat:block/machine_cage",
+  "textures": {
+    "particle": "minecraft:block/emerald_block"
+  }
 }

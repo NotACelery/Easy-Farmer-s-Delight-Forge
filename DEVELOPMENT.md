@@ -1,549 +1,344 @@
-# Easy Farmer's Delight Compat — Developer Reference
+# Easy Farmer's Delight 1.4.0 — Development Reference — Forge 1.20.1
 
-This document is the technical reference for the Forge 1.20.1 backport codebase.
+This document describes the **final 1.4.0 architecture and invariants**. Straightforward implementation details are
+kept in code; cross-class lifecycle rules, persistence contracts, compatibility boundaries and non-obvious behavior
+belong here so Java sources can stay minimally commented.
 
-The source intentionally keeps inline comments to a minimum. Cross-class behavior, compatibility decisions, persistence rules and non-obvious invariants belong here instead of being duplicated throughout implementation files.
+## 1. Release identity
 
-## 1. Project scope
+- Public name: **Easy Farmer's Delight**.
+- Public version: **1.4.0**.
+- Technical mod ID / registry namespace: `easyfarmersdelightcompat`.
+- Java package root: `dev.celerbi.easyfarmersdelightcompat`.
+- Artifact stem: `easy-farmers-delight`.
+- Loader target: **Minecraft 1.20.1 / Forge 47.4.x / Java 17**.
 
-Easy Farmer's Delight Compat is an independent compatibility addon between Easy Villagers and Farmer's Delight. It adds three Farmer variants, an automated Cutter, two client-local noise controls, and optional in-game documentation through Jade, JEI and EMI.
+The technical namespace is intentionally retained. It is persisted in world registry IDs, recipes, tags, saved
+BlockEntity data and existing item stacks. Public rebranding must never be implemented by silently renaming those
+IDs.
 
-Current release line:
+## 2. Source/style rules
 
-- Minecraft: `1.20.1`
-- Forge baseline: `47.4.23`
-- Forge minimum: `47.2.0`
-- Java: `17`
-- Easy Villagers minimum: `1.1.39`
-- Farmer's Delight minimum: `1.3.3`
-- Mod version: `1.3.2`
+- Java uses 4 spaces, no tabs and no trailing whitespace.
+- Wildcard imports are not allowed.
+- Keep Java lines at or below 120 characters where practical.
+- Avoid compressed multi-statement lines.
+- Inline comments are reserved for invariants that cannot be expressed clearly in code structure or this document.
+- JSON is pretty-printed and parse-valid.
+- Loader trees remain behaviorally equivalent unless Minecraft/loader API differences require divergence.
+- Build/cache/log/run/IDE artifacts do not belong in source snapshots.
 
-Optional integrations:
+`.editorconfig` carries the whitespace baseline for editors.
 
-- Jade
-- JEI
-- EMI
-- Ars Nouveau
-- Argentum
+## 3. World and item compatibility contract
 
-## 2. Source tree
+Existing registered identities are stable. In particular, do not casually rename:
 
-The main package is `dev.celerbi.easyfarmersdelightcompat`.
+- Paddy Farmer, Rich Farmer, Rich Paddy Farmer, Cutter or Noise Switch registry IDs.
+- the established Farmer BlockEntity type ID `compat_farmer`;
+- persisted `Efdc*` NBT keys;
+- `CutterLog`;
+- client preference file/key identities;
+- historical Jade provider UIDs used by existing integrations.
 
-### `block`
+New NBT fields require safe defaults. Missing optional mods/datapack definitions must not make existing stored
+machines unreadable.
 
-World interaction and block-level state:
+Empty Farmer machine items normalize back to clean stackable items. Meaningful BlockEntity state makes a Farmer
+non-stackable so stored villagers/inventories cannot be duplicated. Upgrade recipes preserve meaningful source
+Farmer data while stripping transient representation-only state.
 
-- `CompatFarmerBlock` — common block for Paddy, Rich and Rich Paddy Farmers.
-- `FarmerVariant` — compact capability model for `PADDY`, `RICH` and `RICH_PADDY`.
-- `CutterBlock` — Cutter placement, interaction, state preservation and menu access.
-- `VillagerNoiseSwitchBlock` — physical Villager Noise Switch interactions.
-- `IronFarmNoiseSwitchBlock` — Iron Farm Noise Switch assembly and interaction.
+## 4. Farmer architecture
 
-### `blockentity`
+`CompatFarmerBlock` is the shared block shell for Paddy, Rich and Rich Paddy variants.
+`CompatFarmerBlockEntity` owns Easy Farmer's Delight-specific state and coordinates the Easy Villagers adapter,
+virtual crop families, output inventory, Harvest Tool, attached hosts, persistence and client synchronization.
 
-Persistent machine state and server-side work:
+Easy Villagers remains the owner of its stored Villager/Farmer payload. The adapter mutates that delegate; the Easy
+Farmer's Delight BlockEntity owns persistence and sync so one logical transition does not emit duplicate updates.
 
-- `CompatFarmerBlockEntity` — Farmer crop state, harvest logic, virtual crop lifecycle, tool state and Easy Villagers payload preservation.
-- `CutterBlockEntity` — Cutter inventory, Villager state, work planning, processing and automation handlers.
-- `VillagerNoiseSwitchBlockEntity` — stored Villager state for the Villager Noise Switch.
-- `IronFarmNoiseSwitchBlockEntity` — Iron Block assembly stage and completed Golem state.
+The base Easy Villagers Farmer is not patched to gain special crop families. New mechanics belong to the Easy
+Farmer's Delight variants.
 
-### `integration`
+## 5. Event-driven harvest scheduler
 
-Compatibility boundaries and viewer-neutral domain data:
+The 1.4.0 Farmer lifecycle avoids repeated expensive blocked-harvest polling.
 
-- `EasyVillagersFarmerAdapter` — reflection bridge to the Easy Villagers Farmer surface used by the addon.
-- `CutterVillagerAdapter` — Easy Villagers Villager serialization/aging bridge for the Cutter.
-- `NoiseSwitchVillagerAdapter` — Easy Villagers VillagerData bridge for the Villager Noise Switch.
-- `FarmersDelightAdapter` — narrow bridge for Farmer's Delight configuration values.
-- `CuttingRecipeResolver` — runtime access to Farmer's Delight cutting recipes.
-- `AxeActionResolver` — Axe transformations used as Cutter fallback operations.
-- `OutputSimulator` — lossless output-capacity simulation.
-- `FarmerToolSupport` — Knife/Hoe/Axe classification and representative tool stacks.
-- `ToolRequirement` — live hard requirement for the operation currently waiting to run.
-- `ToolUse` — viewer-only semantic role of a tool in documentation.
-- `RecipeViewerData` — shared JEI/EMI documentation dataset.
-- `BlockGuideInfo`, `FarmerHarvestInfo`, `GuideIngredient`, `CutterAxeInfo` and `CutterAxeActionRow` — viewer-neutral presentation models.
+A mature crop attempts harvest once. If blocked, it records the blocker and parks:
 
-### `integration/jei` and `integration/emi`
+- **OUTPUT_FULL** — wake after output capacity genuinely increases.
+- **TOOL** — wake when the Harvest Tool changes.
+- **VILLAGER** — wake when stored villager state changes in a way that may allow work, including baby → adult.
+- world/load reconciliation performs one readiness pass after state restoration.
 
-Viewer-specific rendering and recipe-transfer adapters. Gameplay rules do not originate here.
+When a harvest was already rolled before discovering insufficient output capacity, the pending drop set is retained
+transiently and reused for the capacity retry rather than rerolling loot.
 
-### `compat/jade`
+The output wrapper tracks the four output slots so manual GUI removal, shift-click removal and automation extraction
+all generate the same capacity-increase event. Output insertion does not wake a Farmer waiting for more space.
 
-Read-only machine diagnostics for Jade. Providers surface state that already exists in gameplay classes; they do not own gameplay behavior.
+Attached crops deliberately use a generic output wake rather than one globally cached fruit requirement: different
+faces can produce different items. A blocked face is skipped while the scan continues, allowing any other mature
+face whose drops fit to harvest independently.
 
-### `client`
+## 6. Rich Soil scheduling
 
-Screens, renderers, client preferences and final sound-event filtering.
+Rich Soil acceleration is a **growth opportunity**, never a direct harvest multiplier.
 
-### `recipe`
+Normal/regrowing crops respect Farmer's Delight's `farmersdelight:unaffected_by_rich_soil` exclusion where relevant.
+Attached definitions carry their own `rich_soil` boolean. Rice has its dedicated Rich Paddy boost. Sugar Cane is
+explicitly excluded because Paddy Sugar Cane is Sand-based compatibility behavior.
 
-State-preserving custom recipes and recipe utilities.
+Melon/Pumpkin Rich Soil applies to stem progression only; fruit generation remains on the normal Farmer cadence.
 
-### `registry`
+The Rich Soil hot path is batched around the machine's one-second work pulse and uses statistically equivalent
+opportunity sampling rather than running unnecessary expensive checks every server tick.
 
-Deferred registrations for blocks, items, block entities, menus, serializers and creative-tab integration.
+## 7. Crop families
 
-### `event`
+### 7.1 Normal Easy Villagers-compatible crops
 
-Compatibility/migration event handling for legacy Farmer items.
+Rich Farmer delegates ordinary seed recognition/crop state to Easy Villagers. Easy Farmer's Delight extends the
+logical `minecraft:villager_plantable_seeds` tag with optional Magebloom/Argentum entries. Missing optional entries
+are safe.
 
-## 3. Farmer variants
+### 7.2 Paddy Rice
 
-`FarmerVariant` models two independent capabilities:
+Paddy Farmer and Rich Paddy Farmer maintain the Farmer's Delight Rice lower-plant/panicle lifecycle. Rich Paddy may
+advance Rice through Rich Soil. Knife use is optional on Rich Paddy and forwards the real Knife-sensitive Rice loot
+behavior without artificial durability damage.
 
-| Variant | Rich | Aquatic |
-| --- | --- | --- |
-| Paddy | No | Yes |
-| Rich | Yes | No |
-| Rich Paddy | Yes | Yes |
+### 7.3 Paddy Sugar Cane
 
-The block and block entity use those flags instead of maintaining three unrelated implementations.
+Sugar Cane mode stores installed Sand, base/height/progress state and leaves the bottom cane section planted while
+harvesting upper sections. Rich Paddy does not accelerate it. Sneak-use dismantling returns the installed materials.
 
-### Paddy capability
+### 7.4 Tomatoes and Rope
 
-Aquatic variants support the Paddy-specific state machine used for Rice and Sugar Cane.
+Rich Farmer stores the base Tomato state plus up to two Rope section progress values. Sections advance and harvest
+independently. Gameplay harvest continues to use Farmer's Delight loot behavior so compatible Hoe/Fortune semantics
+remain authoritative.
 
-### Rich capability
+### 7.5 Mushroom Colonies
 
-Rich variants expose the protected Harvest Tool slot and Rich Soil-aware crop behavior.
+Rich Farmer maps Red/Brown Mushroom to the matching Farmer's Delight colony. Growth does not require a Knife;
+mature harvest does. The Knife is a blocker only and is not damaged by this harvest.
 
-## 4. Farmer persistence model
+### 7.6 Melon/Pumpkin
 
-`CompatFarmerBlockEntity` owns addon-specific state while preserving the Easy Villagers payload it does not own.
+Rich Farmer models stem progress and fruit-ready state explicitly. An Axe is a hard mature-harvest requirement.
+Actual fruit drops use the vanilla loot path so tool enchantments keep normal meaning.
 
-Addon NBT keys currently include:
+### 7.7 Regrowing crops
 
-- `EfdcSchema`
-- `EfdcPaddyGrowth`
-- `EfdcBaseProgress`
-- `EfdcRopeOneProgress`
-- `EfdcRopeTwoProgress`
-- `EfdcRopeCount`
-- `EfdcHarvestTool`
-- legacy `EfdcKnife`
-- `EfdcFruitReady`
-- `EfdcPaddySand`
-- `EfdcSugarCaneHeight`
-- `EfdcSugarCaneAge`
+Definitions live under `data/<namespace>/efdc_regrowing_crops/*.json` and declare planting item/tag, crop block,
+age property/range, harvest age, post-harvest age, harvest strategy/count and Rich Soil eligibility.
 
-Unknown Easy Villagers/future payload is retained in `passthroughData`. Known metadata and known empty values may be stripped when deciding whether a machine is actually stateful, but unknown data must not be silently discarded just to make an item stackable.
+Built-ins:
 
-### Item stacking invariant
+- `sweet_berries` — Sweet Berry Bush, age 3 harvest, reset to age 1, 2–3 berries.
+- `ars_sourceberry` — Ars Nouveau Sourceberry, age 3 harvest, reset to age 1, configured 2–3 berry semantics.
 
-A completely empty Farmer may remain a normal stackable item.
+Support is explicit; no broad superclass such as `BushBlock` is automatically accepted.
 
-A Farmer with meaningful machine state is serialized into the dropped item and forced to stack size `1`. This prevents placing multiple copies of one stateful ItemStack and duplicating its Villager, crop or inventory state.
+### 7.8 Attached crops / log mode
 
-### Creative Pick Block
+Definitions live under `data/<namespace>/efdc_attached_crops/*.json`. Each definition specifies:
 
-Creative Pick Block intentionally returns a clean machine item. Normal block drops are the state-preserving path.
+- planting item or item tag;
+- rendered crop block;
+- host block or host tag;
+- age property, min/max/mature/post-harvest values;
+- facing property;
+- loot strategy;
+- Rich Soil eligibility;
+- optional tool category.
 
-### Upgrade recipes
+The Rich Farmer stores two host levels × four horizontal faces. Host blocks and each face's definition/crop/planting
+identity/age are persisted independently.
 
-`RecipeUtil.upgradeFarmer` starts from the canonical target item and copies only meaningful state:
+Built-ins:
 
-- custom name;
-- lore;
-- meaningful block-entity data.
+- Cocoa Beans → `minecraft:jungle_logs`.
+- Bombegranate Pod → `ars_nouveau:blazing_logs`.
+- Mendosteen Pod → `ars_nouveau:flourishing_logs`.
+- Frostaya Pod → `ars_nouveau:cascading_logs`.
+- Bastion Pod → `ars_nouveau:vexing_logs`.
 
-Transient Easy Villagers client/render cache is removed from the upgraded result. Structurally present but semantically empty machine payload is not enough to make the upgraded item stateful.
+Host compatibility is authoritative. A recognized attached seed against an installed incompatible host with a free
+face is rejected without consuming the item and reports the translated incompatible-host message. A completely full
+host does not emit that warning because there is no open planting target.
 
-## 5. Easy Villagers compatibility boundary
+Dismantling order is upper crops → upper log → lower crops → lower log. Dismantling returns planting items, not a
+mature loot bonus.
 
-The addon deliberately keeps Easy Villagers implementation access concentrated in adapter classes.
+Persisted face identity is sufficient to render/dismantle an existing crop even if its datapack definition later
+vanishes.
 
-`EasyVillagersFarmerAdapter` is responsible for the Farmer surface used by the addon, including crop selection, stored Villager behavior, inventory access, aging and `farm_speed` lookup.
+## 8. Farmer item crop tooltip
 
-`CutterVillagerAdapter` and `NoiseSwitchVillagerAdapter` use narrower bridges because those blocks do not need the whole Farmer integration.
+`CompatFarmerItem` reconstructs a lightweight BlockEntity view from the item's persisted state when a world/registry
+context is available. It asks the BlockEntity for planted crop names and displays distinct crops only. Empty state
+uses the translated `Crop: None` line.
 
-### Failure behavior
+This is presentation only; no duplicate tooltip-only NBT format exists.
 
-Reflection failures are contained inside their adapter. A failed reflective lookup must not turn into undefined state in unrelated classes.
+## 9. Cutter architecture
 
-A failed `farm_speed` lookup must not silently become a one-tick machine. The Farmer adapter falls back to the expected default behavior instead of creating accidental extreme acceleration.
+The Cutter is a villager-powered machine with 4 input slots, 1 protected tool slot and 4 output slots.
 
-### Payload synchronization
+It resolves Farmer's Delight Cutting recipes against the installed input/tool, forwards Fortune where supported,
+and also supports Axe transformations such as stripping, scraping and unwaxing.
 
-Easy Villagers-owned keys must be mirrored including removals. Keeping only additions would leave stale data in persistent machine state.
+### Dynamic work-surface log selection
 
-## 6. Farmer server work cadence
+`CutterLogVariant` accepts item/block membership in standard Minecraft log tags plus the historical
+`easyfarmersdelightcompat:cutter_logs` datapack fallback, then filters to unstripped base logs/stems. Names beginning
+with `stripped_`, `_wood` blocks and `_hyphae` blocks are excluded.
 
-Ordinary Farmer machine work runs on a one-second cadence. Easy Villagers `farmSpeed` remains the common growth gate for normal crop progression.
+Only the selected registry ID is stored under `CutterLog`. Missing/invalid stored blocks fall back safely to Oak Log.
 
-Growth and harvest are intentionally separate phases:
+The renderer uses the selected source block's actual model rather than copied addon textures. Modded woods,
+Crimson/Warped stems and animated Ars Nouveau Archwood therefore retain their owning mod's visual behavior.
 
-1. a crop uses its growth cadence until mature;
-2. once mature, the machine retries the concrete harvest on each normal work cadence;
-3. missing tools, an invalid Villager state or insufficient output space leave the mature crop waiting;
-4. successful harvest is what resets or advances the relevant persistent crop state.
+### Cutter standby
 
-This avoids the old behavior where a visibly mature crop could wait for another unrelated random growth roll before harvesting.
+The Cutter parks when there is no processable input/tool combination or output is full. Input/tool changes wake work
+planning; output-full waits wake only after output is reduced. A successful operation batches input consumption,
+output insertion and tool damage into one visible BlockEntity update.
 
-## 7. Rice lifecycle
+`CuttingRecipeResolver` still performs a bounded scan of the recipe manager because the indexed Cutting recipe API
+differs between target versions. This is intentionally isolated so a future safe API-specific optimization can be
+made without changing machine semantics.
 
-The internal Paddy Rice state uses `0..7`:
+## 10. Noise Switches
 
-- `0..3` — submerged lower Rice ages `0..3`;
-- `4..7` — upper panicles ages `0..3`, while the lower Rice remains mature.
+All player mute preferences are client-local and persistent. Lever visuals do not create real Redstone state,
+neighbour updates or Observer signals.
 
-When mature panicles are successfully harvested, the state returns to `3`. The mature submerged plant remains and only the upper half regrows.
+### Villager Noise Switch
 
-A mature Rice harvest waits if the complete output cannot fit. The machine does not consume/reset panicles and then lose overflow.
+Stores one Easy Villagers Villager and controls local Villager voices. The block is non-stackable.
 
-### Rich Paddy Rice
+### Iron Farm Noise Switch
 
-Rich Paddy receives a separate virtual Rich Soil opportunity. Rice harvesting itself still follows the same persistence and output-safety rules.
+Assembly state is persisted. Four Iron Blocks build the miniature Golem body in stages; a Carved Pumpkin permanently
+completes it. Sound cancellation is restricted to the configured synthetic Zombie/Iron Golem sounds whose source
+position is exactly an Easy Villagers Iron Farm.
 
-A Knife is optional for Rice; it affects Knife-sensitive loot behavior but is not a hard blocker for normal Rice harvesting.
+### Easy Mob Farm Noise Switch
 
-## 8. Sugar Cane lifecycle
+Registration is guarded by `easy_mob_farm`. Six Rotten Flesh assemble a decorative vanilla Zombie model. The mute
+controller targets Easy Mob Farm display entities only. No real Zombie is spawned.
 
-Sugar Cane uses two pieces of virtual state:
+## 11. Optional integration boundaries
 
-- stored height;
-- vanilla-style age `0..15`.
+Optional integrations must remain absent-safe:
 
-A successful Easy Villagers growth opportunity advances the internal age. Reaching the end of the age cycle creates the next Cane section, up to the normal three-block height.
+- Jade code lives only under `integration/jade` and is registered through the Jade plugin boundary.
+- JEI and EMI use viewer-neutral data from `RecipeViewerData` where possible.
+- Easy Mob Farm registration/resources are mod-loaded guarded.
+- Ars Nouveau crop definitions use registry IDs/tags and generic data loaders rather than Ars Java classes.
+- Argentum seed entries are optional tag entries.
 
-Rich Soil does not accelerate Sugar Cane in this addon.
+No optional API may be referenced from an unconditional classloading path when that mod can be absent.
 
-Removing Paddy Sugar Cane mode returns the Sand and the persistent base Cane that belong to the player.
+## 12. JEI / EMI viewer model
 
-## 9. Tomato lifecycle
+Farmer viewer information is split by mechanic rather than duplicating gameplay recipes. Gameplay recipes remain the
+authoritative crafting source. Viewer guides describe Harvest Tools, Paddy behavior, Rich Farmer special crops,
+Cutter behavior and Noise Switch usage.
 
-Farmer's Delight Tomatoes begin through `budding_tomatoes`, then transition into the persistent Tomato vine.
+Stateful Farmer recipe transfer must preserve the actual source ItemStack components/NBT instead of replacing it with
+a synthetic clean Farmer. JEI uses standard transfer where reliable; EMI uses the dedicated state-preserving path
+required by its component matching behavior.
 
-The Rich Farmer stores independent progress for:
+## 13. Jade model
 
-- base Tomato section;
-- first Rope section;
-- second Rope section.
+Jade provides diagnostics only; it does not roll loot or mutate machine state. It may report current crop/growth,
+Rich Soil state, hard tool blockers, Sugar Cane state, Melon/Pumpkin phase, attached lower/upper host translated names
+and occupied-face counts, Cutter status and Noise Switch status/assembly.
 
-Rope sections grow independently. Mature sections can harvest without waiting for another growth RNG roll.
+Attached Jade output intentionally summarizes host occupancy rather than exposing per-face internal NBT.
 
-For mature Tomato loot, gameplay uses Farmer's Delight's real loot behavior so Hoe/Fortune-sensitive results stay authoritative. Compatibility with the declared Farmer's Delight 1.2.9 minimum is preserved through the legacy rope-logged Tomato state where required.
+## 14. Rendering and third-party asset boundary
 
-## 10. Mushroom Colonies
+Resources distributed under `assets/easyfarmersdelightcompat` do not use Easy Villagers model parents, textures or
+GUI backgrounds. Machine shell/GUI presentation is project/vanilla based.
 
-Red and Brown Mushroom Colonies use a persistent Rich Farmer lifecycle.
+Dynamic content is intentionally rendered from the owning game's/mod's live resources:
 
-Growth is allowed without a Knife. A mature Colony waits for a Knife before the harvest itself.
+- stored Villagers use the vanilla Villager renderer;
+- crops use their actual crop block model;
+- attached hosts use their actual block model;
+- Cutter variants use the installed log/stem model.
 
-The Knife is a hard operation requirement but is not damaged by the Colony harvesting behavior implemented by the Farmer.
+This gives correct resource-pack/mod animation behavior without redistributing third-party artistic assets.
 
-## 11. Melon and Pumpkin stems
+## 15. `/farm` command
 
-Vanilla Melon/Pumpkin seeds are recognized explicitly because Easy Villagers does not treat their stems like ordinary villager-plantable crops.
-
-The stored lifecycle separates:
-
-1. stem growth;
-2. fruit generation;
-3. ready-fruit harvest.
-
-Rich Soil accelerates stem growth only. Fruit generation remains on the normal work path.
-
-Once fruit exists, the machine retries harvest on the normal work cadence while waiting for an adult Villager, an Axe and enough output space. It does not demand another growth RNG success.
-
-The virtual Rich Soil behavior for stems follows a random-tick-style opportunity rather than directly multiplying the normal Easy Villagers `farmSpeed` work loop.
-
-## 12. Harvest Tool semantics
-
-`FarmerToolSupport` defines accepted tool categories:
-
-Rich Farmer / Rich Paddy Harvest Tool slot:
-
-- Knife tag: `forge:tools/knives`
-- vanilla Hoe tag (`ItemTags.HOES`)
-- vanilla Axe tag (`ItemTags.AXES`)
-
-Cutter Cutting Tool slot:
-
-- Knife
-- Axe
-
-`ToolRequirement` is deliberately narrower than “accepted tool”. It describes what is blocking the operation that is ready right now.
-
-Examples:
-
-- a Rich Farmer accepts Knife, Hoe and Axe;
-- a mature Mushroom Colony specifically requires a Knife;
-- a ready Melon/Pumpkin specifically requires an Axe;
-- normal crops may use a Hoe without making that Hoe a mandatory blocker.
-
-## 13. Output safety
-
-Outputs must be simulated before mutation whenever a multi-stack operation could overflow.
-
-`OutputSimulator` implements the common rule:
-
-1. copy the current output state;
-2. simulate stacking every generated ItemStack;
-3. reject the operation if any remainder survives;
-4. only mutate the real inventory after the whole operation is known to fit.
-
-The Farmer has equivalent capacity checks for its container-backed output path.
-
-This rule is important for random loot, multi-output cutting and stateful harvests. Partial insertion followed by reset would cause silent item loss.
-
-## 14. Cutter architecture
-
-The Cutter owns:
-
-- one stored Villager;
-- one Cutting Tool slot;
-- four input slots;
-- four output slots;
-- a persisted work-surface/log variant;
-- processing progress.
-
-The normal process time is `10` ticks.
-
-### Work-plan caching
-
-The Cutter does not continuously roll recipes or blindly advance its animation.
-
-A work plan is probed non-destructively. It is cached until tool/input/output contents change. Progress starts only after a concrete input/tool pair has been shown to be processable.
-
-If output capacity or another prerequisite changes between probing and completion, the machine parks until contents change instead of repeatedly executing a failing operation.
-
-### Cutting recipes
-
-`CuttingRecipeResolver` uses Farmer's Delight cutting recipes as the authoritative runtime rules.
-
-Its probe path does not roll outputs or consume RNG. The execution path is the place that may produce chance outputs.
-
-### Axe fallback actions
-
-When no Farmer's Delight cutting recipe applies, supported Axe actions are resolved through `AxeActionResolver`, including normal stripping/scraping/wax-removal transformations supplied through Minecraft/Forge behavior.
-
-### Tool durability
-
-A damageable Cutter tool loses durability only after an operation succeeds. Failed probes, output-full states and invalid inputs do not damage the tool.
-
-### Automation sides
-
-`CutterBlockEntity` exposes specialized handlers for top, side and bottom automation rather than one unrestricted inventory interface. Tool/input/output rules remain authoritative regardless of whether an item arrives through the GUI or automation.
-
-## 15. Cutter Villager state
-
-The Cutter reuses Easy Villagers VillagerItem serialization and aging semantics through `CutterVillagerAdapter`.
-
-The displayed/serialized Villager remains owned by the Cutter block entity. The temporary reflected Easy Villagers delegate exists only to reuse the required Easy Villagers behavior.
-
-## 16. Villager Noise Switch
-
-The physical block does not have a real powered Redstone state.
-
-The mute preference is client-local and stored by `ClientPreferences` in:
-
-`config/easyfarmersdelightcompat-client.properties`
-
-Relevant property:
-
-- `villagersMuted`
-
-The renderer reads the local preference, so two clients can look at the same physical block and legitimately see different local switch states.
-
-### Sound routing
-
-Villager sound filtering runs only on the logical client. This is critical in singleplayer because the integrated server exists in the same process; a client preference must never cancel a server event that belongs to other players.
-
-Easy Villagers contained-Villager voices originate through the `BLOCKS` sound source. When not muted, the addon reroutes the recognized Villager sounds to `NEUTRAL` so the Friendly Creatures volume control behaves naturally while keeping the volume Easy Villagers already calculated.
-
-## 17. Iron Farm Noise Switch
-
-The Iron Farm Noise Switch stores assembly state until four Iron Blocks and the final Carved Pumpkin have completed the miniature Golem.
-
-The completed Golem state is persistent and the item is always non-stackable.
-
-Client preference key:
-
-- `ironFarmSoundsMuted`
-
-### Surgical sound filter
-
-The filter only cancels:
-
-- Zombie Ambient;
-- Iron Golem Hurt;
-- Iron Golem Death.
-
-The sound must also:
-
-- use the `BLOCKS` source;
-- originate from the exact block position of `easy_villagers:iron_farm`;
-- be processed on the client;
-- have the local Iron Farm mute enabled.
-
-Real Zombies and real Iron Golems elsewhere are unaffected.
-
-## 18. Rendering
-
-Placed machines and stateful inventory items use dedicated renderers.
-
-Important rendering responsibilities include:
-
-- keeping virtual Farmer crops inside the enclosure;
-- matching Easy Villagers Villager transforms closely enough that stored Villagers look native to the machine family;
-- rendering Rice halves, Tomato trellises, Sugar Cane and stem/fruit pairs from persistent virtual state;
-- previewing stateful Farmer/Cutter/Noise Switch items in inventory;
-- rendering the local client switch state without writing physical block state.
-
-Renderers must remain presentation-only. They may read synchronized/persisted state but must not advance gameplay.
-
-## 19. Jade architecture
-
-Jade providers expose diagnostics such as:
-
-- crop/growth state;
-- Harvest Tool state;
-- hard tool blockers;
-- Cutter progress and output information;
-- Villager Noise Switch local status;
-- Iron Farm Noise Switch assembly and local status.
-
-Diagnostics must use non-destructive probes. In particular, Cutter diagnostics must never execute a random cutting recipe merely to display what could happen.
-
-The historical Jade provider UID for the old Knife-specific display is intentionally preserved by the generalized Harvest Tool provider so user-side Jade configuration does not reset.
-
-## 20. JEI and EMI architecture
-
-`RecipeViewerData` is the single viewer-neutral source for instructional data.
-
-JEI and EMI map that shared data into their own APIs. Gameplay does not read `RecipeViewerData`, and viewer classes must not become a second gameplay ruleset.
-
-Displayed outputs may be examples. Real gameplay loot tables remain authoritative where a crop has enchantment-sensitive or random output.
-
-### EMI stateful Farmer upgrades
-
-The Farmer upgrade recipes require a custom EMI transfer path because a real Easy Villagers Farmer may contain NBT/block-entity state.
-
-The normal ingredient can correctly accept that Farmer, while a generic transfer routine based on concrete ItemStack NBT equality can still fail while moving it.
-
-`FarmerUpgradeEmiRecipeHandler` therefore moves the exact inventory stack. Batch/max fill only groups mutually stackable ItemStacks, which keeps clean Farmers batchable while isolating stateful Farmers whose NBT differs or whose max stack size is one.
-
-The crafting menu remains authoritative for actual recipe consumption and remainders.
-
-## 21. Recipes and state preservation
-
-Farmer upgrade recipes are real gameplay recipes rather than viewer-only approximations. JEI/EMI therefore see the same shaped inputs that crafting uses.
-
-The source Farmer's meaningful state is preserved through the upgrade path.
-
-The Cutter recipe also persists the selected compatible log/bamboo material as its Cutter variant.
-
-## 22. Optional integrations
-
-Jade, JEI and EMI are optional APIs. Their absence must not prevent the base addon from loading.
-
-Ars Nouveau and Argentum compatibility is opportunistic and should continue to use normal registry/tag compatibility where possible instead of turning either mod into a mandatory dependency.
-
-## 23. Build configuration
-
-The project uses ForgeGradle 6 with Java 17.
-
-`build.gradle` intentionally keeps Jade, JEI and EMI as compile-only/API-side dependencies rather than embedding them in the mod JAR.
-
-Windows build launcher:
+The operator command syntax is:
 
 ```text
-build.bat
+/farm <from> <to> <farm> <villager:true|false> <crop-or-none> [extra]
 ```
 
-The batch file delegates to `build.ps1`. The PowerShell helper locates or bootstraps a JDK 17, resolves Gradle `8.8`, runs `clean build --no-daemon --stacktrace --console=plain`, writes `build.log`, and verifies that a runtime JAR appears in `build/libs`.
+Coordinates are vanilla `X Y Z`. Short Farmer names and full legacy IDs are accepted. Crop aliases are normalized
+where appropriate. Extra modes are `rope=0..2`, `sand`, and `logs=1..2`.
 
-## 24. Forge 1.20.1 backport boundaries
+Attached crop plans choose a canonical compatible host deterministically. A direct host ID is used exactly; for host
+tags, unstripped `_log`/`_stem` candidates are preferred before other valid base blocks. One host fills four faces;
+two hosts fill eight.
 
-This repository is a source-level backport, not a loader shim. Keep loader/version adaptation explicit instead of trying to make NeoForge 1.21.1 source compile unchanged.
+The command validates max volume, build height, loaded chunks, Farmer/crop compatibility and extra-mode validity
+before modifying the target area. Vanilla `/fill` is not extended or replaced.
 
-Important Forge-specific boundaries:
+## 16. Performance/rendering notes
 
-- registries use Forge `DeferredRegister` / `RegistryObject`;
-- menus use `IForgeMenuType` and `NetworkHooks`;
-- item automation uses Forge item handlers and `LazyOptional` capability exposure;
-- stateful items use 1.20.1 `BlockEntityTag`/NBT semantics rather than 1.21 data components;
-- custom shaped upgrade recipes use the 1.20.1 `CraftingContainer`, `NonNullList<Ingredient>` and serializer APIs;
-- the Cutter resolves Farmer's Delight 1.20.1 cutting recipes through the runtime surface available in that release;
-- Knife discovery uses the Forge `forge:tools/knives` tag;
-- resource/datapack paths and metadata follow 1.20.1 Forge conventions;
-- Java source must remain Java 17 compatible.
+Server-side Farmer work is expected to remain cheap while machines are blocked or idle. Client FPS can still fall
+when hundreds of full villager/crop models are visible because the renderer must draw that geometry. Vanilla
+occlusion/frustum culling eliminates that visual cost when machines are behind opaque walls or out of view.
 
-When porting a NeoForge change back here, preserve behavior first and translate APIs second. Never copy a 1.21-only type, data component, registry helper or Java 21 construct into this branch without a 1.20.1 equivalent.
+The 1.4.0 NeoForge stress QA used 513 Rich Farmers and recovered roughly normal 100–120 FPS while the machines were
+loaded but occluded. This is treated as evidence that the remaining dense-array cost is predominantly rendering,
+not the previous work scheduler.
 
-## 25. Formatting and source conventions
+## 17. Confirmed 1.4.0 NeoForge runtime QA
 
-The codebase is intentionally formatted for readability rather than compactness.
+The 1.4.0 NeoForge feature set was exercised with:
 
-Rules for future edits:
+- Rich Farmer normal crops and newly supported special crops.
+- Sweet Berry and Sourceberry mature harvest → post-harvest regrowth behavior.
+- Magebloom normal crop support.
+- mixed attached host logs/crops, including Ars Nouveau families.
+- attached output independence after output-full waits and manual extraction.
+- Paddy/Rich Paddy Rice and Sugar Cane behavior, including no Rich Soil Sugar Cane bonus.
+- dynamic Cutter variants with vanilla, Nether stem and external modded logs; source animations remain intact.
+- persistent Farmer inventory/state across save/load/item handling.
+- `/farm` configured-grid creation.
+- dense Farmer rendering/occlusion performance.
 
-- Java uses four-space indentation.
-- Keep one logical statement per line.
-- Do not compress multiple declarations, branches or method bodies into a single physical line merely to reduce line count.
-- Prefer a practical line-width target of roughly 120 characters; long user-facing/debug strings may exceed it when splitting the literal would make the source worse.
-- Keep explanatory source comments exceptional. If a behavior needs cross-class rationale, document it here.
-- Comments are still appropriate when they are legally required, generated by external tooling, or when the code cannot communicate a tiny local constraint clearly on its own.
-- JSON resources use stable pretty-print formatting and a final newline.
-- `build.gradle`, TOML, shell and batch helpers should remain consistently indented and free of obsolete commentary.
+Forge maintains the equivalent feature design through 1.20.1 APIs/data formats. Loader-specific runtime QA should
+still accompany any future code change even when the shared behavior is unchanged.
 
-The repository includes `.editorconfig` so compatible editors inherit the basic whitespace rules automatically.
+## 18. Loader-specific adaptation
 
-## 26. Change discipline
+Forge is a source-level Minecraft 1.20.1 backport, not a loader shim. It adapts registries/events/menu hooks,
+classic `BlockEntityTag`/NBT item persistence, Forge `ITEM_HANDLER` capabilities, 1.20.1 crafting containers and
+serializers, Farmer's Delight 1.20.1 Cutting recipe/tool matching, `forge:tools/knives`, 1.20.1 datapack directory
+names and Java 17 syntax/API constraints. Behavior is kept equivalent to the NeoForge edition where the target
+dependency versions permit it.
 
-Formatting-only passes and behavior changes should remain separate whenever possible.
+## 19. Release hygiene
 
-For a formatting pass:
+A release source tree must pass:
 
-1. preserve Java tokens other than comments/whitespace;
-2. verify every Java file still parses;
-3. verify JSON resources still parse to the same data;
-4. run the Gradle build when dependencies and network/cache are available;
-5. review the diff for accidental logic changes.
+- Java formatting scan: tabs/trailing whitespace/wildcard imports/overlong compressed lines.
+- JSON parse and locale-key parity.
+- TOML parse where applicable.
+- no generated `build`, `.gradle`, `.gradle-dist`, `.jdk17`, `run`, logs, crash reports, classes or IDE metadata.
+- no stale retired Jade/cutter tag sources.
+- no Easy Villagers visual asset references.
+- ZIP CRC verification.
 
-For behavior changes, update this document when an invariant, persistence rule, compatibility boundary or machine lifecycle changes.
-
-## 27. High-value regression checks
-
-After changes to Farmer logic:
-
-- empty vs stateful Farmer stacking;
-- normal block drop state preservation;
-- Creative Pick Block cleanliness;
-- Paddy Rice lower/panicle lifecycle;
-- Rich Paddy boost behavior;
-- Sugar Cane age/height and teardown returns;
-- Tomato base + Rope section growth;
-- Mushroom Colony Knife blocker;
-- Melon/Pumpkin Axe blocker and fruit-ready retry;
-- output-full behavior without state reset/item loss;
-- tool durability only on successful actions.
-
-After changes to Cutter logic:
-
-- Villager presence/adult requirement;
-- Knife and Axe validation;
-- cutting-recipe execution;
-- Axe fallback actions;
-- output simulation;
-- progress reset/parking;
-- hopper/automation sided behavior;
-- stateful item persistence and inventory preview.
-
-After changes to sound switches:
-
-- client-local persistence;
-- no server/global cancellation;
-- Villager mute and Friendly Creatures routing;
-- Iron Farm filter only at `easy_villagers:iron_farm` positions;
-- real mobs remain audible;
-- item/block render state remains synchronized with the intended local/persistent source.
-
-After viewer changes:
-
-- JEI and EMI show equivalent shared guide data;
-- viewer probes do not consume RNG;
-- stateful Farmer recipe transfer still uses the exact inventory stack;
-- Jade remains diagnostic only.
+The internal `DEV_1.4.0_ROADMAP.md` is not a public release artifact and must be excluded from final source packages.

@@ -6,7 +6,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
 
 public final class OutputSimulator {
-    private OutputSimulator() {}
+    private OutputSimulator() {
+    }
 
     public static boolean canFitAll(IItemHandler output, List<ItemStack> stacks) {
         if (output == null)
@@ -25,18 +26,17 @@ public final class OutputSimulator {
         return true;
     }
 
-    public static boolean insertAll(IItemHandler output, List<ItemStack> stacks) {
-        if (!canFitAll(output, stacks))
+    public static boolean insertAllAfterSuccessfulSimulation(IItemHandler output, List<ItemStack> stacks) {
+        if (output == null)
             return false;
         for (ItemStack source : stacks) {
             if (source == null || source.isEmpty())
                 continue;
             ItemStack remaining = source.copy();
-            for (int slot = 0; slot < output.getSlots() && !remaining.isEmpty(); slot++) {
+            for (int slot = 0; slot < output.getSlots() && !remaining.isEmpty(); slot++)
                 remaining = output.insertItem(slot, remaining, false);
-            }
             if (!remaining.isEmpty())
-                throw new IllegalStateException("Output changed after successful Cutter simulation");
+                return false;
         }
         return true;
     }

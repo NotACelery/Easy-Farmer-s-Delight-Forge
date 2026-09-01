@@ -1,0 +1,6 @@
+{
+  "parent": "easyfarmersdelightcompat:block/machine_cage",
+  "textures": {
+    "particle": "minecraft:block/copper_block"
+  }
+}

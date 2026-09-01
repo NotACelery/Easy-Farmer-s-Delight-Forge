@@ -34,6 +34,7 @@ public final class CutterBlockEntityRenderer implements BlockEntityRenderer<Cutt
     private final BlockRenderDispatcher blockRenderer;
     private final ItemRenderer itemRenderer;
     private final VillagerRenderer villagerRenderer;
+    private final Block cuttingBoard;
     public CutterBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
         Minecraft mc = Minecraft.getInstance();
         blockRenderer = context.getBlockRenderDispatcher();
@@ -48,6 +49,7 @@ public final class CutterBlockEntityRenderer implements BlockEntityRenderer<Cutt
                 mc.font
         );
         villagerRenderer = new VillagerRenderer(ec);
+        cuttingBoard = BuiltInRegistries.BLOCK.get(CUTTING_BOARD_ID);
     }
 
     @Override
@@ -55,11 +57,12 @@ public final class CutterBlockEntityRenderer implements BlockEntityRenderer<Cutt
             int overlay) {
         Direction facing = cutter.getBlockState().hasProperty(CutterBlock.FACING) ? cutter.getBlockState()
                 .getValue(CutterBlock.FACING) : Direction.SOUTH;
+        ItemStack shown = cutter.displayInput();
         renderVillager(cutter, facing, pose, buffer, light);
         if (cutter.isItemPreview())
-            renderPreviewContents(cutter, facing, pose, buffer, light, overlay);
+            renderPreviewContents(cutter, shown, facing, pose, buffer, light, overlay);
         else
-            renderWorkstation(cutter, facing, pose, buffer, light, overlay);
+            renderWorkstation(cutter, shown, facing, pose, buffer, light, overlay);
     }
 
     private void renderVillager(CutterBlockEntity cutter, Direction facing, PoseStack pose, MultiBufferSource buffer,
@@ -76,41 +79,39 @@ public final class CutterBlockEntityRenderer implements BlockEntityRenderer<Cutt
         pose.popPose();
     }
 
-    private void renderWorkstation(CutterBlockEntity cutter, Direction facing, PoseStack pose, MultiBufferSource buffer,
-            int light, int overlay) {
+    private void renderWorkstation(CutterBlockEntity cutter, ItemStack shown, Direction facing, PoseStack pose,
+            MultiBufferSource buffer, int light, int overlay) {
         pose.pushPose();
         applyWorkTransform(pose, facing);
         blockRenderer.renderSingleBlock(cutter.logVariant().defaultBlockState(), pose, buffer, light, overlay);
-        renderBoardAndItem(cutter, pose, buffer, light, overlay, true);
+        renderBoardAndItem(cutter, shown, pose, buffer, light, overlay, true);
         pose.popPose();
     }
 
-    private void renderPreviewContents(CutterBlockEntity cutter, Direction facing, PoseStack pose,
+    private void renderPreviewContents(CutterBlockEntity cutter, ItemStack shown, Direction facing, PoseStack pose,
             MultiBufferSource buffer, int light, int overlay) {
-        if (cutter.displayInput().isEmpty())
+        if (shown.isEmpty())
             return;
         pose.pushPose();
         applyWorkTransform(pose, facing);
-        renderBoardAndItem(cutter, pose, buffer, light, overlay, true);
+        renderBoardAndItem(cutter, shown, pose, buffer, light, overlay, true);
         pose.popPose();
     }
 
-    private void renderBoardAndItem(CutterBlockEntity cutter, PoseStack pose, MultiBufferSource buffer, int light,
-            int overlay, boolean renderBoard) {
-        Block board = BuiltInRegistries.BLOCK.get(CUTTING_BOARD_ID);
-        if (board == Blocks.AIR)
+    private void renderBoardAndItem(CutterBlockEntity cutter, ItemStack shown, PoseStack pose,
+            MultiBufferSource buffer, int light, int overlay, boolean renderBoard) {
+        if (cuttingBoard == Blocks.AIR)
             return;
         pose.pushPose();
         pose.translate(0D, 1D, 0D);
         if (renderBoard)
-            blockRenderer.renderSingleBlock(board.defaultBlockState(), pose, buffer, light, overlay);
-        renderItem(cutter, pose, buffer, light, overlay);
+            blockRenderer.renderSingleBlock(cuttingBoard.defaultBlockState(), pose, buffer, light, overlay);
+        renderItem(cutter, shown, pose, buffer, light, overlay);
         pose.popPose();
     }
 
-    private void renderItem(CutterBlockEntity cutter, PoseStack pose, MultiBufferSource buffer, int light,
-            int overlay) {
-        ItemStack shown = cutter.displayInput();
+    private void renderItem(CutterBlockEntity cutter, ItemStack shown, PoseStack pose, MultiBufferSource buffer,
+            int light, int overlay) {
         if (shown.isEmpty() || cutter.getLevel() == null)
             return;
         pose.pushPose();

@@ -13,8 +13,8 @@ import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import net.minecraft.resources.ResourceLocation;
-import vectorwing.farmersdelight.integration.jei.FDRecipeTypes;
 import net.minecraft.world.item.ItemStack;
+import vectorwing.farmersdelight.integration.jei.FDRecipeTypes;
 
 @JeiPlugin
 public final class EasyFdJeiPlugin implements IModPlugin {
@@ -68,7 +68,7 @@ public final class EasyFdJeiPlugin implements IModPlugin {
         registration.addRecipes(PADDY_HARVEST, RecipeViewerData.PADDY_HARVESTS);
         registration.addRecipes(RICH_FARMER_HARVEST, RecipeViewerData.RICH_FARMER_HARVESTS);
         registration.addRecipes(CUTTER_AXE, RecipeViewerData.cutterAxeActions());
-        registration.addRecipes(BLOCK_GUIDE, RecipeViewerData.BLOCK_GUIDES);
+        registration.addRecipes(BLOCK_GUIDE, RecipeViewerData.blockGuides());
     }
 
     @Override
@@ -89,11 +89,18 @@ public final class EasyFdJeiPlugin implements IModPlugin {
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.RICH_PADDY_FARMER_ITEM.get()), BLOCK_GUIDE);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.CUTTER_ITEM.get()), BLOCK_GUIDE);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.VILLAGER_NOISE_SWITCH_ITEM.get()), BLOCK_GUIDE);
-    }
-    private static void registerCutting(IRecipeCatalystRegistration registration) {
+        if (ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM != null) {
             registration.addRecipeCatalyst(
-                    new ItemStack(ModBlocks.CUTTER_ITEM.get()),
-                FDRecipeTypes.CUTTING
+                    new ItemStack(ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM.get()),
+                    BLOCK_GUIDE
             );
         }
     }
+
+    private static void registerCutting(IRecipeCatalystRegistration registration) {
+        registration.addRecipeCatalyst(
+                new ItemStack(ModBlocks.CUTTER_ITEM.get()),
+                FDRecipeTypes.CUTTING
+        );
+    }
+}

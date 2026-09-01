@@ -1,10 +1,18 @@
 package dev.celerbi.easyfarmersdelightcompat.integration;
 
 import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
+import dev.celerbi.easyfarmersdelightcompat.compat.easymobfarm.EasyMobFarmCompat;
+import dev.celerbi.easyfarmersdelightcompat.integration.attached.AttachedCropDefinition;
+import dev.celerbi.easyfarmersdelightcompat.integration.attached.AttachedCropDefinitions;
+import dev.celerbi.easyfarmersdelightcompat.integration.regrowing.RegrowingCropDefinition;
+import dev.celerbi.easyfarmersdelightcompat.integration.regrowing.RegrowingCropDefinitions;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlockEntities;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlocks;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -15,6 +23,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
 public final class RecipeViewerData {
 
@@ -236,6 +247,20 @@ public final class RecipeViewerData {
                     lines("easyfarmersdelightcompat.viewer.guide.rich_pumpkin", 7)
             ),
             new BlockGuideInfo(
+                    id("block_guide/rich_attached_crops"),
+                    Component.translatable("easyfarmersdelightcompat.viewer.guide.rich_attached_crops.title"),
+                    List.of(
+                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.machine"),
+                            input(Ingredient.of(Items.JUNGLE_LOG),
+                                    "easyfarmersdelightcompat.viewer.label.host_log"),
+                            input(Ingredient.of(Items.COCOA_BEANS),
+                                    "easyfarmersdelightcompat.viewer.label.planting_item"),
+                            output(Ingredient.of(Items.COCOA_BEANS), new ItemStack(Items.COCOA_BEANS).getHoverName())
+                    ),
+                    lines("easyfarmersdelightcompat.viewer.guide.rich_attached_crops", 5)
+            ),
+            new BlockGuideInfo(
                     id("block_guide/cutter"),
                     Component.translatable("easyfarmersdelightcompat.viewer.guide.cutter.title"),
                     List.of(
@@ -292,6 +317,237 @@ public final class RecipeViewerData {
     );
 
     private RecipeViewerData() {
+    }
+
+    public static List<BlockGuideInfo> blockGuides() {
+        List<BlockGuideInfo> guides = new ArrayList<>(BLOCK_GUIDES);
+        if (EasyMobFarmCompat.isLoaded()
+                && ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM != null
+                && ModBlockEntities.EASY_MOB_FARM_NOISE_SWITCH != null) {
+            guides.add(new BlockGuideInfo(
+                    id("block_guide/easy_mob_farm_noise_switch"),
+                    Component.translatable("easyfarmersdelightcompat.viewer.guide.easy_mob_farm_noise_switch.title"),
+                    List.of(
+                            catalystPreview(
+                                    Ingredient.of(ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM.get()),
+                                    emptyEasyMobFarmNoiseSwitch(),
+                                    "easyfarmersdelightcompat.viewer.label.machine"
+                            ),
+                            inputPreview(
+                                    Ingredient.of(Items.ROTTEN_FLESH),
+                                    new ItemStack(Items.ROTTEN_FLESH, 6),
+                                    "easyfarmersdelightcompat.viewer.label.rotten_flesh"
+                            ),
+                            outputPreview(
+                                    Ingredient.of(ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM.get()),
+                                    completedEasyMobFarmNoiseSwitch(),
+                                    Component.translatable(
+                                            "easyfarmersdelightcompat.viewer.guide.easy_mob_farm_noise_switch.completed"
+                                    )
+                            )
+                    ),
+                    lines("easyfarmersdelightcompat.viewer.guide.easy_mob_farm_noise_switch", 3)
+            ));
+        }
+
+        addAttachedDefinitionGuides(guides);
+        addRegrowingDefinitionGuides(guides);
+        return List.copyOf(guides);
+    }
+
+    private static void addAttachedDefinitionGuides(List<BlockGuideInfo> guides) {
+        for (AttachedCropDefinition definition : viewerAttachedDefinitions()) {
+            if ("easyfarmersdelightcompat".equals(definition.id().getNamespace())
+                    && "cocoa".equals(definition.id().getPath())) {
+                continue;
+            }
+
+            List<ItemStack> planting = matchingItems(definition::matchesPlanting, 16);
+            List<ItemStack> hosts = matchingBlocks(definition::matchesHost, 16);
+            Block crop = BuiltInRegistries.BLOCK.get(definition.cropBlockId());
+            if (planting.isEmpty()
+                    || hosts.isEmpty()
+                    || crop == null
+                    || crop == Blocks.AIR) {
+                continue;
+            }
+
+            guides.add(new BlockGuideInfo(
+                    id("block_guide/attached/" + safeViewerPath(definition.id())),
+                    Component.translatable(
+                            "easyfarmersdelightcompat.viewer.guide.attached_definition.title",
+                            crop.getName()
+                    ),
+                    List.of(
+                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.machine"),
+                            input(Ingredient.of(hosts.stream()),
+                                    "easyfarmersdelightcompat.viewer.label.host_log"),
+                            input(Ingredient.of(planting.stream()),
+                                    "easyfarmersdelightcompat.viewer.label.planting_item"),
+                            output(Ingredient.of(planting.stream()), crop.getName())
+                    ),
+                    List.of(
+                            Component.translatable("easyfarmersdelightcompat.viewer.guide.attached_definition.line1",
+                                    crop.getName()),
+                            Component.translatable("easyfarmersdelightcompat.viewer.guide.attached_definition.line2"),
+                            Component.translatable("easyfarmersdelightcompat.viewer.guide.attached_definition.line3"),
+                            Component.translatable("easyfarmersdelightcompat.viewer.guide.attached_definition.line4")
+                    )
+            ));
+        }
+    }
+
+    private static void addRegrowingDefinitionGuides(List<BlockGuideInfo> guides) {
+        for (RegrowingCropDefinition definition : viewerRegrowingDefinitions()) {
+            List<ItemStack> planting = matchingItems(definition::matchesPlanting, 16);
+            Block crop = BuiltInRegistries.BLOCK.get(definition.cropBlockId());
+            if (planting.isEmpty() || crop == null || crop == Blocks.AIR) {
+                continue;
+            }
+
+            guides.add(new BlockGuideInfo(
+                    id("block_guide/regrowing/" + safeViewerPath(definition.id())),
+                    Component.translatable(
+                            "easyfarmersdelightcompat.viewer.guide.regrowing_definition.title",
+                            crop.getName()
+                    ),
+                    List.of(
+                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.machine"),
+                            input(Ingredient.of(planting.stream()),
+                                    "easyfarmersdelightcompat.viewer.label.planting_item"),
+                            output(Ingredient.of(planting.stream()), crop.getName())
+                    ),
+                    List.of(
+                            Component.translatable("easyfarmersdelightcompat.viewer.guide.regrowing_definition.line1",
+                                    crop.getName()),
+                            Component.translatable("easyfarmersdelightcompat.viewer.guide.regrowing_definition.line2",
+                                    definition.harvestAge(), definition.postHarvestAge()),
+                            Component.translatable("easyfarmersdelightcompat.viewer.guide.regrowing_definition.line3"),
+                            Component.translatable("easyfarmersdelightcompat.viewer.guide.regrowing_definition.line4")
+                    )
+            ));
+        }
+    }
+
+    private static List<AttachedCropDefinition> viewerAttachedDefinitions() {
+        LinkedHashMap<ResourceLocation, AttachedCropDefinition> definitions = new LinkedHashMap<>();
+        for (AttachedCropDefinition definition : AttachedCropDefinitions.all()) {
+            definitions.put(definition.id(), definition);
+        }
+        loadBundledAttachedDefinition(definitions, "cocoa");
+        loadBundledAttachedDefinition(definitions, "ars_bombegranate");
+        loadBundledAttachedDefinition(definitions, "ars_mendosteen");
+        loadBundledAttachedDefinition(definitions, "ars_frostaya");
+        loadBundledAttachedDefinition(definitions, "ars_bastion");
+        return List.copyOf(definitions.values());
+    }
+
+    private static List<RegrowingCropDefinition> viewerRegrowingDefinitions() {
+        LinkedHashMap<ResourceLocation, RegrowingCropDefinition> definitions = new LinkedHashMap<>();
+        for (RegrowingCropDefinition definition : RegrowingCropDefinitions.all()) {
+            definitions.put(definition.id(), definition);
+        }
+        loadBundledRegrowingDefinition(definitions, "ars_sourceberry");
+        return List.copyOf(definitions.values());
+    }
+
+    private static void loadBundledAttachedDefinition(
+            Map<ResourceLocation, AttachedCropDefinition> definitions,
+            String path
+    ) {
+        ResourceLocation id = id(path);
+        if (definitions.containsKey(id)) {
+            return;
+        }
+        String resourcePath = "data/" + EasyFarmersDelightCompat.MOD_ID + "/efdc_attached_crops/" + path + ".json";
+        try (java.io.InputStream stream = RecipeViewerData.class.getClassLoader().getResourceAsStream(resourcePath)) {
+            if (stream == null) {
+                return;
+            }
+            com.google.gson.JsonElement root = com.google.gson.JsonParser.parseReader(
+                    new java.io.InputStreamReader(stream, java.nio.charset.StandardCharsets.UTF_8)
+            );
+            if (!root.isJsonObject()) {
+                return;
+            }
+            AttachedCropDefinition definition = AttachedCropDefinition.parse(id, root.getAsJsonObject());
+            if (definition != null) {
+                definitions.put(id, definition);
+            }
+        } catch (java.io.IOException | RuntimeException ignored) {
+        }
+    }
+
+    private static void loadBundledRegrowingDefinition(
+            Map<ResourceLocation, RegrowingCropDefinition> definitions,
+            String path
+    ) {
+        ResourceLocation id = id(path);
+        if (definitions.containsKey(id)) {
+            return;
+        }
+        String resourcePath = "data/" + EasyFarmersDelightCompat.MOD_ID + "/efdc_regrowing_crops/" + path + ".json";
+        try (java.io.InputStream stream = RecipeViewerData.class.getClassLoader().getResourceAsStream(resourcePath)) {
+            if (stream == null) {
+                return;
+            }
+            com.google.gson.JsonElement root = com.google.gson.JsonParser.parseReader(
+                    new java.io.InputStreamReader(stream, java.nio.charset.StandardCharsets.UTF_8)
+            );
+            if (!root.isJsonObject()) {
+                return;
+            }
+            RegrowingCropDefinition definition = RegrowingCropDefinition.parse(id, root.getAsJsonObject());
+            if (definition != null) {
+                definitions.put(id, definition);
+            }
+        } catch (java.io.IOException | RuntimeException ignored) {
+        }
+    }
+
+    private static List<ItemStack> matchingItems(
+            Predicate<ItemStack> predicate,
+            int limit
+    ) {
+        List<ItemStack> result = new ArrayList<>();
+        for (Item item : BuiltInRegistries.ITEM) {
+            ItemStack stack = item.getDefaultInstance();
+            if (stack.isEmpty() || !predicate.test(stack)) {
+                continue;
+            }
+            result.add(stack.copyWithCount(1));
+            if (result.size() >= limit) {
+                break;
+            }
+        }
+        return List.copyOf(result);
+    }
+
+    private static List<ItemStack> matchingBlocks(
+            Predicate<BlockState> predicate,
+            int limit
+    ) {
+        List<ItemStack> result = new ArrayList<>();
+        for (Block block : BuiltInRegistries.BLOCK) {
+            if (!predicate.test(block.defaultBlockState())) {
+                continue;
+            }
+            ItemStack stack = new ItemStack(block);
+            if (stack.isEmpty()) {
+                continue;
+            }
+            result.add(stack);
+            if (result.size() >= limit) {
+                break;
+            }
+        }
+        return List.copyOf(result);
+    }
+
+    private static String safeViewerPath(ResourceLocation id) {
+        return (id.getNamespace() + "/" + id.getPath()).replace(':', '/');
     }
 
     public static List<CutterAxeInfo> cutterAxeActions() {
@@ -384,6 +640,18 @@ public final class RecipeViewerData {
         data.putInt("AssemblyStage", 4);
         data.putBoolean("HasGolem", true);
         BlockItem.setBlockEntityData(stack, ModBlockEntities.IRON_FARM_NOISE_SWITCH.get(), data);
+        return stack;
+    }
+
+    private static ItemStack emptyEasyMobFarmNoiseSwitch() {
+        return new ItemStack(ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM.get());
+    }
+
+    private static ItemStack completedEasyMobFarmNoiseSwitch() {
+        ItemStack stack = emptyEasyMobFarmNoiseSwitch();
+        CompoundTag data = new CompoundTag();
+        data.putInt("AssemblyStage", 6);
+        BlockItem.setBlockEntityData(stack, ModBlockEntities.EASY_MOB_FARM_NOISE_SWITCH.get(), data);
         return stack;
     }
 

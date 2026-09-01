@@ -17,6 +17,7 @@ import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 
 public final class CutterMenu extends AbstractContainerMenu {
+
     public static final int TOOL_SLOT = 0,
             INPUT_START = 1,
             INPUT_END = 5,
@@ -68,23 +69,28 @@ public final class CutterMenu extends AbstractContainerMenu {
             }
         });
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++) {
             addSlot(new SlotItemHandler(input, i, 52 + i * 18, 20));
+        }
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++) {
             addSlot(new SlotItemHandler(output, i, 52 + i * 18, 51) {
                 @Override
                 public boolean mayPlace(ItemStack s) {
                     return false;
                 }
             });
+        }
 
-        for (int r = 0; r < 3; r++)
-            for (int c = 0; c < 9; c++)
+        for (int r = 0; r < 3; r++) {
+            for (int c = 0; c < 9; c++) {
                 addSlot(new Slot(inv, c + r * 9 + 9, 8 + c * 18, 83 + r * 18));
+            }
+        }
 
-        for (int c = 0; c < 9; c++)
+        for (int c = 0; c < 9; c++) {
             addSlot(new Slot(inv, c, 8 + c * 18, 141));
+        }
     }
 
     public static CutterMenu fromNetwork(int id, Inventory inv, FriendlyByteBuf buf) {
@@ -114,29 +120,35 @@ public final class CutterMenu extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        if (index < 0 || index >= slots.size())
+        if (index < 0 || index >= slots.size()) {
             return ItemStack.EMPTY;
+        }
 
         Slot slot = slots.get(index);
-        if (!slot.hasItem())
+        if (!slot.hasItem()) {
             return ItemStack.EMPTY;
+        }
 
         ItemStack stack = slot.getItem(), original = stack.copy();
 
         if (index < PLAYER_START) {
-            if (!moveItemStackTo(stack, PLAYER_START, PLAYER_END, true))
+            if (!moveItemStackTo(stack, PLAYER_START, PLAYER_END, true)) {
                 return ItemStack.EMPTY;
+            }
         } else if (FarmerToolSupport.isCuttingTool(stack)) {
             if (slots.get(TOOL_SLOT).hasItem()
-                    || !moveItemStackTo(stack, TOOL_SLOT, TOOL_SLOT + 1, false))
+                    || !moveItemStackTo(stack, TOOL_SLOT, TOOL_SLOT + 1, false)) {
                 return ItemStack.EMPTY;
-        } else if (!moveItemStackTo(stack, INPUT_START, INPUT_END, false))
+            }
+        } else if (!moveItemStackTo(stack, INPUT_START, INPUT_END, false)) {
             return ItemStack.EMPTY;
+        }
 
-        if (stack.isEmpty())
+        if (stack.isEmpty()) {
             slot.setByPlayer(ItemStack.EMPTY);
-        else
+        } else {
             slot.setChanged();
+        }
 
         return original;
     }
@@ -144,10 +156,9 @@ public final class CutterMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player player) {
         return player.distanceToSqr(
-                        blockPos.getX() + .5,
-                        blockPos.getY() + .5,
-                        blockPos.getZ() + .5)
-                <= 64
+                blockPos.getX() + .5,
+                blockPos.getY() + .5,
+                blockPos.getZ() + .5) <= 64
                 && player.level().getBlockEntity(blockPos) instanceof CutterBlockEntity;
     }
 }
