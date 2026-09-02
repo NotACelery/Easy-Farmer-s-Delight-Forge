@@ -15,9 +15,9 @@ fruit, regrowing bushes, dynamic Cutting Board automation and client-local sound
 > namespace remains `easyfarmersdelightcompat`. Existing registered blocks/items, BlockEntity IDs, NBT keys, recipes
 > and saved worlds therefore retain their established identity.
 
-For the complete crop matrix and host rules, see **[SUPPORTED_CROPS.md](SUPPORTED_CROPS.md)**.
-For architecture and persistence details, see **[DEVELOPMENT.md](DEVELOPMENT.md)**.
-For third-party interoperability/resource boundaries, see **[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)**.
+For the complete crop matrix and host rules, see **[SUPPORTED_CROPS.md](docs/SUPPORTED_CROPS.md)**.
+For architecture and persistence details, see **[DEVELOPMENT.md](docs/DEVELOPMENT.md)**.
+For third-party interoperability/resource boundaries, see **[THIRD_PARTY_NOTICES.md](docs/THIRD_PARTY_NOTICES.md)**.
 
 ## Main features
 
@@ -100,7 +100,7 @@ at once.
 
 Sneak-use dismantles in this order: upper crops → upper log → lower crops → lower log.
 
-See [SUPPORTED_CROPS.md](SUPPORTED_CROPS.md) for the complete behavior, Rich Soil rules and datapack format.
+See [SUPPORTED_CROPS.md](docs/SUPPORTED_CROPS.md) for the complete behavior, Rich Soil rules and datapack format.
 
 ## Regrowing bushes
 

@@ -1,6 +1,7 @@
 {
   "parent": "easyfarmersdelightcompat:block/machine_cage",
   "textures": {
-    "particle": "minecraft:block/emerald_block"
+    "particle": "minecraft:block/emerald_block",
+    "floor": "minecraft:block/emerald_block"
   }
 }

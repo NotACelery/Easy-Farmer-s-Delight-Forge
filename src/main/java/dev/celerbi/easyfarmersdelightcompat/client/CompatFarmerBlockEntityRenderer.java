@@ -53,6 +53,8 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
     private static final float PADDY_WATERLINE_Y = 1.25F / 16.0F;
     private static final float PADDY_SURFACE_EPSILON = 1.0F / 1024.0F;
     private static final float PADDY_ISLAND_TOP_Y = PADDY_WATERLINE_Y + PADDY_SURFACE_EPSILON;
+    private static final float PADDY_PLATFORM_BOTTOM_Y = PADDY_SURFACE_EPSILON;
+    private static final float PADDY_PLATFORM_HEIGHT = PADDY_ISLAND_TOP_Y - PADDY_PLATFORM_BOTTOM_Y;
 
     private static final float PADDY_ISLAND_SCALE = 5.0F / 16.0F;
     private static final float PADDY_SUPPORT_LOCAL_Z = -3.0F / 16.0F;
@@ -285,9 +287,9 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
                 direction,
                 0.0F,
                 PADDY_SUPPORT_LOCAL_Z,
-                0.0F,
+                PADDY_PLATFORM_BOTTOM_Y,
                 PADDY_ISLAND_SCALE,
-                PADDY_ISLAND_TOP_Y,
+                PADDY_PLATFORM_HEIGHT,
                 PADDY_ISLAND_SCALE
         );
         renderBlockState(platform.defaultBlockState(), poseStack, buffer, combinedLight, combinedOverlay);
@@ -329,9 +331,9 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
                 direction,
                 0.0F,
                 PADDY_SAND_LOCAL_Z,
-                0.0F,
+                PADDY_PLATFORM_BOTTOM_Y,
                 PADDY_ISLAND_SCALE,
-                PADDY_ISLAND_TOP_Y,
+                PADDY_PLATFORM_HEIGHT,
                 PADDY_ISLAND_SCALE
         );
         renderBlockState(Blocks.SAND.defaultBlockState(), poseStack, buffer, combinedLight, combinedOverlay);

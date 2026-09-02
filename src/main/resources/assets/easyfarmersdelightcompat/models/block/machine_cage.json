@@ -6,7 +6,8 @@
     "particle": "minecraft:block/iron_block",
     "glass": "minecraft:block/glass",
     "iron": "minecraft:block/iron_block",
-    "frame": "minecraft:block/iron_block"
+    "frame": "minecraft:block/iron_block",
+    "floor": "minecraft:block/iron_block"
   },
   "elements": [
     {
@@ -142,6 +143,40 @@
         },
         "down": {
           "texture": "#iron"
+        }
+      }
+    },
+    {
+      "from": [
+        1,
+        0,
+        1
+      ],
+      "to": [
+        15,
+        1,
+        15
+      ],
+      "shade": false,
+      "name": "center_floor",
+      "faces": {
+        "north": {
+          "texture": "#floor"
+        },
+        "south": {
+          "texture": "#floor"
+        },
+        "west": {
+          "texture": "#floor"
+        },
+        "east": {
+          "texture": "#floor"
+        },
+        "up": {
+          "texture": "#floor"
+        },
+        "down": {
+          "texture": "#floor"
         }
       }
     },

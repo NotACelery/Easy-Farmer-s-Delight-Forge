@@ -1,6 +1,7 @@
 {
   "parent": "easyfarmersdelightcompat:block/machine_cage",
   "textures": {
-    "particle": "minecraft:block/copper_block"
+    "particle": "minecraft:block/copper_block",
+    "floor": "minecraft:block/mossy_cobblestone"
   }
 }

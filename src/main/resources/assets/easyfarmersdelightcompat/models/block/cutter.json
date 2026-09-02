@@ -1,6 +1,7 @@
 {
   "parent": "easyfarmersdelightcompat:block/machine_cage",
   "textures": {
-    "particle": "minecraft:block/bricks"
+    "particle": "minecraft:block/bricks",
+    "floor": "minecraft:block/bricks"
   }
 }
