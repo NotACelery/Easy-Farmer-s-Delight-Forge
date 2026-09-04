@@ -114,7 +114,7 @@
   "easyfarmersdelightcompat.viewer.guide.rich_pumpkin.line7": "Si la salida está llena, la calabaza espera y el hacha no se daña.",
   "easyfarmersdelightcompat.viewer.guide.cutter.title": "Cutter",
   "easyfarmersdelightcompat.viewer.guide.cutter.line1": "Requiere un aldeano de Easy Villagers y ofrece 4 entradas más 4 salidas.",
-  "easyfarmersdelightcompat.viewer.guide.cutter.line2": "Su slot protegido de herramienta acepta cuchillos y hachas.",
+  "easyfarmersdelightcompat.viewer.guide.cutter.line2": "Su slot protegido de herramienta acepta las herramientas compatibles con las recetas de Cutting Board: cuchillos, picos, hachas, palas, azadas y tijeras.",
   "easyfarmersdelightcompat.viewer.guide.cutter.line3": "Las recetas Cutting de Farmer’s Delight tienen prioridad sobre las acciones de hacha.",
   "easyfarmersdelightcompat.viewer.guide.cutter.line4": "El fallback de hacha permite descortezar, raspar y quitar cera.",
   "easyfarmersdelightcompat.viewer.guide.cutter.line5": "El procesamiento es serial: completa una entrada cada 10 ticks.",
@@ -250,5 +250,11 @@
   "jade.easyfarmersdelightcompat.grafting_support.empty": "Sin hojas — añade cualquier bloque de hojas",
   "jade.easyfarmersdelightcompat.grafting_support.decorative": "Copa decorativa: %s",
   "jade.easyfarmersdelightcompat.grafting_support.needs_rich_soil": "Necesita Rich Soil debajo para producir fruta",
-  "block.easyfarmersdelightcompat.grafting_canopy": "Soporte de injerto"
+  "block.easyfarmersdelightcompat.grafting_canopy": "Soporte de injerto",
+  "jade.easyfarmersdelightcompat.waiting.pickaxe": "Esperando un pico",
+  "jade.easyfarmersdelightcompat.waiting.shovel": "Esperando una pala",
+  "jade.easyfarmersdelightcompat.waiting.cutting_tool": "Esperando una herramienta compatible con la Cutting Board",
+  "jade.easyfarmersdelightcompat.wrong_tool.pickaxe": "Herramienta incorrecta: se requiere un pico",
+  "jade.easyfarmersdelightcompat.wrong_tool.shovel": "Herramienta incorrecta: se requiere una pala",
+  "jade.easyfarmersdelightcompat.wrong_tool.cutting_tool": "Herramienta incorrecta: se requiere una herramienta compatible con la Cutting Board"
 }

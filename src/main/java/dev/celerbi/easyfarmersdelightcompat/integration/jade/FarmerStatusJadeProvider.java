@@ -83,7 +83,6 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
 
         if (status.getBoolean(PADDY_SAND)) {
             appendSugarCane(tooltip, status);
-            appendRichSoil(tooltip, status, null);
             appendWaitingTool(tooltip, status);
             return;
         }
@@ -137,7 +136,6 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
             tooltip.add(Component.translatable("jade.easyfarmersdelightcompat.harvest.ready")
                     .withStyle(ChatFormatting.GREEN));
         }
-        appendRichSoil(tooltip, status, cropId);
         appendWaitingTool(tooltip, status);
     }
 
@@ -239,8 +237,6 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
                             percent(age, maxAge)
                     )
                     .withStyle(ChatFormatting.GRAY));
-            tooltip.add(Component.translatable("jade.easyfarmersdelightcompat.rich_soil.active")
-                    .withStyle(ChatFormatting.GREEN));
         }
     }
 
@@ -335,44 +331,6 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
                             : "jade.easyfarmersdelightcompat.fruit.growing")
                     .withStyle(status.getBoolean(FRUIT_READY) ? ChatFormatting.GREEN : ChatFormatting.GRAY));
         }
-    }
-
-    private static void appendRichSoil(ITooltip tooltip, CompoundTag status, ResourceLocation cropId) {
-        if (!status.getBoolean(RICH))
-            return;
-        if (status.getBoolean(PADDY_SAND)) {
-            tooltip.add(Component.translatable("jade.easyfarmersdelightcompat.rich_soil.no_effect_sugar_cane")
-                    .withStyle(ChatFormatting.GRAY));
-            return;
-        }
-        if (cropId == null)
-            return;
-        if (isStem(cropId) && status.getInt(AGE) >= status.getInt(MAX_AGE)) {
-            tooltip.add(Component.translatable("jade.easyfarmersdelightcompat.rich_soil.stem_only")
-                    .withStyle(ChatFormatting.GRAY));
-            return;
-        }
-        if (!status.getBoolean(AQUATIC) && !isGrowthPhaseActive(status, cropId)) {
-            return;
-        }
-        tooltip.add(Component.translatable("jade.easyfarmersdelightcompat.rich_soil.active")
-                .withStyle(ChatFormatting.GREEN));
-    }
-
-    private static boolean isGrowthPhaseActive(CompoundTag status, ResourceLocation cropId) {
-        if (BUDDING_TOMATOES.equals(cropId)) {
-            return true;
-        }
-        if (TOMATOES.equals(cropId)) {
-            if (status.getInt(BASE_PROGRESS) < 3)
-                return true;
-            int ropes = Math.max(0, Math.min(2, status.getInt(ROPE_COUNT)));
-            if (ropes >= 1 && status.getInt(ROPE_ONE_PROGRESS) < 3)
-                return true;
-            return ropes >= 2 && status.getInt(ROPE_TWO_PROGRESS) < 3;
-        }
-        int maxAge = status.getInt(MAX_AGE);
-        return maxAge > 0 && status.getInt(AGE) < maxAge;
     }
 
     private static void appendWaitingTool(ITooltip tooltip, CompoundTag status) {

@@ -207,7 +207,7 @@ It provides:
 * **1 protected Cutting Tool slot**
 * **1 stored Villager**
 
-Insert an adult Villager, provide the appropriate Knife or Axe, and supply compatible materials.
+Insert an adult Villager, provide the appropriate Cutting Board tool, and supply compatible materials.
 
 The Cutter automatically performs supported **Farmer's Delight Cutting Board recipes**.
 

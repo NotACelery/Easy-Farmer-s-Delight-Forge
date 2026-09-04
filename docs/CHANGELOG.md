@@ -1,3 +1,11 @@
+## 1.4.3-dev.4
+
+- Expanded Cutter parity with Farmer's Delight Cutting Board recipes to support Knife, Pickaxe, Axe, Shovel, Hoe and Shears tool families.
+- Generalized Cutter tool detection/Jade requirement reporting while preserving Axe fallback behavior.
+- Removed redundant Rich Soil status text from Rich Farmer and Rich Paddy Farmer Jade tooltips.
+- Re-audited Farmer harvest-tool/Fortune behavior and Cutter sided automation; existing crop-specific Fortune policy remains intact.
+- Integrated the pixel-grid-aligned Grafting Support base model.
+
 # Changelog
 
 ## 1.4.2 — 2026-09-03

@@ -71,6 +71,8 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
     private static final String KEY_BASE_PROGRESS = "EfdcBaseProgress";
     private static final String KEY_ROPE_ONE_PROGRESS = "EfdcRopeOneProgress";
     private static final String KEY_ROPE_TWO_PROGRESS = "EfdcRopeTwoProgress";
+    private static final String KEY_ROPE_ONE_PLANTED = "EfdcRopeOnePlanted";
+    private static final String KEY_ROPE_TWO_PLANTED = "EfdcRopeTwoPlanted";
     private static final String KEY_ROPE_COUNT = "EfdcRopeCount";
     private static final String KEY_HARVEST_TOOL = "EfdcHarvestTool";
     private static final String LEGACY_EFDC_KNIFE = "EfdcKnife";
@@ -140,6 +142,8 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
     private int baseProgress;
     private int ropeOneProgress;
     private int ropeTwoProgress;
+    private boolean ropeOnePlanted;
+    private boolean ropeTwoPlanted;
     private int ropeCount;
     private boolean fruitReady;
     private boolean paddySand;
@@ -692,6 +696,14 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         return ropeTwoProgress;
     }
 
+    public boolean ropeOnePlanted() {
+        return ropeOnePlanted;
+    }
+
+    public boolean ropeTwoPlanted() {
+        return ropeTwoPlanted;
+    }
+
     public int ropeCount() {
         return ropeCount;
     }
@@ -710,14 +722,18 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         }
     }
 
+    // Normal farmland crops (including Tomatoes and compatible modded crops) may use an optional Hoe.
+    // Passing the Hoe into the loot context lets vanilla loot tables apply Fortune without making it required.
     private ItemStack normalCropHarvestTool() {
         return variant().isRich() && FarmerToolSupport.isHoe(harvestTool) ? harvestTool : ItemStack.EMPTY;
     }
 
+    // Rice has its own Knife-aware harvest path and intentionally never falls back to Hoe Fortune.
     private ItemStack riceHarvestTool() {
         return variant().isRich() && FarmerToolSupport.isKnife(harvestTool) ? harvestTool : ItemStack.EMPTY;
     }
 
+    // Melons and Pumpkins use their required Axe so their normal Fortune/Silk Touch loot rules are preserved.
     private ItemStack stemHarvestTool() {
         return variant().isRich() && FarmerToolSupport.isAxe(harvestTool) ? harvestTool : ItemStack.EMPTY;
     }
@@ -841,8 +857,10 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         ropeCount++;
         if (ropeCount == 1) {
             ropeOneProgress = 0;
+            ropeOnePlanted = false;
         } else {
             ropeTwoProgress = 0;
+            ropeTwoPlanted = false;
         }
         setChanged();
         return true;
@@ -855,8 +873,10 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
 
         if (ropeCount == 2) {
             ropeTwoProgress = 0;
+            ropeTwoPlanted = false;
         } else {
             ropeOneProgress = 0;
+            ropeOnePlanted = false;
         }
         ropeCount--;
         setChanged();
@@ -883,6 +903,8 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         baseProgress = 0;
         ropeOneProgress = 0;
         ropeTwoProgress = 0;
+        ropeOnePlanted = false;
+        ropeTwoPlanted = false;
         setChanged();
     }
 
@@ -907,6 +929,8 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         baseProgress = 0;
         ropeOneProgress = 0;
         ropeTwoProgress = 0;
+        ropeOnePlanted = false;
+        ropeTwoPlanted = false;
         ropeCount = 0;
         setChanged();
         return true;
@@ -928,6 +952,8 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         baseProgress = 0;
         ropeOneProgress = 0;
         ropeTwoProgress = 0;
+        ropeOnePlanted = false;
+        ropeTwoPlanted = false;
         ropeCount = 0;
         setChanged();
         return true;
@@ -970,6 +996,8 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         baseProgress = 0;
         ropeOneProgress = 0;
         ropeTwoProgress = 0;
+        ropeOnePlanted = false;
+        ropeTwoPlanted = false;
         ropeCount = 0;
         setChanged();
         return true;
@@ -982,6 +1010,8 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         baseProgress = 0;
         ropeOneProgress = 0;
         ropeTwoProgress = 0;
+        ropeOnePlanted = false;
+        ropeTwoPlanted = false;
         ropeCount = 0;
         setChanged();
     }
@@ -999,6 +1029,8 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         baseProgress = 0;
         ropeOneProgress = 0;
         ropeTwoProgress = 0;
+        ropeOnePlanted = false;
+        ropeTwoPlanted = false;
         fruitReady = false;
         regrowingDefinitionId = null;
         regrowingPlantingItemId = null;
@@ -1296,11 +1328,13 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         BlockState afterBase = farmer.easyVillagers.getCrop(registries);
         if (afterBase != null && TOMATO_CROP_ID.equals(BuiltInRegistries.BLOCK.getKey(afterBase.getBlock()))) {
             if (farmer.ropeCount >= 1
-                    && farmer.ropeOneProgress < 3
+                    && (farmer.ropeOnePlanted || farmer.shouldExtendTomatoToRopeOne(afterBase))
+                    && (farmer.ropeOneProgress < 3 || farmer.shouldExtendTomatoToRopeTwo())
                     && level.random.nextInt(farmSpeed) == 0) {
                 farmer.ageTomatoRopeSection(level, registries, 1);
             }
             if (farmer.ropeCount >= 2
+                    && farmer.ropeTwoPlanted
                     && farmer.ropeTwoProgress < 3
                     && level.random.nextInt(farmSpeed) == 0) {
                 farmer.ageTomatoRopeSection(level, registries, 2);
@@ -1346,12 +1380,16 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         }
 
         ResourceLocation cropId = BuiltInRegistries.BLOCK.getKey(crop.getBlock());
-        if (!BUDDING_TOMATO_ID.equals(cropId) && isMatureAgeState(crop)) {
-            return true;
+        if (TOMATO_CROP_ID.equals(cropId)) {
+            if (isMatureAgeState(crop) && !shouldExtendTomatoToRopeOne(crop)) {
+                return true;
+            }
+            if (ropeOnePlanted && ropeOneProgress >= 3 && !shouldExtendTomatoToRopeTwo()) {
+                return true;
+            }
+            return ropeTwoPlanted && ropeTwoProgress >= 3;
         }
-        return TOMATO_CROP_ID.equals(cropId)
-                && ((ropeCount >= 1 && ropeOneProgress >= 3)
-                || (ropeCount >= 2 && ropeTwoProgress >= 3));
+        return !BUDDING_TOMATO_ID.equals(cropId) && isMatureAgeState(crop);
     }
 
     private boolean isBaseHarvestReady(BlockState crop) {
@@ -1365,7 +1403,11 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         if (isStemState(crop)) {
             return fruitReady;
         }
-        if (BUDDING_TOMATO_ID.equals(BuiltInRegistries.BLOCK.getKey(crop.getBlock()))) {
+        ResourceLocation cropId = BuiltInRegistries.BLOCK.getKey(crop.getBlock());
+        if (BUDDING_TOMATO_ID.equals(cropId)) {
+            return false;
+        }
+        if (TOMATO_CROP_ID.equals(cropId) && shouldExtendTomatoToRopeOne(crop)) {
             return false;
         }
         return isMatureAgeState(crop);
@@ -1463,10 +1505,10 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
 
             BlockState afterBase = easyVillagers.getCrop(registries);
             if (afterBase != null && TOMATO_CROP_ID.equals(BuiltInRegistries.BLOCK.getKey(afterBase.getBlock()))) {
-                if (ropeCount >= 1 && ropeOneProgress >= 3) {
+                if (ropeOnePlanted && ropeOneProgress >= 3) {
                     ageTomatoRopeSection(level, registries, 1);
                 }
-                if (ropeCount >= 2 && ropeTwoProgress >= 3) {
+                if (ropeTwoPlanted && ropeTwoProgress >= 3) {
                     ageTomatoRopeSection(level, registries, 2);
                 }
             }
@@ -1909,12 +1951,12 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
                 return true;
             }
 
-            if (ropeCount >= 1 && ropeOneProgress < 3) {
+            if (ropeOnePlanted && ropeOneProgress < 3) {
                 ropeOneProgress = Math.min(3, ropeOneProgress + increment);
                 setChanged();
                 return true;
             }
-            if (ropeCount >= 2 && ropeTwoProgress < 3) {
+            if (ropeTwoPlanted && ropeTwoProgress < 3) {
                 ropeTwoProgress = Math.min(3, ropeTwoProgress + increment);
                 setChanged();
                 return true;
@@ -2093,6 +2135,13 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             return true;
         }
 
+        if (shouldExtendTomatoToRopeOne(crop)) {
+            ropeOnePlanted = true;
+            ropeOneProgress = 0;
+            setChanged();
+            return true;
+        }
+
         if (!hasAdultFarmerVillager(registries)) {
             return false;
         }
@@ -2111,13 +2160,44 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             return false;
         }
 
+        if (ropeIndex == 1 && !ropeOnePlanted) {
+            BlockState crop = easyVillagers.getCrop(registries);
+            if (!shouldExtendTomatoToRopeOne(crop)) {
+                return false;
+            }
+            ropeOnePlanted = true;
+            ropeOneProgress = 0;
+            setChanged();
+            return true;
+        }
+        if (ropeIndex == 2 && !ropeTwoPlanted) {
+            if (!shouldExtendTomatoToRopeTwo()) {
+                return false;
+            }
+            ropeTwoPlanted = true;
+            ropeTwoProgress = 0;
+            setChanged();
+            return true;
+        }
+
         int progress = ropeIndex == 1 ? ropeOneProgress : ropeTwoProgress;
         if (progress < 3) {
             if (ropeIndex == 1) {
                 ropeOneProgress++;
+                if (ropeOneProgress >= 3 && shouldExtendTomatoToRopeTwo()) {
+                    ropeTwoPlanted = true;
+                    ropeTwoProgress = 0;
+                }
             } else {
                 ropeTwoProgress++;
             }
+            setChanged();
+            return true;
+        }
+
+        if (ropeIndex == 1 && shouldExtendTomatoToRopeTwo()) {
+            ropeTwoPlanted = true;
+            ropeTwoProgress = 0;
             setChanged();
             return true;
         }
@@ -2136,6 +2216,21 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         }
         setChanged();
         return true;
+    }
+
+    private boolean shouldExtendTomatoToRopeOne(BlockState crop) {
+        return crop != null
+                && ropeCount >= 1
+                && !ropeOnePlanted
+                && TOMATO_CROP_ID.equals(BuiltInRegistries.BLOCK.getKey(crop.getBlock()))
+                && isMatureAgeState(crop);
+    }
+
+    private boolean shouldExtendTomatoToRopeTwo() {
+        return ropeCount >= 2
+                && ropeOnePlanted
+                && ropeOneProgress >= 3
+                && !ropeTwoPlanted;
     }
 
     private boolean harvestTomatoSection(ServerLevel level, RegistryAccess registries, boolean ropeSection) {
@@ -2556,6 +2651,12 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         ropeOneProgress = Math.max(0, tag.getInt(KEY_ROPE_ONE_PROGRESS));
         ropeTwoProgress = Math.max(0, tag.getInt(KEY_ROPE_TWO_PROGRESS));
         ropeCount = Math.max(0, Math.min(2, tag.getInt(KEY_ROPE_COUNT)));
+        ropeOnePlanted = ropeCount >= 1 && (tag.contains(KEY_ROPE_ONE_PLANTED)
+                ? tag.getBoolean(KEY_ROPE_ONE_PLANTED)
+                : true);
+        ropeTwoPlanted = ropeCount >= 2 && (tag.contains(KEY_ROPE_TWO_PLANTED)
+                ? tag.getBoolean(KEY_ROPE_TWO_PLANTED)
+                : true);
 
         fruitReady = tag.getBoolean(KEY_FRUIT_READY);
         paddySand = variant().isAquatic() && tag.getBoolean(KEY_PADDY_SAND);
@@ -2628,11 +2729,13 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         stripAddonKeys(preserved);
         tag.merge(preserved);
 
-        tag.putInt(KEY_SCHEMA, 9);
+        tag.putInt(KEY_SCHEMA, 10);
         tag.putInt(KEY_PADDY_GROWTH, paddyGrowth);
         tag.putInt(KEY_BASE_PROGRESS, baseProgress);
         tag.putInt(KEY_ROPE_ONE_PROGRESS, ropeOneProgress);
         tag.putInt(KEY_ROPE_TWO_PROGRESS, ropeTwoProgress);
+        tag.putBoolean(KEY_ROPE_ONE_PLANTED, ropeCount >= 1 && ropeOnePlanted);
+        tag.putBoolean(KEY_ROPE_TWO_PLANTED, ropeCount >= 2 && ropeTwoPlanted);
         tag.putInt(KEY_ROPE_COUNT, ropeCount);
         tag.putBoolean(KEY_FRUIT_READY, fruitReady);
         tag.putBoolean(KEY_PADDY_SAND, variant().isAquatic() && paddySand);
@@ -2858,6 +2961,8 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         tag.remove(KEY_BASE_PROGRESS);
         tag.remove(KEY_ROPE_ONE_PROGRESS);
         tag.remove(KEY_ROPE_TWO_PROGRESS);
+        tag.remove(KEY_ROPE_ONE_PLANTED);
+        tag.remove(KEY_ROPE_TWO_PLANTED);
         tag.remove(KEY_ROPE_COUNT);
         tag.remove(KEY_HARVEST_TOOL);
         tag.remove(LEGACY_EFDC_KNIFE);

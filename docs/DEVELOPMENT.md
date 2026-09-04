@@ -341,7 +341,7 @@ A release source tree must pass:
 The internal `DEV_1.4.0_ROADMAP.md` is not a public release artifact and must be excluded from final source packages.
 
 
-## 15. Orchard definitions (1.4.2)
+## 15. Orchard definitions (1.4.2+)
 
 Orchard definitions live under `data/easyfarmersdelightcompat/efdc_orchard_crops/*.json`. The runtime loader resolves
 optional registry IDs without classloading the source mod. A definition supplies a planting item or tag, a render

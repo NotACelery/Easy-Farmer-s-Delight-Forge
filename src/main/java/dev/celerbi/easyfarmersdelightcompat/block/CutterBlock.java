@@ -88,7 +88,7 @@ public final class CutterBlock extends Block implements EntityBlock {
     }
 
     @Override
-    public InteractionResult use( BlockState state, Level level, BlockPos pos,
+    public InteractionResult use(BlockState state, Level level, BlockPos pos,
             Player player, InteractionHand hand, BlockHitResult hit) {
         ItemStack held = player.getItemInHand(hand);
         if (!(level.getBlockEntity(pos) instanceof CutterBlockEntity cutter))

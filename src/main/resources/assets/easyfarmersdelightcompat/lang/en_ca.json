@@ -114,7 +114,7 @@
   "easyfarmersdelightcompat.viewer.guide.rich_pumpkin.line7": "If the output is full, the Pumpkin waits and the Axe stays safe.",
   "easyfarmersdelightcompat.viewer.guide.cutter.title": "Cutter",
   "easyfarmersdelightcompat.viewer.guide.cutter.line1": "Requires one Easy Villagers Villager and provides 4 input plus 4 output slots.",
-  "easyfarmersdelightcompat.viewer.guide.cutter.line2": "Its protected Cutting Tool slot accepts Knives and Axes.",
+  "easyfarmersdelightcompat.viewer.guide.cutter.line2": "Its protected Cutting Tool slot accepts the tools supported by Cutting Board recipes: Knives, Pickaxes, Axes, Shovels, Hoes and Shears.",
   "easyfarmersdelightcompat.viewer.guide.cutter.line3": "Farmer’s Delight Cutting recipes have priority over Axe fallback actions.",
   "easyfarmersdelightcompat.viewer.guide.cutter.line4": "Axe fallback supports stripping, scraping and wax removal.",
   "easyfarmersdelightcompat.viewer.guide.cutter.line5": "Processing is serial: one input completes every 10 ticks.",
@@ -250,5 +250,11 @@
   "jade.easyfarmersdelightcompat.grafting_support.empty": "No canopy — add any leaves block",
   "jade.easyfarmersdelightcompat.grafting_support.decorative": "Decorative canopy: %s",
   "jade.easyfarmersdelightcompat.grafting_support.needs_rich_soil": "Requires Rich Soil below to grow fruit",
-  "block.easyfarmersdelightcompat.grafting_canopy": "Grafting Support"
+  "block.easyfarmersdelightcompat.grafting_canopy": "Grafting Support",
+  "jade.easyfarmersdelightcompat.waiting.pickaxe": "Waiting for Pickaxe",
+  "jade.easyfarmersdelightcompat.waiting.shovel": "Waiting for Shovel",
+  "jade.easyfarmersdelightcompat.waiting.cutting_tool": "Waiting for a compatible Cutting Board tool",
+  "jade.easyfarmersdelightcompat.wrong_tool.pickaxe": "Wrong tool: Pickaxe required",
+  "jade.easyfarmersdelightcompat.wrong_tool.shovel": "Wrong tool: Shovel required",
+  "jade.easyfarmersdelightcompat.wrong_tool.cutting_tool": "Wrong tool: compatible Cutting Board tool required"
 }

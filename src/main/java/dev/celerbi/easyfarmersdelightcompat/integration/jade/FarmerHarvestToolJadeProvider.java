@@ -37,7 +37,7 @@ public enum FarmerHarvestToolJadeProvider implements IBlockComponentProvider, IS
         CompoundTag data = accessor.getServerData();
         if (!data.contains(KEY, Tag.TAG_COMPOUND))
             return;
-        ItemStack tool = ItemStack.of( data.getCompound(KEY));
+        ItemStack tool = ItemStack.of(data.getCompound(KEY));
         if (!tool.isEmpty()) {
             tooltip.add(Component.translatable(
                     "jade.easyfarmersdelightcompat.farmer.tool",

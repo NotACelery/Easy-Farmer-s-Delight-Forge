@@ -1,6 +1,6 @@
-# Supported Crops and Farming Rules — Easy Farmer's Delight 1.4.2
+# Supported Crops and Farming Rules — Easy Farmer's Delight 1.4.3
 
-This document is the user-facing source of truth for crop support in **Easy Farmer's Delight 1.4.2**.
+This document is the user-facing source of truth for crop support in **Easy Farmer's Delight 1.4.3**.
 The public project name changed in 1.4.0, but the technical registry namespace remains
 `easyfarmersdelightcompat` so existing worlds and saved machine items keep their identity.
 
@@ -290,7 +290,7 @@ for every occupied face.
 
 ## Deliberate exclusions
 
-**Bamboo is not treated as a Farmer crop in 1.4.2.** Its vertical structural growth is outside the crop families
+**Bamboo is not treated as a Farmer crop in 1.4.3.** Its vertical structural growth is outside the crop families
 implemented by Easy Farmer's Delight.
 
 This does not prevent Bamboo Block from participating in unrelated Cutter Axe/log behavior when Minecraft exposes

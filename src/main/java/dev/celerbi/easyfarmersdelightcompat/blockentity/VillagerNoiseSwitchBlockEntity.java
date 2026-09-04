@@ -102,7 +102,7 @@ public final class VillagerNoiseSwitchBlockEntity extends BlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag);
         ItemStack loadedVillager = tag.contains(KEY_VILLAGER, Tag.TAG_COMPOUND)
-                ? ItemStack.of( tag.getCompound(KEY_VILLAGER))
+                ? ItemStack.of(tag.getCompound(KEY_VILLAGER))
                 : ItemStack.EMPTY;
         villager = villagerAdapter.isVillagerItem(loadedVillager)
                 ? loadedVillager.copyWithCount(1)
