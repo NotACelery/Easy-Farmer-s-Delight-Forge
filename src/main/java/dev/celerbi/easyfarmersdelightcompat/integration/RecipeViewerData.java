@@ -59,6 +59,16 @@ public final class RecipeViewerData {
                     false,
                     List.of(),
                     Component.translatable("easyfarmersdelightcompat.viewer.farmer_tools.axe")
+            ),
+            new FarmerHarvestInfo(
+                    id("farmer_harvest/tools/shears"),
+                    Ingredient.of(Items.SHEARS),
+                    Ingredient.EMPTY,
+                    ToolUse.NONE,
+                    false,
+                    false,
+                    List.of(),
+                    Component.translatable("easyfarmersdelightcompat.viewer.farmer_tools.shears")
             )
     );
 
@@ -350,9 +360,102 @@ public final class RecipeViewerData {
             ));
         }
 
+        addOrchardGuides(guides);
+        addCinnamonGuide(guides);
         addAttachedDefinitionGuides(guides);
         addRegrowingDefinitionGuides(guides);
         return List.copyOf(guides);
+    }
+
+    private static void addOrchardGuides(List<BlockGuideInfo> guides) {
+        guides.add(new BlockGuideInfo(
+                id("block_guide/orchard/apple"),
+                Component.translatable("easyfarmersdelightcompat.viewer.guide.orchard.title"),
+                List.of(
+                        catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()),
+                                "easyfarmersdelightcompat.viewer.label.machine"),
+                        input(Ingredient.of(ModBlocks.GRAFTING_SUPPORT_ITEM.get()),
+                                "easyfarmersdelightcompat.viewer.label.grafting_support"),
+                        input(Ingredient.of(Items.OAK_LEAVES, Items.DARK_OAK_LEAVES),
+                                "easyfarmersdelightcompat.viewer.label.orchard_leaves"),
+                        tool(Ingredient.of(Items.SHEARS),
+                                "easyfarmersdelightcompat.viewer.label.shears"),
+                        output(Ingredient.of(Items.APPLE), new ItemStack(Items.APPLE).getHoverName())
+                ),
+                lines("easyfarmersdelightcompat.viewer.guide.orchard", 6)
+        ));
+
+        List<ItemStack> croptopiaLeaves = new ArrayList<>();
+        List<ItemStack> croptopiaFruit = new ArrayList<>();
+        for (String fruit : List.of("banana", "cherry", "lemon", "coconut", "apple", "mango")) {
+            ItemStack leaves = stack("croptopia", fruit + "_crop");
+            ItemStack output = stack("croptopia", fruit);
+            if (!leaves.isEmpty() && !output.isEmpty()) {
+                croptopiaLeaves.add(leaves);
+                croptopiaFruit.add(output);
+            }
+        }
+        if (!croptopiaLeaves.isEmpty() && !croptopiaFruit.isEmpty()) {
+            guides.add(new BlockGuideInfo(
+                    id("block_guide/orchard/croptopia"),
+                    Component.translatable("easyfarmersdelightcompat.viewer.guide.croptopia_orchard.title"),
+                    List.of(
+                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.machine"),
+                            input(Ingredient.of(ModBlocks.GRAFTING_SUPPORT_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.grafting_support"),
+                            input(Ingredient.of(croptopiaLeaves.stream()),
+                                    "easyfarmersdelightcompat.viewer.label.orchard_leaves"),
+                            tool(Ingredient.of(Items.SHEARS),
+                                    "easyfarmersdelightcompat.viewer.label.shears"),
+                            output(Ingredient.of(croptopiaFruit.stream()),
+                                    Component.translatable("easyfarmersdelightcompat.viewer.label.orchard_fruit"))
+                    ),
+                    lines("easyfarmersdelightcompat.viewer.guide.croptopia_orchard", 5)
+            ));
+        }
+    }
+
+    private static void addCinnamonGuide(List<BlockGuideInfo> guides) {
+        ItemStack cinnamonLog = stack("croptopia", "cinnamon_log");
+        ItemStack cinnamonWood = stack("croptopia", "cinnamon_wood");
+        ItemStack strippedLog = stack("croptopia", "stripped_cinnamon_log");
+        ItemStack strippedWood = stack("croptopia", "stripped_cinnamon_wood");
+        ItemStack cinnamon = stack("croptopia", "cinnamon");
+        if (cinnamon.isEmpty() || (cinnamonLog.isEmpty() && cinnamonWood.isEmpty())) {
+            return;
+        }
+
+        List<ItemStack> inputs = new ArrayList<>();
+        List<ItemStack> stripped = new ArrayList<>();
+        if (!cinnamonLog.isEmpty() && !strippedLog.isEmpty()) {
+            inputs.add(cinnamonLog);
+            stripped.add(strippedLog);
+        }
+        if (!cinnamonWood.isEmpty() && !strippedWood.isEmpty()) {
+            inputs.add(cinnamonWood);
+            stripped.add(strippedWood);
+        }
+        if (inputs.isEmpty()) {
+            return;
+        }
+
+        guides.add(new BlockGuideInfo(
+                id("block_guide/cutter/croptopia_cinnamon"),
+                Component.translatable("easyfarmersdelightcompat.viewer.guide.cinnamon.title"),
+                List.of(
+                        catalyst(Ingredient.of(ModBlocks.CUTTER_ITEM.get()),
+                                "easyfarmersdelightcompat.viewer.label.machine"),
+                        input(Ingredient.of(inputs.stream()),
+                                "easyfarmersdelightcompat.viewer.label.cinnamon_wood"),
+                        tool(Ingredient.of(ItemTags.AXES),
+                                "easyfarmersdelightcompat.viewer.label.axe"),
+                        output(Ingredient.of(stripped.stream()),
+                                Component.translatable("easyfarmersdelightcompat.viewer.label.stripped_cinnamon_wood")),
+                        output(Ingredient.of(cinnamon), cinnamon.getHoverName())
+                ),
+                lines("easyfarmersdelightcompat.viewer.guide.cinnamon", 3)
+        ));
     }
 
     private static void addAttachedDefinitionGuides(List<BlockGuideInfo> guides) {

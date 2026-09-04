@@ -6,6 +6,8 @@ import dev.celerbi.easyfarmersdelightcompat.block.CutterBlock;
 import dev.celerbi.easyfarmersdelightcompat.block.EasyMobFarmNoiseSwitchBlock;
 import dev.celerbi.easyfarmersdelightcompat.block.FarmerVariant;
 import dev.celerbi.easyfarmersdelightcompat.block.IronFarmNoiseSwitchBlock;
+import dev.celerbi.easyfarmersdelightcompat.block.GraftingCanopyBlock;
+import dev.celerbi.easyfarmersdelightcompat.block.GraftingSupportBlock;
 import dev.celerbi.easyfarmersdelightcompat.block.VillagerNoiseSwitchBlock;
 import dev.celerbi.easyfarmersdelightcompat.compat.easymobfarm.EasyMobFarmCompat;
 import dev.celerbi.easyfarmersdelightcompat.item.CompatFarmerItem;
@@ -13,6 +15,7 @@ import dev.celerbi.easyfarmersdelightcompat.item.CutterItem;
 import dev.celerbi.easyfarmersdelightcompat.item.EasyMobFarmNoiseSwitchItem;
 import dev.celerbi.easyfarmersdelightcompat.item.IronFarmNoiseSwitchItem;
 import dev.celerbi.easyfarmersdelightcompat.item.VillagerNoiseSwitchItem;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -48,6 +51,16 @@ public final class ModBlocks {
             () -> new CompatFarmerBlock(properties(), FarmerVariant.RICH_PADDY)
     );
 
+    public static final RegistryObject<GraftingSupportBlock> GRAFTING_SUPPORT = BLOCKS.register(
+            "grafting_support",
+            () -> new GraftingSupportBlock(graftingSupportProperties())
+    );
+
+    public static final RegistryObject<GraftingCanopyBlock> GRAFTING_CANOPY = BLOCKS.register(
+            "grafting_canopy",
+            () -> new GraftingCanopyBlock(graftingCanopyProperties())
+    );
+
     public static final RegistryObject<CutterBlock> CUTTER = BLOCKS.register(
             "cutter",
             () -> new CutterBlock(properties())
@@ -70,6 +83,11 @@ public final class ModBlocks {
                             () -> new EasyMobFarmNoiseSwitchBlock(properties())
                     )
                     : null;
+
+    public static final RegistryObject<BlockItem> GRAFTING_SUPPORT_ITEM = ITEMS.register(
+            "grafting_support",
+            () -> new BlockItem(GRAFTING_SUPPORT.get(), new Item.Properties().stacksTo(64))
+    );
 
     public static final RegistryObject<CutterItem> CUTTER_ITEM = ITEMS.register(
             "cutter",
@@ -132,5 +150,22 @@ public final class ModBlocks {
                 .strength(2.5F)
                 .sound(SoundType.METAL)
                 .noOcclusion();
+    }
+
+    private static BlockBehaviour.Properties graftingSupportProperties() {
+        return BlockBehaviour.Properties.of()
+                .strength(1.5F)
+                .sound(SoundType.WOOD)
+                .noOcclusion()
+                .randomTicks();
+    }
+
+    private static BlockBehaviour.Properties graftingCanopyProperties() {
+        return BlockBehaviour.Properties.of()
+                .strength(0.2F)
+                .sound(SoundType.GRASS)
+                .noOcclusion()
+                .dynamicShape()
+                .noLootTable();
     }
 }

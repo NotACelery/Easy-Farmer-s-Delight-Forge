@@ -4,10 +4,13 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import dev.celerbi.easyfarmersdelightcompat.block.CompatFarmerBlock;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.CompatFarmerBlockEntity;
+import dev.celerbi.easyfarmersdelightcompat.integration.orchard.OrchardCropDefinition;
+import dev.celerbi.easyfarmersdelightcompat.registry.ModBlocks;
 import java.util.Optional;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -22,6 +25,9 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AttachedStemBlock;
 import net.minecraft.world.level.block.Block;
@@ -69,9 +75,16 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
     private static final float ATTACHED_LOG_SCALE = 0.26F;
     private static final float ATTACHED_LOG_LOCAL_Z = 2.0F / 16.0F;
     private static final float ATTACHED_LOG_BOTTOM_Y = 1.0F / 16.0F;
+    private static final float ORCHARD_SUPPORT_SCALE = 0.46F;
+    private static final float ORCHARD_CANOPY_SCALE = 0.34F;
+    private static final float ORCHARD_SUPPORT_BOTTOM_Y = 1.0F / 16.0F;
+    private static final float ORCHARD_CANOPY_BOTTOM_Y = 0.395F;
+    private static final float ORCHARD_LOCAL_Z = 2.5F / 16.0F;
+    private static final float ORCHARD_ITEM_Y_OFFSET = 0.055F;
 
     private final Minecraft minecraft;
     private final BlockRenderDispatcher blockRenderer;
+    private final ItemRenderer itemRenderer;
     private final VillagerRenderer villagerRenderer;
     private final Block riceCropBlock;
     private final Block ricePaniclesBlock;
@@ -83,6 +96,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
     public CompatFarmerBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
         this.minecraft = Minecraft.getInstance();
         this.blockRenderer = context.getBlockRenderDispatcher();
+        this.itemRenderer = minecraft.getItemRenderer();
         EntityRendererProvider.Context entityContext = new EntityRendererProvider.Context(
                 minecraft.getEntityRenderDispatcher(),
                 minecraft.getItemRenderer(),
@@ -132,6 +146,10 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
             renderPaddyPlatform(farmer, direction, poseStack, buffer, interiorLight, combinedOverlay);
         }
         renderVillager(farmer, registries, direction, poseStack, buffer, interiorLight);
+        if (farmer.hasGraftingSupport()) {
+            renderOrchard(farmer, direction, poseStack, buffer, interiorLight, combinedOverlay);
+            return;
+        }
         renderCrop(farmer, registries, direction, poseStack, buffer, interiorLight, combinedOverlay);
         renderAttachedCrops(farmer, direction, poseStack, buffer, interiorLight, combinedOverlay);
     }
@@ -159,6 +177,181 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         poseStack.scale(villagerScale, villagerScale, villagerScale);
         villagerRenderer.render(villager, 0F, 1F, poseStack, buffer, combinedLight);
         poseStack.popPose();
+    }
+
+    private void renderOrchard(
+            CompatFarmerBlockEntity farmer,
+            Direction direction,
+            PoseStack poseStack,
+            MultiBufferSource buffer,
+            int combinedLight,
+            int combinedOverlay
+    ) {
+        if (farmer.getLevel() == null) {
+            return;
+        }
+
+        // Render the support as an actual block model, not as a FIXED item transform.
+        // The item transform recenters the model for inventory/display use and made the
+        // rootstock protrude below the Rich Farmer floor. Using the block model keeps
+        // Y=0 of the support aligned with the Farmer's internal soil surface.
+        poseStack.pushPose();
+        applyScaledBlockTransform(
+                poseStack,
+                direction,
+                0.0F,
+                ORCHARD_LOCAL_Z,
+                ORCHARD_SUPPORT_BOTTOM_Y,
+                ORCHARD_SUPPORT_SCALE,
+                ORCHARD_SUPPORT_SCALE,
+                ORCHARD_SUPPORT_SCALE
+        );
+        renderBlockState(ModBlocks.GRAFTING_SUPPORT.get().defaultBlockState(), poseStack, buffer, combinedLight, combinedOverlay);
+        poseStack.popPose();
+
+        if (!farmer.hasOrchardCrop()) {
+            return;
+        }
+
+        BlockState canopy = farmer.orchardRenderState();
+        if (!canopy.isAir()) {
+            poseStack.pushPose();
+            applyScaledBlockTransform(
+                    poseStack,
+                    direction,
+                    0.0F,
+                    ORCHARD_LOCAL_Z,
+                    ORCHARD_CANOPY_BOTTOM_Y,
+                    ORCHARD_CANOPY_SCALE,
+                    ORCHARD_CANOPY_SCALE,
+                    ORCHARD_CANOPY_SCALE
+            );
+            renderBlockState(canopy, poseStack, buffer, combinedLight, combinedOverlay);
+            poseStack.popPose();
+            renderOrchardBranch(direction, poseStack, buffer, combinedLight, combinedOverlay);
+        }
+
+        if (farmer.orchardRenderStyle() == OrchardCropDefinition.RenderStyle.APPLE) {
+            renderAppleGrowth(farmer, direction, poseStack, buffer, combinedLight, combinedOverlay);
+        }
+    }
+
+    private void renderOrchardBranch(
+            Direction direction,
+            PoseStack poseStack,
+            MultiBufferSource buffer,
+            int combinedLight,
+            int combinedOverlay
+    ) {
+        poseStack.pushPose();
+        applyScaledBlockTransform(
+                poseStack,
+                direction,
+                0.0F,
+                ORCHARD_LOCAL_Z,
+                0.345F,
+                0.080F,
+                0.28F,
+                0.080F
+        );
+        renderBlockState(Blocks.STRIPPED_OAK_LOG.defaultBlockState(), poseStack, buffer, combinedLight, combinedOverlay);
+        poseStack.popPose();
+    }
+
+    private void renderAppleGrowth(
+            CompatFarmerBlockEntity farmer,
+            Direction direction,
+            PoseStack poseStack,
+            MultiBufferSource buffer,
+            int light,
+            int overlay
+    ) {
+        int age = Math.max(0, Math.min(3, farmer.orchardAge()));
+        float front = ORCHARD_LOCAL_Z + 0.174F;
+        float back = ORCHARD_LOCAL_Z - 0.174F;
+
+        if (age == 0) {
+            renderOrchardItem(farmer, direction, new ItemStack(Items.PINK_PETALS),
+                    -0.094F, 0.50F, front, 0.052F, 0F, poseStack, buffer, light, overlay);
+            renderOrchardItem(farmer, direction, new ItemStack(Items.PINK_PETALS),
+                    0.174F, 0.56F, ORCHARD_LOCAL_Z + 0.05F, 0.048F, 90F, poseStack, buffer, light, overlay);
+            return;
+        }
+
+        if (age == 1) {
+            renderOrchardItem(farmer, direction, new ItemStack(Items.PINK_PETALS),
+                    -0.102F, 0.49F, front, 0.068F, 0F, poseStack, buffer, light, overlay);
+            renderOrchardItem(farmer, direction, new ItemStack(Items.PINK_PETALS),
+                    0.094F, 0.56F, back, 0.064F, 180F, poseStack, buffer, light, overlay);
+            renderOrchardItem(farmer, direction, new ItemStack(Items.PINK_PETALS),
+                    0.174F, 0.53F, ORCHARD_LOCAL_Z + 0.05F, 0.060F, 90F, poseStack, buffer, light, overlay);
+            renderOrchardItem(farmer, direction, new ItemStack(Items.PINK_PETALS),
+                    -0.174F, 0.58F, ORCHARD_LOCAL_Z - 0.04F, 0.060F, -90F, poseStack, buffer, light, overlay);
+            return;
+        }
+
+        if (age == 2) {
+            renderOrchardItem(farmer, direction, new ItemStack(Items.APPLE),
+                    -0.094F, 0.47F, front, 0.094F, 0F, poseStack, buffer, light, overlay);
+            renderOrchardItem(farmer, direction, new ItemStack(Items.APPLE),
+                    0.086F, 0.55F, back, 0.090F, 180F, poseStack, buffer, light, overlay);
+            renderOrchardItem(farmer, direction, new ItemStack(Items.APPLE),
+                    0.176F, 0.51F, ORCHARD_LOCAL_Z + 0.05F, 0.086F, 90F, poseStack, buffer, light, overlay);
+            renderOrchardItem(farmer, direction, new ItemStack(Items.APPLE),
+                    -0.176F, 0.57F, ORCHARD_LOCAL_Z - 0.05F, 0.086F, -90F, poseStack, buffer, light, overlay);
+            return;
+        }
+
+        renderOrchardItem(farmer, direction, new ItemStack(Items.APPLE),
+                -0.102F, 0.46F, front, 0.132F, 0F, poseStack, buffer, light, overlay);
+        renderOrchardItem(farmer, direction, new ItemStack(Items.APPLE),
+                0.094F, 0.56F, back, 0.124F, 180F, poseStack, buffer, light, overlay);
+        renderOrchardItem(farmer, direction, new ItemStack(Items.APPLE),
+                0.178F, 0.51F, ORCHARD_LOCAL_Z + 0.05F, 0.124F, 90F, poseStack, buffer, light, overlay);
+        renderOrchardItem(farmer, direction, new ItemStack(Items.APPLE),
+                -0.178F, 0.58F, ORCHARD_LOCAL_Z - 0.05F, 0.120F, -90F, poseStack, buffer, light, overlay);
+        renderOrchardItem(farmer, direction, new ItemStack(Items.APPLE),
+                0.086F, 0.45F, front + 0.01F, 0.116F, 0F, poseStack, buffer, light, overlay);
+    }
+
+    private void renderOrchardItem(
+            CompatFarmerBlockEntity farmer,
+            Direction direction,
+            ItemStack stack,
+            float localX,
+            float y,
+            float localZ,
+            float scale,
+            float yawDegrees,
+            PoseStack poseStack,
+            MultiBufferSource buffer,
+            int light,
+            int overlay
+    ) {
+        if (farmer.getLevel() == null || stack.isEmpty()) {
+            return;
+        }
+        poseStack.pushPose();
+        poseStack.translate(0.5D, y + ORCHARD_ITEM_Y_OFFSET, 0.5D);
+        poseStack.mulPose(Axis.YP.rotationDegrees(-direction.toYRot()));
+        poseStack.translate(localX, 0.0D, localZ);
+        poseStack.mulPose(Axis.YP.rotationDegrees(yawDegrees));
+        poseStack.scale(scale, scale, scale);
+        itemRenderer.renderStatic(
+                stack,
+                ItemDisplayContext.FIXED,
+                light,
+                overlay,
+                poseStack,
+                buffer,
+                farmer.getLevel(),
+                farmer.getBlockPos().hashCode() + ageSeed(localX, localZ)
+        );
+        poseStack.popPose();
+    }
+
+    private static int ageSeed(float x, float z) {
+        return Float.floatToIntBits(x) * 31 + Float.floatToIntBits(z);
     }
 
     private void renderCrop(

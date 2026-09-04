@@ -53,6 +53,9 @@ public final class EasyFdEmiPlugin implements EmiPlugin {
         registry.addWorkstation(RICH_FARMER_HARVEST, EmiStack.of(ModBlocks.RICH_FARMER_ITEM.get()));
 
         registry.addWorkstation(CUTTER_AXE, EmiStack.of(ModBlocks.CUTTER_ITEM.get()));
+        registry.addWorkstation(BLOCK_GUIDE, EmiStack.of(ModBlocks.RICH_FARMER_ITEM.get()));
+        registry.addWorkstation(BLOCK_GUIDE, EmiStack.of(ModBlocks.GRAFTING_SUPPORT_ITEM.get()));
+        registry.addWorkstation(BLOCK_GUIDE, EmiStack.of(ModBlocks.CUTTER_ITEM.get()));
         if (ModBlocks.EASY_MOB_FARM_NOISE_SWITCH_ITEM != null) {
             registry.addWorkstation(
                     BLOCK_GUIDE,

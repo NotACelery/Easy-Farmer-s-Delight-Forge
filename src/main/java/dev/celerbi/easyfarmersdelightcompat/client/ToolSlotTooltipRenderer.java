@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public final class ToolSlotTooltipRenderer {
     private static final int ICON = 16;
@@ -27,7 +28,10 @@ public final class ToolSlotTooltipRenderer {
     }
 
     public static Examples harvestExamples() {
-        return snapshot(FarmerToolSupport.HARVEST_TOOL_CATEGORIES);
+        Examples tagged = snapshot(FarmerToolSupport.HARVEST_TOOL_CATEGORIES);
+        List<List<ItemStack>> categories = new ArrayList<>(tagged.categories);
+        categories.add(List.of(new ItemStack(Items.SHEARS)));
+        return new Examples(List.copyOf(categories));
     }
 
     public static Examples cuttingExamples() {

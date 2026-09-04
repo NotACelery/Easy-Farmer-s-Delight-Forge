@@ -1,0 +1,20 @@
+{
+  "planting": {
+    "item": "croptopia:walnut_crop"
+  },
+  "render_block": "croptopia:walnut_crop",
+  "age": {
+    "property": "age",
+    "min": 0,
+    "max": 3,
+    "mature": 3,
+    "post_harvest": 0
+  },
+  "harvest": {
+    "item": "croptopia:walnut",
+    "min": 1,
+    "max": 1
+  },
+  "render_style": "block_age",
+  "rich_soil": true
+}

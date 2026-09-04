@@ -51,6 +51,10 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
     private static final String UPPER_HOST = "UpperHost";
     private static final String LOWER_OCCUPIED = "LowerOccupied";
     private static final String UPPER_OCCUPIED = "UpperOccupied";
+    private static final String ORCHARD_SUPPORT = "OrchardSupport";
+    private static final String ORCHARD_HARVEST = "OrchardHarvest";
+    private static final String ORCHARD_AGE = "OrchardAge";
+    private static final String ORCHARD_MAX_AGE = "OrchardMaxAge";
 
     private static final ResourceLocation RICE = new ResourceLocation("farmersdelight", "rice");
     private static final ResourceLocation BUDDING_TOMATOES = new ResourceLocation("farmersdelight",
@@ -80,6 +84,12 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
         if (status.getBoolean(PADDY_SAND)) {
             appendSugarCane(tooltip, status);
             appendRichSoil(tooltip, status, null);
+            appendWaitingTool(tooltip, status);
+            return;
+        }
+
+        if (status.getBoolean(ORCHARD_SUPPORT)) {
+            appendOrchard(tooltip, status);
             appendWaitingTool(tooltip, status);
             return;
         }
@@ -160,6 +170,19 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
         status.putInt(SUGAR_CANE_HEIGHT, farmer.sugarCaneHeight());
         status.putInt(SUGAR_CANE_AGE, farmer.sugarCaneAge());
 
+        if (farmer.hasGraftingSupport()) {
+            status.putBoolean(ORCHARD_SUPPORT, true);
+            ItemStack harvest = farmer.orchardHarvestDisplayStack();
+            if (!harvest.isEmpty()) {
+                ResourceLocation harvestId = BuiltInRegistries.ITEM.getKey(harvest.getItem());
+                if (harvestId != null) {
+                    status.putString(ORCHARD_HARVEST, harvestId.toString());
+                }
+                status.putInt(ORCHARD_AGE, farmer.orchardAge());
+                status.putInt(ORCHARD_MAX_AGE, farmer.orchardMatureAge());
+            }
+        }
+
         if (farmer.hasAttachedSetup()) {
             status.putBoolean(ATTACHED, true);
             appendAttachedLevelStatus(status, farmer, 0, LOWER_HOST, LOWER_OCCUPIED);
@@ -184,6 +207,41 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
             status.putInt(MAX_AGE, ageInfo.maxAge());
         }
         return status;
+    }
+
+    private static void appendOrchard(ITooltip tooltip, CompoundTag status) {
+        String harvestIdString = status.getString(ORCHARD_HARVEST);
+        ResourceLocation harvestId = harvestIdString.isEmpty() ? null : ResourceLocation.tryParse(harvestIdString);
+        if (harvestId == null) {
+            tooltip.add(Component.translatable("jade.easyfarmersdelightcompat.orchard.support")
+                    .withStyle(ChatFormatting.WHITE));
+            tooltip.add(Component.translatable("jade.easyfarmersdelightcompat.orchard.waiting_leaves")
+                    .withStyle(ChatFormatting.GRAY));
+            return;
+        }
+
+        net.minecraft.world.item.Item harvestItem = BuiltInRegistries.ITEM.get(harvestId);
+        ItemStack harvest = harvestItem == null ? ItemStack.EMPTY : new ItemStack(harvestItem);
+        Component fruitName = harvest.isEmpty()
+                ? Component.translatable("jade.easyfarmersdelightcompat.unknown")
+                : harvest.getHoverName();
+        tooltip.add(Component.translatable("jade.easyfarmersdelightcompat.orchard.name", fruitName)
+                .withStyle(ChatFormatting.WHITE));
+
+        int age = status.getInt(ORCHARD_AGE);
+        int maxAge = Math.max(1, status.getInt(ORCHARD_MAX_AGE));
+        if (age >= maxAge) {
+            tooltip.add(Component.translatable("jade.easyfarmersdelightcompat.orchard.ready")
+                    .withStyle(ChatFormatting.GREEN));
+        } else {
+            tooltip.add(Component.translatable(
+                            "jade.easyfarmersdelightcompat.growth",
+                            percent(age, maxAge)
+                    )
+                    .withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable("jade.easyfarmersdelightcompat.rich_soil.active")
+                    .withStyle(ChatFormatting.GREEN));
+        }
     }
 
     private static void appendAttached(ITooltip tooltip, CompoundTag status) {
@@ -325,6 +383,7 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
             case "KNIFE" -> "jade.easyfarmersdelightcompat.waiting.knife";
             case "HOE" -> "jade.easyfarmersdelightcompat.waiting.hoe";
             case "AXE" -> "jade.easyfarmersdelightcompat.waiting.axe";
+            case "SHEARS" -> "jade.easyfarmersdelightcompat.waiting.shears";
             case "KNIFE_OR_AXE" -> "jade.easyfarmersdelightcompat.waiting.knife_or_axe";
             default -> null;
         };

@@ -7,13 +7,13 @@ modId = "${mod_id}"
 version = "${mod_version}"
 displayName = "${mod_name}"
 authors = "Celerbi"
-credits = "Independent expansion for Easy Villagers by henkelmax and Farmer's Delight by vectorwing. Optional integrations: Easy Mob Farm, Jade, JEI, EMI, Argentum and Ars Nouveau."
+credits = "Independent expansion for Easy Villagers by henkelmax and Farmer's Delight by vectorwing. Optional integrations: Croptopia, Easy Mob Farm, Jade, JEI, EMI, Argentum and Ars Nouveau."
 logoFile = "easy-farmers-delight-icon.png"
 logoBlur = false
 description = '''
 Forge 1.20.1 edition of Easy Farmer's Delight.
 An independent, unofficial expansion that extends Easy Villagers and Farmer's Delight with new automation mechanics.
-Adds Paddy/Rich Farmers, Rich Soil farming, Tomato/Rope and regrowing crops, Rich Farmer Log Mode with Cocoa and optional Ars Nouveau Archfruits, dynamic Cutter work surfaces for compatible modded logs, client-local Noise Switches and optional Jade/JEI/EMI guidance.
+Adds Paddy/Rich Farmers, Rich Soil farming, Tomato/Rope and regrowing crops, Grafting Support Orchards with optional Croptopia fruit-tree support, Rich Farmer Log Mode, dynamic Cutter work surfaces, client-local Noise Switches and optional Jade/JEI/EMI guidance.
 '''
 
 [[dependencies.${mod_id}]]

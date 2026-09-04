@@ -4,11 +4,14 @@ import dev.celerbi.easyfarmersdelightcompat.block.CompatFarmerBlock;
 import dev.celerbi.easyfarmersdelightcompat.block.CutterBlock;
 import dev.celerbi.easyfarmersdelightcompat.block.EasyMobFarmNoiseSwitchBlock;
 import dev.celerbi.easyfarmersdelightcompat.block.IronFarmNoiseSwitchBlock;
+import dev.celerbi.easyfarmersdelightcompat.block.GraftingCanopyBlock;
+import dev.celerbi.easyfarmersdelightcompat.block.GraftingSupportBlock;
 import dev.celerbi.easyfarmersdelightcompat.block.VillagerNoiseSwitchBlock;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.CompatFarmerBlockEntity;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.CutterBlockEntity;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.EasyMobFarmNoiseSwitchBlockEntity;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.IronFarmNoiseSwitchBlockEntity;
+import dev.celerbi.easyfarmersdelightcompat.blockentity.GraftingSupportBlockEntity;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.VillagerNoiseSwitchBlockEntity;
 import dev.celerbi.easyfarmersdelightcompat.compat.easymobfarm.EasyMobFarmCompat;
 import snownee.jade.api.IWailaClientRegistration;
@@ -21,6 +24,7 @@ public final class EfdcJadePlugin implements IWailaPlugin {
     @Override
     public void register(IWailaCommonRegistration registration) {
         registration.registerBlockDataProvider(FarmerStatusJadeProvider.INSTANCE, CompatFarmerBlockEntity.class);
+        registration.registerBlockDataProvider(GraftingSupportJadeProvider.INSTANCE, GraftingSupportBlockEntity.class);
         registration.registerBlockDataProvider(FarmerHarvestToolJadeProvider.INSTANCE, CompatFarmerBlockEntity.class);
         registration.registerBlockDataProvider(CutterJadeProvider.INSTANCE, CutterBlockEntity.class);
         registration.registerBlockDataProvider(NoiseSwitchJadeProvider.INSTANCE, VillagerNoiseSwitchBlockEntity.class);
@@ -37,6 +41,8 @@ public final class EfdcJadePlugin implements IWailaPlugin {
     @Override
     public void registerClient(IWailaClientRegistration registration) {
         registration.registerBlockComponent(FarmerStatusJadeProvider.INSTANCE, CompatFarmerBlock.class);
+        registration.registerBlockComponent(GraftingSupportJadeProvider.INSTANCE, GraftingSupportBlock.class);
+        registration.registerBlockComponent(GraftingSupportJadeProvider.INSTANCE, GraftingCanopyBlock.class);
         registration.registerBlockComponent(FarmerHarvestToolJadeProvider.INSTANCE, CompatFarmerBlock.class);
         registration.registerBlockComponent(CutterJadeProvider.INSTANCE, CutterBlock.class);
         registration.registerBlockComponent(NoiseSwitchJadeProvider.INSTANCE, VillagerNoiseSwitchBlock.class);

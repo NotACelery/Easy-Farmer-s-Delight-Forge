@@ -251,7 +251,7 @@ public final class CutterBlockEntity extends BlockEntity {
             Optional<AxeActionResolver.Result> axe = AxeActionResolver.resolve(source, equipped);
             if (axe.isPresent()) {
                 AxeActionResolver.Result result = axe.get();
-                List<ItemStack> results = List.of(result.output());
+                List<ItemStack> results = result.outputs();
                 if (OutputSimulator.canFitAll(output, results)) {
                     waitingForOutputSpace = false;
                     return completeOperation(level, slot, results, result.sound());

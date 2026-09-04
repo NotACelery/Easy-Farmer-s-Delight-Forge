@@ -7,6 +7,7 @@ public enum ToolRequirement {
     KNIFE,
     HOE,
     AXE,
+    SHEARS,
     KNIFE_OR_AXE;
 
     public boolean isRequired() {
@@ -19,6 +20,7 @@ public enum ToolRequirement {
             case KNIFE -> FarmerToolSupport.isKnife(stack);
             case HOE -> FarmerToolSupport.isHoe(stack);
             case AXE -> FarmerToolSupport.isAxe(stack);
+            case SHEARS -> FarmerToolSupport.isShears(stack);
             case KNIFE_OR_AXE -> FarmerToolSupport.isKnife(stack) || FarmerToolSupport.isAxe(stack);
         };
     }

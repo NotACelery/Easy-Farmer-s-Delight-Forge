@@ -86,6 +86,7 @@ public final class EasyFdJeiPlugin implements IModPlugin {
 
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.PADDY_FARMER_ITEM.get()), BLOCK_GUIDE);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.RICH_FARMER_ITEM.get()), BLOCK_GUIDE);
+        registration.addRecipeCatalyst(new ItemStack(ModBlocks.GRAFTING_SUPPORT_ITEM.get()), BLOCK_GUIDE);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.RICH_PADDY_FARMER_ITEM.get()), BLOCK_GUIDE);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.CUTTER_ITEM.get()), BLOCK_GUIDE);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.VILLAGER_NOISE_SWITCH_ITEM.get()), BLOCK_GUIDE);

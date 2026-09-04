@@ -1,0 +1,20 @@
+{
+  "planting": {
+    "item": "croptopia:date_crop"
+  },
+  "render_block": "croptopia:date_crop",
+  "age": {
+    "property": "age",
+    "min": 0,
+    "max": 3,
+    "mature": 3,
+    "post_harvest": 0
+  },
+  "harvest": {
+    "item": "croptopia:date",
+    "min": 1,
+    "max": 1
+  },
+  "render_style": "block_age",
+  "rich_soil": true
+}

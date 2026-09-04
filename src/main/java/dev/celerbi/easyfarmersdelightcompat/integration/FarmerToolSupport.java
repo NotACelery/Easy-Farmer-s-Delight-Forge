@@ -49,8 +49,12 @@ public final class FarmerToolSupport {
         return stack != null && !stack.isEmpty() && stack.is(ItemTags.AXES);
     }
 
+    public static boolean isShears(ItemStack stack) {
+        return stack != null && !stack.isEmpty() && stack.is(Items.SHEARS);
+    }
+
     public static boolean isHarvestTool(ItemStack stack) {
-        return isKnife(stack) || isHoe(stack) || isAxe(stack);
+        return isKnife(stack) || isHoe(stack) || isAxe(stack) || isShears(stack);
     }
 
     public static boolean isCuttingTool(ItemStack stack) {

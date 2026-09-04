@@ -1,0 +1,21 @@
+{
+  "planting": {
+    "item": "minecraft:dark_oak_leaves"
+  },
+  "render_block": "minecraft:dark_oak_leaves",
+  "age": {
+    "min": 0,
+    "max": 3,
+    "mature": 3,
+    "post_harvest": 0
+  },
+  "harvest": {
+    "item": "minecraft:apple",
+    "min": 2,
+    "max": 2,
+    "bonus_chance": 0.3,
+    "bonus_count": 1
+  },
+  "render_style": "apple",
+  "rich_soil": true
+}

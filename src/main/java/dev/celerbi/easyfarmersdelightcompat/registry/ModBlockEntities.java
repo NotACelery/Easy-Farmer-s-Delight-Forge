@@ -5,6 +5,7 @@ import dev.celerbi.easyfarmersdelightcompat.blockentity.CompatFarmerBlockEntity;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.CutterBlockEntity;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.EasyMobFarmNoiseSwitchBlockEntity;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.IronFarmNoiseSwitchBlockEntity;
+import dev.celerbi.easyfarmersdelightcompat.blockentity.GraftingSupportBlockEntity;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.VillagerNoiseSwitchBlockEntity;
 import dev.celerbi.easyfarmersdelightcompat.compat.easymobfarm.EasyMobFarmCompat;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -27,6 +28,16 @@ public final class ModBlockEntities {
                                     ModBlocks.PADDY_FARMER.get(),
                                     ModBlocks.RICH_FARMER.get(),
                                     ModBlocks.RICH_PADDY_FARMER.get()
+                            )
+                            .build(null)
+            );
+
+    public static final RegistryObject<BlockEntityType<GraftingSupportBlockEntity>> GRAFTING_SUPPORT =
+            BLOCK_ENTITIES.register(
+                    "grafting_support",
+                    () -> BlockEntityType.Builder.of(
+                                    GraftingSupportBlockEntity::new,
+                                    ModBlocks.GRAFTING_SUPPORT.get()
                             )
                             .build(null)
             );

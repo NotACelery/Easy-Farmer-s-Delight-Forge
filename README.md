@@ -1,8 +1,10 @@
-# Easy Farmer's Delight — Forge 1.20.1
+# Easy Farmer's Delight
 
-Current release: **1.4.0** (Minecraft 1.20.1 / Forge 47.4.x / Java 17)
+Current Forge release: **1.4.2** (Minecraft 1.20.1 / Forge 47.4.x / Java 17)
 
-
+<p align="center">
+  <img src="easy-farmers-delight-cover.png" alt="Easy Farmer's Delight" width="320">
+</p>
 
 **Easy Farmer's Delight** is an independent, unofficial expansion for **Easy Villagers** and **Farmer's Delight**.
 It extends villager-powered farming beyond normal field crops with Paddy farming, Rich Soil mechanics, attached-log
@@ -22,13 +24,13 @@ For third-party interoperability/resource boundaries, see **[THIRD_PARTY_NOTICES
 ## Main features
 
 - **Paddy Farmer** for Farmer's Delight Rice and Sand-based Sugar Cane.
-- **Rich Farmer** with Rich Soil, Harvest Tools, Tomatoes/Rope, Mushroom Colonies, Melon/Pumpkin, regrowing bushes
-  and attached-log crops.
+- **Rich Farmer** with Rich Soil, Harvest Tools, Tomatoes/Rope, Mushroom Colonies, Melon/Pumpkin, regrowing bushes,
+  attached-log crops and productive **Orchards** built with the Grafting Support.
 - **Rich Paddy Farmer** combining the Paddy lifecycle with Rich Soil acceleration for Rice.
 - **Rich Farmer Log Mode** with two independent host logs and up to 8 attached crop faces.
 - Built-in optional **Ars Nouveau** support for Magebloom, Sourceberry and all four Archfruits.
 - Optional **Argentum** seed integration through the normal villager seed tag.
-- **Cutter** automation for Farmer's Delight Cutting Board recipes plus Axe transformations.
+- **Cutter** automation for Farmer's Delight Cutting Board recipes plus Axe transformations, including Croptopia Cinnamon bark recovery when available.
 - Dynamic Cutter work surfaces for **any compatible unstripped base log from any mod** that follows Minecraft's
   standard log tags; the selected block is rendered using its own source model/texture/animation.
 - **Villager Noise Switch**, **Iron Farm Noise Switch**, and optional **Easy Mob Farm Noise Switch**.
@@ -60,6 +62,8 @@ The Rich Farmer keeps the normal Easy Villagers crop route and adds specialized 
 - Cocoa on Jungle Logs.
 - Ars Nouveau Bombegranate, Mendosteen, Frostaya and Bastion fruit on their matching Archwood host families.
 - Two independently selectable attached host logs, allowing mixed crops in one Farmer.
+- **Grafting Support / Orchard mode:** Oak or Dark Oak Leaves grow apples through four fruit stages; Croptopia adds all 26 productive fruit-tree crop leaves when installed.
+- **Croptopia ground-crop compatibility:** its 58 normal farmland crops use the standard Rich Farmer crop lifecycle and harvest correctly without bespoke per-crop handlers.
 
 The base Easy Villagers Farmer itself is not modified to gain these special mechanics.
 
@@ -77,9 +81,30 @@ Rich Farmer and Rich Paddy Farmer expose a protected Harvest Tool slot.
 | **Knife** | Required for mature Mushroom Colonies; optional for Rich Paddy Rice |
 | **Hoe** | Optional for compatible normal crops and Tomatoes; may carry Fortune into real crop loot |
 | **Axe** | Required for mature Melons/Pumpkins |
+| **Shears** | Required for mature Orchards; normal durability and Unbreaking apply |
 
 A tool is only consumed/damaged when the relevant mechanic says it should be. Blocked output does not consume the
 crop or damage the tool.
+
+
+## Orchards and the Grafting Support
+
+The **Grafting Support** is a permanent Easy Farmer's Delight mechanic and does not require Croptopia. Craft it from
+Farmer's Delight Rope, Sticks, any Minecraft log and Hanging Roots. It can either be placed directly in the world or
+installed into an empty Rich Farmer.
+
+- A placed support accepts **any block in `minecraft:leaves`**. Unsupported leaves remain a decorative canopy forever.
+- A productive canopy grows only while the support is directly above **Farmer's Delight Rich Soil**.
+- **Oak Leaves** and **Dark Oak Leaves** become an Apple Orchard on Rich Soil and follow four internal fruit stages: bud → flower → young fruit → mature fruit. Mature harvest yields 2 Apples with a 30% chance for a third.
+- A mature placed Orchard is harvested manually by right-clicking with **Shears**; fruit drops into the world beside the support.
+- The canopy is a real breakable upper block: Shears or Silk Touch recover the inserted leaves, while other tools/hand destroy the leaves. The lower Grafting Support remains in place.
+- In a **Rich Farmer**, the same Orchard lifecycle is automated. Mature fruit waits for Shears in the Harvest Tool slot and output capacity.
+- Shears lose durability only after a successful harvest and normal **Unbreaking** behavior applies.
+- Rich Soil accelerates Orchard fruit growth without multiplying the configured harvest roll.
+- With **Croptopia 4.0.1** installed, all 26 productive fruit-tree crop leaves use the same Orchard system and retain their native age-0-to-3 visual progression.
+
+The Grafting Support and vanilla Apple Orchard remain available even when Croptopia is absent. Croptopia is resolved
+through registry IDs and data definitions rather than a hard Java dependency.
 
 ## Attached log crops
 
@@ -152,7 +177,7 @@ Farmer and Cutter blocked-work paths are designed to sleep instead of polling ex
 - Pending output drops are reused where possible instead of rerolling loot after every failed capacity check.
 - Cutter idle/full-output states similarly park until an input/tool/output/villager event can actually change work.
 
-A NeoForge stress test with **513 Rich Farmers** showed normal 100–120 FPS while the machines remained loaded but
+The shared 1.4.x architecture was stress-tested on the NeoForge counterpart with **513 Rich Farmers**, reaching normal 100–120 FPS while the machines remained loaded but
 fully occluded, with the remaining slowdown tied primarily to rendering hundreds of visible villager/crop models.
 
 ## Farmer item state and tooltips
@@ -235,7 +260,7 @@ those assets.
 
 ## Bamboo scope
 
-Bamboo is **not a supported Farmer crop** in 1.4.0. Its vertical structural growth is outside the crop families
+Bamboo is **not a supported Farmer crop** in 1.4.2. Its vertical structural growth is outside the crop families
 implemented by this release. Bamboo Block can still participate in Cutter Axe/log behavior if exposed through the
 standard game transformation/tag systems.
 
@@ -250,6 +275,7 @@ Required:
 
 Optional:
 
+- Croptopia **4.0.1** (full 1.4.2 Orchard/Cinnamon target)
 - Ars Nouveau
 - Argentum
 - Easy Mob Farm

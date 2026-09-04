@@ -11,7 +11,10 @@ import dev.celerbi.easyfarmersdelightcompat.integration.attached.AttachedCropDef
 import dev.celerbi.easyfarmersdelightcompat.integration.attached.AttachedCropDefinitions;
 import dev.celerbi.easyfarmersdelightcompat.integration.regrowing.RegrowingCropDefinition;
 import dev.celerbi.easyfarmersdelightcompat.integration.regrowing.RegrowingCropDefinitions;
+import dev.celerbi.easyfarmersdelightcompat.integration.orchard.OrchardCropDefinition;
+import dev.celerbi.easyfarmersdelightcompat.integration.orchard.OrchardCropDefinitions;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlockEntities;
+import dev.celerbi.easyfarmersdelightcompat.registry.ModBlocks;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -79,6 +82,16 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
     private static final String KEY_ATTACHED_CROPS = "EfdcAttachedCrops";
     private static final String KEY_REGROWING_DEFINITION = "EfdcRegrowingDefinition";
     private static final String KEY_REGROWING_PLANTING_ITEM = "EfdcRegrowingPlantingItem";
+    private static final String KEY_GRAFTING_SUPPORT = "EfdcGraftingSupport";
+    private static final String KEY_ORCHARD_DEFINITION = "EfdcOrchardDefinition";
+    private static final String KEY_ORCHARD_PLANTING_ITEM = "EfdcOrchardPlantingItem";
+    private static final String KEY_ORCHARD_AGE = "EfdcOrchardAge";
+    private static final String KEY_ORCHARD_RENDER_BLOCK = "EfdcOrchardRenderBlock";
+    private static final String KEY_ORCHARD_AGE_PROPERTY = "EfdcOrchardAgeProperty";
+    private static final String KEY_ORCHARD_RENDER_STYLE = "EfdcOrchardRenderStyle";
+    private static final String KEY_ORCHARD_HARVEST_ITEM = "EfdcOrchardHarvestItem";
+    private static final String KEY_ORCHARD_MATURE_AGE = "EfdcOrchardMatureAge";
+    private static final String KEY_ORCHARD_PENDING_HARVEST = "EfdcOrchardPendingHarvest";
 
     private static final ResourceLocation RICE_ITEM_ID = new ResourceLocation("farmersdelight",
             "rice");
@@ -146,6 +159,16 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
     private boolean itemPreview;
     private ResourceLocation regrowingDefinitionId;
     private ResourceLocation regrowingPlantingItemId;
+    private boolean graftingSupport;
+    private ResourceLocation orchardDefinitionId;
+    private ResourceLocation orchardPlantingItemId;
+    private ResourceLocation orchardRenderBlockId;
+    private String orchardAgeProperty = "";
+    private OrchardCropDefinition.RenderStyle orchardRenderStyle = OrchardCropDefinition.RenderStyle.BLOCK_AGE;
+    private ResourceLocation orchardHarvestItemId;
+    private int orchardMatureAge = 3;
+    private int orchardAge;
+    private ItemStack orchardPendingHarvest = ItemStack.EMPTY;
     private boolean harvestRetryRequested = true;
     private boolean harvestTransactionActive;
     private boolean harvestStateChanged;
@@ -232,6 +255,168 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
                 || canFitAllPure(output, blockedOutputRequirement)) {
             requestHarvestRetry();
         }
+    }
+
+    public boolean supportsOrchard() {
+        return variant().isRich() && !variant().isAquatic();
+    }
+
+    public boolean hasGraftingSupport() {
+        return supportsOrchard() && graftingSupport;
+    }
+
+    public boolean hasOrchardCrop() {
+        return hasGraftingSupport() && orchardDefinitionId != null;
+    }
+
+    public int orchardAge() {
+        return orchardAge;
+    }
+
+    public int orchardMatureAge() {
+        OrchardCropDefinition definition = currentOrchardDefinition();
+        return definition == null ? Math.max(1, orchardMatureAge) : definition.matureAge();
+    }
+
+    public ItemStack orchardHarvestDisplayStack() {
+        OrchardCropDefinition definition = currentOrchardDefinition();
+        if (definition != null) {
+            return definition.harvestDisplayStack();
+        }
+        if (orchardHarvestItemId == null) {
+            return ItemStack.EMPTY;
+        }
+        Item item = BuiltInRegistries.ITEM.get(orchardHarvestItemId);
+        return item == null || item == Items.AIR ? ItemStack.EMPTY : new ItemStack(item);
+    }
+
+    public BlockState orchardRenderState() {
+        OrchardCropDefinition definition = currentOrchardDefinition();
+        if (definition != null) {
+            return definition.renderState(orchardAge);
+        }
+        if (orchardRenderBlockId == null) {
+            return Blocks.AIR.defaultBlockState();
+        }
+        Block block = BuiltInRegistries.BLOCK.get(orchardRenderBlockId);
+        if (block == null || block == Blocks.AIR) {
+            return Blocks.AIR.defaultBlockState();
+        }
+        BlockState state = block.defaultBlockState();
+        if (orchardAgeProperty == null || orchardAgeProperty.isBlank()) {
+            return state;
+        }
+        Property<?> raw = state.getProperties().stream()
+                .filter(property -> property.getName().equals(orchardAgeProperty))
+                .findFirst()
+                .orElse(null);
+        if (raw instanceof IntegerProperty integerProperty && integerProperty.getPossibleValues().contains(orchardAge)) {
+            return state.setValue(integerProperty, orchardAge);
+        }
+        return state;
+    }
+
+    public OrchardCropDefinition.RenderStyle orchardRenderStyle() {
+        OrchardCropDefinition definition = currentOrchardDefinition();
+        return definition == null ? orchardRenderStyle : definition.renderStyle();
+    }
+
+    public boolean canInstallGraftingSupport(ItemStack stack) {
+        if (!supportsOrchard() || graftingSupport || stack == null || stack.isEmpty()
+                || stack.getItem() != ModBlocks.GRAFTING_SUPPORT_ITEM.get() || hasAttachedSetup()) {
+            return false;
+        }
+        return level == null || easyVillagers.getCrop(level.registryAccess()) == null;
+    }
+
+    public boolean installGraftingSupport(ItemStack stack) {
+        if (!canInstallGraftingSupport(stack)) {
+            return false;
+        }
+        graftingSupport = true;
+        clearOrchardCropState();
+        setChanged();
+        return true;
+    }
+
+    public boolean canPlantOrchardCrop(ItemStack stack) {
+        if (!hasGraftingSupport() || hasOrchardCrop() || stack == null || stack.isEmpty() || hasAttachedSetup()) {
+            return false;
+        }
+        if (level != null && easyVillagers.getCrop(level.registryAccess()) != null) {
+            return false;
+        }
+        return OrchardCropDefinitions.findPlanting(stack).isPresent();
+    }
+
+    public boolean plantOrchardCrop(ItemStack stack) {
+        OrchardCropDefinition definition = OrchardCropDefinitions.findPlanting(stack).orElse(null);
+        if (!canPlantOrchardCrop(stack) || definition == null) {
+            return false;
+        }
+        orchardDefinitionId = definition.id();
+        orchardPlantingItemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        orchardRenderBlockId = definition.renderBlockId();
+        orchardAgeProperty = definition.ageProperty();
+        orchardRenderStyle = definition.renderStyle();
+        orchardHarvestItemId = definition.harvestItemId();
+        orchardMatureAge = definition.matureAge();
+        orchardAge = definition.minAge();
+        setChanged();
+        return true;
+    }
+
+    public List<ItemStack> dismantleOrchardStep() {
+        if (!hasGraftingSupport()) {
+            return List.of();
+        }
+        if (hasOrchardCrop()) {
+            ItemStack planting = orchardPlantingStack();
+            clearOrchardCropState();
+            setChanged();
+            return planting.isEmpty() ? List.of() : List.of(planting);
+        }
+        graftingSupport = false;
+        setChanged();
+        return List.of(new ItemStack(ModBlocks.GRAFTING_SUPPORT_ITEM.get()));
+    }
+
+    private void clearOrchardCropState() {
+        orchardDefinitionId = null;
+        orchardPlantingItemId = null;
+        orchardRenderBlockId = null;
+        orchardAgeProperty = "";
+        orchardRenderStyle = OrchardCropDefinition.RenderStyle.BLOCK_AGE;
+        orchardHarvestItemId = null;
+        orchardMatureAge = 3;
+        orchardAge = 0;
+        orchardPendingHarvest = ItemStack.EMPTY;
+    }
+
+    private ItemStack orchardPlantingStack() {
+        if (orchardPlantingItemId != null) {
+            Item item = BuiltInRegistries.ITEM.get(orchardPlantingItemId);
+            if (item != null && item != Items.AIR) {
+                return new ItemStack(item);
+            }
+        }
+        OrchardCropDefinition definition = currentOrchardDefinition();
+        return definition == null ? ItemStack.EMPTY : definition.canonicalPlantingStack();
+    }
+
+    private static OrchardCropDefinition.RenderStyle parseOrchardRenderStyle(String value) {
+        if (value == null || value.isBlank()) {
+            return OrchardCropDefinition.RenderStyle.BLOCK_AGE;
+        }
+        try {
+            return OrchardCropDefinition.RenderStyle.valueOf(value);
+        } catch (IllegalArgumentException exception) {
+            return OrchardCropDefinition.RenderStyle.BLOCK_AGE;
+        }
+    }
+
+    private OrchardCropDefinition currentOrchardDefinition() {
+        return OrchardCropDefinitions.get(orchardDefinitionId).orElse(null);
     }
 
     public boolean supportsAttachedCrops() {
@@ -544,6 +729,11 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
     public ToolRequirement currentToolRequirement() {
         if (!variant().isRich() || level == null) {
             return ToolRequirement.NONE;
+        }
+
+        OrchardCropDefinition orchardDefinition = currentOrchardDefinition();
+        if (orchardDefinition != null && orchardAge >= orchardDefinition.matureAge()) {
+            return ToolRequirement.SHEARS;
         }
 
         ToolRequirement attachedRequirement = currentAttachedToolRequirement();
@@ -873,6 +1063,16 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             }
         }
 
+        if (hasOrchardCrop()) {
+            ItemStack planting = orchardPlantingStack();
+            if (!planting.isEmpty()) {
+                ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(planting.getItem());
+                if (itemId != null && seenItems.add(itemId)) {
+                    names.add(planting.getHoverName());
+                }
+            }
+        }
+
         BlockState selected = easyVillagers.getCrop(registries);
         if (selected != null) {
             ItemStack planting = plantingStackForTooltip(selected);
@@ -974,7 +1174,8 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
 
         if (!harvestTool.isEmpty() || paddySand || sugarCaneHeight > 0 || sugarCaneAge > 0
                  || ropeCount > 0 || paddyGrowth > 0 || baseProgress > 0
-                 || ropeOneProgress > 0 || ropeTwoProgress > 0 || fruitReady || hasAttachedSetup()) {
+                 || ropeOneProgress > 0 || ropeTwoProgress > 0 || fruitReady || hasAttachedSetup()
+                 || graftingSupport || orchardDefinitionId != null || orchardAge > 0) {
             return true;
         }
 
@@ -1022,6 +1223,11 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         }
 
         int farmSpeed = farmer.easyVillagers.farmSpeed();
+
+        if (farmer.hasGraftingSupport()) {
+            farmer.growOrchard(level, farmSpeed);
+            return;
+        }
 
         if (farmer.supportsAttachedCrops() && farmer.hasAttachedSetup()) {
             farmer.growAttachedCrops(level, farmSpeed);
@@ -1117,6 +1323,10 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         if (variant().isAquatic()) {
             return paddyGrowth >= MAX_PADDY_GROWTH && easyVillagers.hasRiceCrop(registries);
         }
+        OrchardCropDefinition orchardDefinition = currentOrchardDefinition();
+        if (orchardDefinition != null && orchardAge >= orchardDefinition.matureAge()) {
+            return true;
+        }
         if (hasMatureAttachedCrop()) {
             return true;
         }
@@ -1204,6 +1414,12 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
                             SoundSource.BLOCKS, 1.0F, 1.0F
                     );
                 }
+                return;
+            }
+
+            OrchardCropDefinition orchardDefinition = currentOrchardDefinition();
+            if (orchardDefinition != null && orchardAge >= orchardDefinition.matureAge()) {
+                harvestMatureOrchard(level, registries, orchardDefinition);
                 return;
             }
 
@@ -1327,6 +1543,76 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         easyVillagers.setCropState(definition.withAge(crop, definition.postHarvestAge()), registries);
         level.playSound(null, worldPosition, SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES,
                 SoundSource.BLOCKS, 1.0F, 0.9F + level.random.nextFloat() * 0.2F);
+        return true;
+    }
+
+    private void growOrchard(ServerLevel level, int farmSpeed) {
+        OrchardCropDefinition definition = currentOrchardDefinition();
+        if (definition == null || orchardAge >= definition.matureAge()) {
+            return;
+        }
+        int safeFarmSpeed = Math.max(1, farmSpeed);
+        int nextAge = orchardAge;
+        if (level.random.nextInt(safeFarmSpeed) == 0) {
+            nextAge++;
+        }
+        double boostChance = farmersDelight.richSoilBoostChance();
+        if (definition.richSoil() && nextAge < definition.matureAge()
+                && boostChance > 0.0D
+                && level.random.nextInt(safeFarmSpeed) == 0
+                && level.random.nextDouble() < boostChance) {
+            nextAge++;
+        }
+        nextAge = Math.min(definition.matureAge(), Math.min(definition.maxAge(), nextAge));
+        if (nextAge != orchardAge) {
+            orchardAge = nextAge;
+            setChanged();
+        }
+    }
+
+    private boolean harvestMatureOrchard(
+            ServerLevel level,
+            RegistryAccess registries,
+            OrchardCropDefinition definition
+    ) {
+        if (definition == null || orchardAge < definition.matureAge()) {
+            return false;
+        }
+        if (!hasAdultFarmerVillager(registries)) {
+            return false;
+        }
+        if (!FarmerToolSupport.isShears(harvestTool)) {
+            if (harvestTransactionActive) {
+                harvestWaitingForTool = true;
+            }
+            return false;
+        }
+        Container output = easyVillagers.getOutputInventory(registries);
+        if (output == null) {
+            return false;
+        }
+        if (orchardPendingHarvest.isEmpty()) {
+            orchardPendingHarvest = definition.harvestStack(level.random);
+        }
+        ItemStack harvest = orchardPendingHarvest.copy();
+        List<ItemStack> drops = harvest.isEmpty() ? List.of() : List.of(harvest);
+        if (!canFitAllPure(output, drops)) {
+            if (harvestTransactionActive) {
+                harvestWaitingForOutputSpace = true;
+                blockedOutputRequirement = drops.stream().map(ItemStack::copy).toList();
+            }
+            return false;
+        }
+        if (!harvest.isEmpty()) {
+            insertIntoOutput(output, harvest.copy());
+            output.setChanged();
+        }
+        orchardAge = definition.postHarvestAge();
+        orchardPendingHarvest = ItemStack.EMPTY;
+        damageHarvestTool(level);
+        setChanged();
+        level.playSound(null, worldPosition, SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES,
+                SoundSource.BLOCKS, 1.0F, 0.95F + level.random.nextFloat() * 0.1F);
         return true;
     }
 
@@ -2293,6 +2579,36 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         regrowingPlantingItemId = tag.contains(KEY_REGROWING_PLANTING_ITEM)
                 ? ResourceLocation.tryParse(tag.getString(KEY_REGROWING_PLANTING_ITEM))
                 : null;
+        graftingSupport = supportsOrchard() && tag.getBoolean(KEY_GRAFTING_SUPPORT);
+        orchardDefinitionId = graftingSupport && tag.contains(KEY_ORCHARD_DEFINITION)
+                ? ResourceLocation.tryParse(tag.getString(KEY_ORCHARD_DEFINITION))
+                : null;
+        orchardPlantingItemId = orchardDefinitionId != null && tag.contains(KEY_ORCHARD_PLANTING_ITEM)
+                ? ResourceLocation.tryParse(tag.getString(KEY_ORCHARD_PLANTING_ITEM))
+                : null;
+        OrchardCropDefinition loadedOrchard = OrchardCropDefinitions.get(orchardDefinitionId).orElse(null);
+        orchardRenderBlockId = orchardDefinitionId != null && tag.contains(KEY_ORCHARD_RENDER_BLOCK)
+                ? ResourceLocation.tryParse(tag.getString(KEY_ORCHARD_RENDER_BLOCK))
+                : loadedOrchard == null ? null : loadedOrchard.renderBlockId();
+        orchardAgeProperty = orchardDefinitionId != null && tag.contains(KEY_ORCHARD_AGE_PROPERTY)
+                ? tag.getString(KEY_ORCHARD_AGE_PROPERTY)
+                : loadedOrchard == null ? "" : loadedOrchard.ageProperty();
+        orchardRenderStyle = loadedOrchard == null
+                ? parseOrchardRenderStyle(tag.getString(KEY_ORCHARD_RENDER_STYLE))
+                : loadedOrchard.renderStyle();
+        orchardHarvestItemId = orchardDefinitionId != null && tag.contains(KEY_ORCHARD_HARVEST_ITEM)
+                ? ResourceLocation.tryParse(tag.getString(KEY_ORCHARD_HARVEST_ITEM))
+                : loadedOrchard == null ? null : loadedOrchard.harvestItemId();
+        orchardMatureAge = loadedOrchard == null
+                ? Math.max(1, tag.contains(KEY_ORCHARD_MATURE_AGE) ? tag.getInt(KEY_ORCHARD_MATURE_AGE) : 3)
+                : loadedOrchard.matureAge();
+        int orchardMin = loadedOrchard == null ? 0 : loadedOrchard.minAge();
+        int orchardMax = loadedOrchard == null ? Math.max(orchardMatureAge, 3) : loadedOrchard.maxAge();
+        orchardAge = orchardDefinitionId == null ? 0
+                : Math.max(orchardMin, Math.min(orchardMax, tag.getInt(KEY_ORCHARD_AGE)));
+        orchardPendingHarvest = orchardDefinitionId != null && tag.contains(KEY_ORCHARD_PENDING_HARVEST, Tag.TAG_COMPOUND)
+                ? ItemStack.of(tag.getCompound(KEY_ORCHARD_PENDING_HARVEST))
+                : ItemStack.EMPTY;
         harvestRetryRequested = true;
         harvestStateChanged = false;
         harvestWaitingForOutputSpace = false;
@@ -2312,7 +2628,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         stripAddonKeys(preserved);
         tag.merge(preserved);
 
-        tag.putInt(KEY_SCHEMA, 8);
+        tag.putInt(KEY_SCHEMA, 9);
         tag.putInt(KEY_PADDY_GROWTH, paddyGrowth);
         tag.putInt(KEY_BASE_PROGRESS, baseProgress);
         tag.putInt(KEY_ROPE_ONE_PROGRESS, ropeOneProgress);
@@ -2331,6 +2647,45 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             tag.putString(KEY_REGROWING_PLANTING_ITEM, regrowingPlantingItemId.toString());
         } else {
             tag.remove(KEY_REGROWING_PLANTING_ITEM);
+        }
+        if (supportsOrchard() && graftingSupport) {
+            tag.putBoolean(KEY_GRAFTING_SUPPORT, true);
+        } else {
+            tag.remove(KEY_GRAFTING_SUPPORT);
+        }
+        if (supportsOrchard() && graftingSupport && orchardDefinitionId != null) {
+            tag.putString(KEY_ORCHARD_DEFINITION, orchardDefinitionId.toString());
+            tag.putInt(KEY_ORCHARD_AGE, orchardAge);
+        } else {
+            tag.remove(KEY_ORCHARD_DEFINITION);
+            tag.remove(KEY_ORCHARD_AGE);
+        }
+        if (supportsOrchard() && graftingSupport && orchardPlantingItemId != null) {
+            tag.putString(KEY_ORCHARD_PLANTING_ITEM, orchardPlantingItemId.toString());
+        } else {
+            tag.remove(KEY_ORCHARD_PLANTING_ITEM);
+        }
+        if (supportsOrchard() && graftingSupport && orchardDefinitionId != null && orchardRenderBlockId != null) {
+            tag.putString(KEY_ORCHARD_RENDER_BLOCK, orchardRenderBlockId.toString());
+            tag.putString(KEY_ORCHARD_AGE_PROPERTY, orchardAgeProperty == null ? "" : orchardAgeProperty);
+            tag.putString(KEY_ORCHARD_RENDER_STYLE, orchardRenderStyle.name());
+            if (orchardHarvestItemId != null) {
+                tag.putString(KEY_ORCHARD_HARVEST_ITEM, orchardHarvestItemId.toString());
+            } else {
+                tag.remove(KEY_ORCHARD_HARVEST_ITEM);
+            }
+            tag.putInt(KEY_ORCHARD_MATURE_AGE, orchardMatureAge);
+        } else {
+            tag.remove(KEY_ORCHARD_RENDER_BLOCK);
+            tag.remove(KEY_ORCHARD_AGE_PROPERTY);
+            tag.remove(KEY_ORCHARD_RENDER_STYLE);
+            tag.remove(KEY_ORCHARD_HARVEST_ITEM);
+            tag.remove(KEY_ORCHARD_MATURE_AGE);
+        }
+        if (supportsOrchard() && graftingSupport && orchardDefinitionId != null && !orchardPendingHarvest.isEmpty()) {
+            tag.put(KEY_ORCHARD_PENDING_HARVEST, orchardPendingHarvest.save(new CompoundTag()));
+        } else {
+            tag.remove(KEY_ORCHARD_PENDING_HARVEST);
         }
         saveAttachedState(tag);
         tag.remove(LEGACY_EFDC_KNIFE);
@@ -2514,6 +2869,16 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         tag.remove(KEY_ATTACHED_CROPS);
         tag.remove(KEY_REGROWING_DEFINITION);
         tag.remove(KEY_REGROWING_PLANTING_ITEM);
+        tag.remove(KEY_GRAFTING_SUPPORT);
+        tag.remove(KEY_ORCHARD_DEFINITION);
+        tag.remove(KEY_ORCHARD_PLANTING_ITEM);
+        tag.remove(KEY_ORCHARD_AGE);
+        tag.remove(KEY_ORCHARD_RENDER_BLOCK);
+        tag.remove(KEY_ORCHARD_AGE_PROPERTY);
+        tag.remove(KEY_ORCHARD_RENDER_STYLE);
+        tag.remove(KEY_ORCHARD_HARVEST_ITEM);
+        tag.remove(KEY_ORCHARD_MATURE_AGE);
+        tag.remove(KEY_ORCHARD_PENDING_HARVEST);
     }
 
     private static void stripMetadata(CompoundTag tag) {

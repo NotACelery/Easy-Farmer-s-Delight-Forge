@@ -1,4 +1,4 @@
-# Easy Farmer's Delight 1.4.0 — Development Reference — Forge 1.20.1
+# Easy Farmer's Delight 1.4.0 — Development Reference
 
 This document describes the **final 1.4.0 architecture and invariants**. Straightforward implementation details are
 kept in code; cross-class lifecycle rules, persistence contracts, compatibility boundaries and non-obvious behavior
@@ -299,13 +299,13 @@ Server-side Farmer work is expected to remain cheap while machines are blocked o
 when hundreds of full villager/crop models are visible because the renderer must draw that geometry. Vanilla
 occlusion/frustum culling eliminates that visual cost when machines are behind opaque walls or out of view.
 
-The 1.4.0 NeoForge stress QA used 513 Rich Farmers and recovered roughly normal 100–120 FPS while the machines were
+The cross-loader reference stress QA on the NeoForge counterpart used 513 Rich Farmers and recovered roughly normal 100–120 FPS while the machines were
 loaded but occluded. This is treated as evidence that the remaining dense-array cost is predominantly rendering,
 not the previous work scheduler.
 
-## 17. Confirmed 1.4.0 NeoForge runtime QA
+## 17. Reference 1.4.0 runtime QA
 
-The 1.4.0 NeoForge feature set was exercised with:
+The shared 1.4.0 architecture was exercised on the NeoForge counterpart with:
 
 - Rich Farmer normal crops and newly supported special crops.
 - Sweet Berry and Sourceberry mature harvest → post-harvest regrowth behavior.
@@ -323,11 +323,8 @@ still accompany any future code change even when the shared behavior is unchange
 
 ## 18. Loader-specific adaptation
 
-Forge is a source-level Minecraft 1.20.1 backport, not a loader shim. It adapts registries/events/menu hooks,
-classic `BlockEntityTag`/NBT item persistence, Forge `ITEM_HANDLER` capabilities, 1.20.1 crafting containers and
-serializers, Farmer's Delight 1.20.1 Cutting recipe/tool matching, `forge:tools/knives`, 1.20.1 datapack directory
-names and Java 17 syntax/API constraints. Behavior is kept equivalent to the NeoForge edition where the target
-dependency versions permit it.
+The Forge backport uses Minecraft 1.20.1 Forge item-handler/NBT conventions and generated Forge metadata.
+The Java toolchain is Java 17. Jade/JEI/EMI compile-time integrations use their Forge 1.20.1 API lines.
 
 ## 19. Release hygiene
 
@@ -342,3 +339,42 @@ A release source tree must pass:
 - ZIP CRC verification.
 
 The internal `DEV_1.4.0_ROADMAP.md` is not a public release artifact and must be excluded from final source packages.
+
+
+## 15. Orchard definitions (1.4.2)
+
+Orchard definitions live under `data/easyfarmersdelightcompat/efdc_orchard_crops/*.json`. The runtime loader resolves
+optional registry IDs without classloading the source mod. A definition supplies a planting item or tag, a render
+block, age bounds/property, harvest item/count semantics, Rich Soil eligibility and render style.
+
+`CompatFarmerBlockEntity` persists the definition ID plus planting item and a small render snapshot (render block,
+age property/style, harvest item and mature age). The standalone `GraftingSupportBlockEntity` persists the exact
+inserted canopy plus the same render snapshot. Both paths therefore synchronize enough information for dedicated
+clients to render the Orchard without relying on the server datapack reload listener populating a client-side static
+map.
+
+A standalone Grafting Support accepts any `minecraft:leaves` BlockItem. If no Orchard definition matches, the canopy
+is decorative. A matching canopy advances only while Farmer's Delight Rich Soil is directly beneath the support;
+removing Rich Soil stalls the current age without resetting it. Mature standalone fruit is harvested manually with
+Shears, while Rich Farmer Orchards use the Harvest Tool slot and automatic output insertion.
+
+The standalone canopy is represented by an invisible reserved upper block whose dynamic outline/collision follows the
+visible leaf mass. It is physically breakable: Shears or Silk Touch recover the exact installed leaves, while ordinary
+breaking destroys them and leaves the lower Grafting Support intact. The visible graft branch is a slim stripped-oak
+segment rendered only when a canopy is installed.
+
+Vanilla Oak/Dark Oak use `render_style: apple`: their age is virtual and is represented by the Rich Farmer and
+standalone Grafting Support renderers. Croptopia uses `render_style: block_age`, allowing both renderers to draw
+Croptopia's real `*_crop` AGE 0..3 models. The source models/textures are never copied into Easy Farmer's Delight.
+Croptopia's 58 ordinary ground crops remain on the standard Easy Villagers-compatible crop path; no special Java
+handler is required for those crops.
+
+Mature Rich Farmer Orchard output is rolled once and retained while output is blocked. The pending roll is persisted
+so clearing output space cannot reroll a better/worse Apple result. Shears are damaged only after the pending output
+is inserted. Standalone harvesting has no machine output buffer, so a successful Shears harvest drops the rolled fruit into the
+world beside the support and then resets the fruit age.
+
+Croptopia Cinnamon is intentionally handled as a narrow `AxeActionResolver` compatibility case because Croptopia
+implements the bark drop through its tool-modification event rather than Minecraft's normal Axe stripping map. The
+Cutter therefore resolves Cinnamon Log/Wood to the corresponding stripped block plus one Cinnamon as one atomic
+operation.
