@@ -1,13 +1,13 @@
-# Easy Farmer's Delight 1.4.0 — Development Reference
+# Easy Farmer's Delight 1.4.3 — Development Reference
 
-This document describes the **final 1.4.0 architecture and invariants**. Straightforward implementation details are
+This document describes the **current 1.4.3 architecture and invariants**. Straightforward implementation details are
 kept in code; cross-class lifecycle rules, persistence contracts, compatibility boundaries and non-obvious behavior
 belong here so Java sources can stay minimally commented.
 
 ## 1. Release identity
 
 - Public name: **Easy Farmer's Delight**.
-- Public version: **1.4.0**.
+- Public version: **1.4.3**.
 - Technical mod ID / registry namespace: `easyfarmersdelightcompat`.
 - Java package root: `dev.celerbi.easyfarmersdelightcompat`.
 - Artifact stem: `easy-farmers-delight`.

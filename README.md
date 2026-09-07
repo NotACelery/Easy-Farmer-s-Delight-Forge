@@ -129,9 +129,10 @@ See [SUPPORTED_CROPS.md](docs/SUPPORTED_CROPS.md) for the complete behavior, Ric
 
 ## Regrowing bushes
 
-Sweet Berry Bushes and Ars Nouveau Sourceberry are explicit data-driven regrowing crops. Mature bushes are picked
-and reset to their post-harvest age instead of being destroyed and replanted. Rich Soil can accelerate their growth
-but does not directly increase the harvest roll.
+Regrowing crops are harvested without destroying the underlying plant and return to their native post-harvest age.
+Built-in support includes Sweet Berry Bushes, Ars Nouveau Sourceberry, Hearth & Harvest Blueberry/Raspberry,
+Regions Unexplored Salmonberry and the supported Twilight Forest food berry bushes. Rich Soil may accelerate
+compatible bushes but does not directly increase their harvest roll. See `docs/SUPPORTED_CROPS.md` for exact rules.
 
 ## Ars Nouveau support
 

@@ -1,0 +1,21 @@
+{
+  "planting": {
+    "item": "regions_unexplored:salmonberry"
+  },
+  "crop_block": "regions_unexplored:salmonberry_bush",
+  "age": {
+    "property": "age",
+    "min": 0,
+    "max": 3,
+    "harvest": 3,
+    "post_harvest": 1
+  },
+  "harvest": {
+    "strategy": "random_item",
+    "item": "regions_unexplored:salmonberry",
+    "min_count": 2,
+    "max_count": 2,
+    "full_age_bonus": 0
+  },
+  "rich_soil": true
+}

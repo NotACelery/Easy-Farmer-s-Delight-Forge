@@ -54,6 +54,8 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
             "farmersdelight", "hanging_tomatoes");
     private static final ResourceLocation RICH_SOIL_ID = new ResourceLocation("farmersdelight",
             "rich_soil");
+    private static final ResourceLocation NOCTURNAL_MILLET_STALK_ID = new ResourceLocation(
+            "eternal_starlight", "nocturnal_millet_stalk");
 
     private static final float FARM_SCALE = 0.45F;
     private static final float PADDY_VILLAGER_SCALE = 0.90F;
@@ -380,6 +382,8 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
             renderRice(farmer, direction, poseStack, buffer, combinedLight, combinedOverlay, crop);
         } else if (isTomatoState(crop)) {
             renderTomato(farmer, direction, poseStack, buffer, combinedLight, combinedOverlay, crop);
+        } else if (isNocturnalMilletState(crop)) {
+            renderNocturnalMillet(farmer, direction, poseStack, buffer, combinedLight, combinedOverlay, crop);
         } else if (isStemState(crop)) {
             renderStem(farmer, direction, poseStack, buffer, combinedLight, combinedOverlay, crop);
         } else {
@@ -560,6 +564,33 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         }
     }
 
+    private void renderNocturnalMillet(
+            CompatFarmerBlockEntity farmer,
+            Direction direction,
+            PoseStack poseStack,
+            MultiBufferSource buffer,
+            int combinedLight,
+            int combinedOverlay,
+            BlockState stalk
+    ) {
+        poseStack.pushPose();
+        applyCropTransform(poseStack, direction, 0.34F);
+        renderBlockState(stalk, poseStack, buffer, combinedLight, combinedOverlay);
+        if (farmer.nocturnalMilletPanicleAge() >= 0) {
+            Block panicle = farmer.nocturnalMilletPanicleBlock();
+            if (panicle != Blocks.AIR) {
+                poseStack.pushPose();
+                poseStack.translate(0D, 1D, 0D);
+                BlockState panicleState = withAge(panicle.defaultBlockState(), farmer.nocturnalMilletPanicleAge());
+                panicleState = withBooleanProperty(panicleState, "forgotten", booleanPropertyValue(stalk, "forgotten"));
+                panicleState = withBooleanProperty(panicleState, "withered", false);
+                renderBlockState(panicleState, poseStack, buffer, combinedLight, combinedOverlay);
+                poseStack.popPose();
+            }
+        }
+        poseStack.popPose();
+    }
+
     private void renderStem(
             CompatFarmerBlockEntity farmer,
             Direction direction,
@@ -569,13 +600,17 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
             int combinedOverlay,
             BlockState stem
     ) {
-        Block fruit = stem.is(Blocks.MELON_STEM) ? Blocks.MELON
-                 : stem.is(Blocks.PUMPKIN_STEM) ? Blocks.PUMPKIN : Blocks.AIR;
+        Block fruit = farmer.stemFruitBlockForRender(stem);
 
         BlockState renderedStem = stem;
         if (farmer.fruitReady() && fruit != Blocks.AIR) {
-            Block attached = stem.is(Blocks.MELON_STEM) ? Blocks.ATTACHED_MELON_STEM : Blocks.ATTACHED_PUMPKIN_STEM;
-            renderedStem = attached.defaultBlockState().setValue(AttachedStemBlock.FACING, Direction.EAST);
+            Block attached = farmer.attachedStemBlockForRender(stem);
+            if (attached != Blocks.AIR) {
+                renderedStem = attached.defaultBlockState();
+                if (renderedStem.hasProperty(AttachedStemBlock.FACING)) {
+                    renderedStem = renderedStem.setValue(AttachedStemBlock.FACING, Direction.EAST);
+                }
+            }
         }
 
         poseStack.pushPose();
@@ -723,12 +758,25 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
     }
 
     private static boolean isStemState(BlockState state) {
-        return state.is(Blocks.MELON_STEM) || state.is(Blocks.PUMPKIN_STEM);
+        return state != null && state.getBlock() instanceof net.minecraft.world.level.block.StemBlock;
+    }
+
+    private static boolean isNocturnalMilletState(BlockState state) {
+        return state != null && NOCTURNAL_MILLET_STALK_ID.equals(BuiltInRegistries.BLOCK.getKey(state.getBlock()));
     }
 
     private boolean isTomatoState(BlockState state) {
         Block block = state.getBlock();
         return block == buddingTomatoBlock || block == tomatoBlock;
+    }
+
+    private static boolean booleanPropertyValue(BlockState state, String propertyName) {
+        Optional<Property<?>> property = state.getProperties().stream()
+                .filter(candidate -> candidate.getName().equals(propertyName))
+                .findFirst();
+        return property.isPresent()
+                && property.get() instanceof BooleanProperty booleanProperty
+                && state.getValue(booleanProperty);
     }
 
     private static BlockState withBooleanProperty(BlockState state, String propertyName, boolean value) {

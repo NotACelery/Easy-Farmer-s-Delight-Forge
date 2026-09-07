@@ -1,0 +1,21 @@
+{
+  "planting": {
+    "item": "twilightforest:skyberry_bush"
+  },
+  "crop_block": "twilightforest:skyberry_bush",
+  "age": {
+    "property": "age",
+    "min": 0,
+    "max": 3,
+    "harvest": 3,
+    "post_harvest": 2
+  },
+  "harvest": {
+    "strategy": "random_item",
+    "item": "twilightforest:skyberry",
+    "min_count": 1,
+    "max_count": 1,
+    "full_age_bonus": 0
+  },
+  "rich_soil": true
+}

@@ -13,6 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -31,6 +32,8 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
 
     private static final String ROOT = "EfdcFarmerStatus";
     private static final String CROP = "Crop";
+    private static final String CROP_DISPLAY_ITEM = "CropDisplayItem";
+    private static final String NOCTURNAL_MILLET_PANICLE_AGE = "NocturnalMilletPanicleAge";
     private static final String AGE = "Age";
     private static final String MAX_AGE = "MaxAge";
     private static final String PADDY_GROWTH = "PaddyGrowth";
@@ -65,6 +68,8 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
             "red_mushroom_colony");
     private static final ResourceLocation BROWN_MUSHROOM_COLONY = new ResourceLocation(
             "farmersdelight", "brown_mushroom_colony");
+    private static final ResourceLocation NOCTURNAL_MILLET_STALK = new ResourceLocation(
+            "eternal_starlight", "nocturnal_millet_stalk");
     private static final ResourceLocation MELON_STEM = new ResourceLocation("melon_stem");
     private static final ResourceLocation PUMPKIN_STEM = new ResourceLocation("pumpkin_stem");
 
@@ -110,11 +115,21 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
 
         tooltip.add(Component.translatable(
                         "jade.easyfarmersdelightcompat.crop",
-                        cropName(cropId)
+                        cropName(cropId, status.getString(CROP_DISPLAY_ITEM))
                 )
                 .withStyle(ChatFormatting.WHITE));
 
-        if (isStem(cropId)) {
+        if (NOCTURNAL_MILLET_STALK.equals(cropId)) {
+            int baseAge = status.getInt(AGE);
+            int baseMax = Math.max(1, status.getInt(MAX_AGE));
+            int panicleAge = status.getInt(NOCTURNAL_MILLET_PANICLE_AGE);
+            int progress = Math.min(baseMax + 3, baseAge + (panicleAge < 0 ? 0 : panicleAge + 1));
+            tooltip.add(Component.translatable(
+                            "jade.easyfarmersdelightcompat.growth",
+                            percent(progress, baseMax + 3)
+                    )
+                    .withStyle(ChatFormatting.GRAY));
+        } else if (isStem(cropId)) {
             appendStemStatus(tooltip, status);
         } else if (isTomato(cropId)) {
             appendTomatoGrowth(tooltip, status);
@@ -200,6 +215,16 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
         if (crop != null) {
             ResourceLocation cropId = BuiltInRegistries.BLOCK.getKey(crop.getBlock());
             status.putString(CROP, cropId.toString());
+            ItemStack display = farmer.cropDisplayStack(level.registryAccess());
+            if (!display.isEmpty()) {
+                ResourceLocation displayId = BuiltInRegistries.ITEM.getKey(display.getItem());
+                if (displayId != null) {
+                    status.putString(CROP_DISPLAY_ITEM, displayId.toString());
+                }
+            }
+            if (NOCTURNAL_MILLET_STALK.equals(cropId)) {
+                status.putInt(NOCTURNAL_MILLET_PANICLE_AGE, farmer.nocturnalMilletPanicleAge());
+            }
             AgeInfo ageInfo = ageInfo(crop);
             status.putInt(AGE, ageInfo.age());
             status.putInt(MAX_AGE, ageInfo.maxAge());
@@ -376,9 +401,17 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
         tooltip.add(line.withStyle(ChatFormatting.GRAY));
     }
 
-    private static Component cropName(ResourceLocation cropId) {
+    private static Component cropName(ResourceLocation cropId, String displayItemIdString) {
         if (cropId == null)
             return Component.translatable("jade.easyfarmersdelightcompat.unknown");
+        ResourceLocation displayItemId = displayItemIdString == null || displayItemIdString.isEmpty()
+                ? null : ResourceLocation.tryParse(displayItemIdString);
+        if (displayItemId != null) {
+            net.minecraft.world.item.Item item = BuiltInRegistries.ITEM.get(displayItemId);
+            if (item != null && item != net.minecraft.world.item.Items.AIR) {
+                return new ItemStack(item).getHoverName();
+            }
+        }
         if (RICE.equals(cropId))
             return Component.translatable("item.farmersdelight.rice");
         if (isTomato(cropId))
@@ -392,7 +425,27 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
         if (PUMPKIN_STEM.equals(cropId))
             return Blocks.PUMPKIN.getName();
         Block crop = BuiltInRegistries.BLOCK.get(cropId);
-        return crop.getName();
+        if (crop != null && crop != Blocks.AIR && crop.asItem() != net.minecraft.world.item.Items.AIR) {
+            return new ItemStack(crop.asItem()).getHoverName();
+        }
+        return Component.literal(humanizeCropPath(cropId.getPath()));
+    }
+
+    private static String humanizeCropPath(String path) {
+        String cleaned = path;
+        for (String suffix : new String[]{"_crop", "_bush", "_stem", "_vines", "_plant", "_stalk"}) {
+            if (cleaned.endsWith(suffix)) {
+                cleaned = cleaned.substring(0, cleaned.length() - suffix.length());
+                break;
+            }
+        }
+        StringBuilder result = new StringBuilder();
+        for (String part : cleaned.split("_")) {
+            if (part.isEmpty()) continue;
+            if (result.length() > 0) result.append(' ');
+            result.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1));
+        }
+        return result.length() == 0 ? path : result.toString();
     }
 
     private static boolean isTomato(ResourceLocation cropId) {
@@ -400,7 +453,9 @@ public enum FarmerStatusJadeProvider implements IBlockComponentProvider, IServer
     }
 
     private static boolean isStem(ResourceLocation cropId) {
-        return MELON_STEM.equals(cropId) || PUMPKIN_STEM.equals(cropId);
+        if (cropId == null) return false;
+        Block block = BuiltInRegistries.BLOCK.get(cropId);
+        return block instanceof StemBlock;
     }
 
     private static int percent(int progress, int maximum) {

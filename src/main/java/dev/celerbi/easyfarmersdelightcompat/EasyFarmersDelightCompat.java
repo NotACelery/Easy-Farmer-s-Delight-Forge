@@ -6,6 +6,7 @@ import dev.celerbi.easyfarmersdelightcompat.event.LegacyFarmerMigrationEvents;
 import dev.celerbi.easyfarmersdelightcompat.integration.attached.AttachedCropReloadListener;
 import dev.celerbi.easyfarmersdelightcompat.integration.orchard.OrchardCropReloadListener;
 import dev.celerbi.easyfarmersdelightcompat.integration.regrowing.RegrowingCropReloadListener;
+import dev.celerbi.easyfarmersdelightcompat.integration.stem.StemCropReloadListener;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlockEntities;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlocks;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModMenus;
@@ -35,6 +36,8 @@ public final class EasyFarmersDelightCompat {
                 event.addListener(AttachedCropReloadListener.INSTANCE));
         MinecraftForge.EVENT_BUS.addListener((AddReloadListenerEvent event) ->
                 event.addListener(RegrowingCropReloadListener.INSTANCE));
+        MinecraftForge.EVENT_BUS.addListener((AddReloadListenerEvent event) ->
+                event.addListener(StemCropReloadListener.INSTANCE));
         MinecraftForge.EVENT_BUS.addListener((AddReloadListenerEvent event) ->
                 event.addListener(OrchardCropReloadListener.INSTANCE));
     }

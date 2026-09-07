@@ -1,0 +1,21 @@
+{
+  "planting": {
+    "item": "hearthandharvest:cotton_seeds"
+  },
+  "crop_block": "hearthandharvest:cotton",
+  "age": {
+    "property": "age",
+    "min": 0,
+    "max": 7,
+    "harvest": 7,
+    "post_harvest": 5
+  },
+  "harvest": {
+    "strategy": "random_item",
+    "item": "hearthandharvest:cotton",
+    "min_count": 1,
+    "max_count": 2,
+    "full_age_bonus": 0
+  },
+  "rich_soil": true
+}

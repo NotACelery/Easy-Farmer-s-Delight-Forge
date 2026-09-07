@@ -243,7 +243,8 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
 
         if (farmer.easyVillagers().getCrop(registries) == null && !farmer.hasAttachedSetup() && !farmer.hasGraftingSupport()) {
             boolean validCrop = variant.isAquatic() ? (!farmer.hasPaddySand() && isRice(heldItem)) : (variant.isRich()
-                    && (isTomatoSeeds(heldItem) || isMushroom(heldItem) || isStemSeed(heldItem))) || farmer
+                    && (isTomatoSeeds(heldItem) || isMushroom(heldItem)
+                    || farmer.canSelectStem(heldItem) || farmer.canSelectGenericCrop(heldItem))) || farmer
                 .easyVillagers().isValidSeed(heldItem, registries);
             if (validCrop) {
                 if (!level.isClientSide) {
@@ -256,12 +257,15 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
                         selected = true;
                     } else if (variant.isRich() && isMushroom(heldItem)) {
                         selected = farmer.selectMushroom(heldItem, registries);
-                    } else if (variant.isRich() && isStemSeed(heldItem)) {
+                    } else if (variant.isRich() && farmer.canSelectStem(heldItem)) {
                         selected = farmer.selectStem(heldItem, registries);
                     } else {
                         selected = farmer.easyVillagers().setCropFromSeed(heldItem, registries);
-                        if (selected)
-                            farmer.onNormalCropSelected();
+                        if (selected) {
+                            farmer.onNormalCropSelected(heldItem);
+                        } else if (variant.isRich() && farmer.canSelectGenericCrop(heldItem)) {
+                            selected = farmer.selectGenericCrop(heldItem, registries);
+                        }
                     }
                     if (selected) {
                         consumeOne(heldItem, player);

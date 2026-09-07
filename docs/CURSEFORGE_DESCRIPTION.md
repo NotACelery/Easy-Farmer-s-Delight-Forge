@@ -64,8 +64,11 @@ Supported bushes include:
 
 * **Sweet Berry Bushes**
 * **Ars Nouveau Sourceberry**, when Ars Nouveau is installed
+* **Hearth & Harvest Blueberry and Raspberry**, when Hearth & Harvest is installed
+* **Regions Unexplored Salmonberry**, when Regions Unexplored is installed
+* **Twilight Forest Raspberry, Blueberry, Blackberry, Maloberry, Blightberry, Duskberry, Skyberry and Stingberry**, when Twilight Forest is installed
 
-Once harvested, the bush returns to its normal post-harvest state and begins growing again.
+Once harvested, each bush returns to its native post-harvest state and begins growing again.
 
 #### Mushroom Colonies
 
@@ -82,6 +85,18 @@ The Rich Farmer can automate both **Melons** and **Pumpkins**.
 Insert the corresponding seeds and the Farmer will handle the stem and resulting fruit.
 
 An **Axe** is required to harvest the fruit. The stem remains planted for future harvests.
+
+#### Additional modded crop support
+
+Easy Farmer's Delight 1.4.3 expands Rich Farmer compatibility with more modded crop structures, including:
+
+* **Deep Aether Squash**, with Blue/Green fruit and attached-stem behavior
+* **Eternal Starlight Nocturnal Millet**, including Forgotten Nocturnal Millet
+* **Hearth & Harvest Cotton** and compatible standard crops such as Peanut
+* **Regions Unexplored Salmonberry**
+* **Twilight Forest food berry bushes**
+
+Compatible standard modded crops that expose a normal Minecraft-style crop/planting-item relationship can also work through the generic Rich Farmer crop fallback without requiring a dedicated hardcoded integration.
 
 ***
 

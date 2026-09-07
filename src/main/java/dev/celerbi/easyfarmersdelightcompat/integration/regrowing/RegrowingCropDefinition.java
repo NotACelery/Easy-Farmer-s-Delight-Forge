@@ -220,6 +220,11 @@ public final class RegrowingCropDefinition {
         return state.setValue(property, safe);
     }
 
+    public ItemStack harvestDisplayStack() {
+        Item item = BuiltInRegistries.ITEM.get(harvestItemId);
+        return item == null || item == Items.AIR ? ItemStack.EMPTY : new ItemStack(item);
+    }
+
     public ItemStack canonicalPlantingStack() {
         if (plantingItemId == null) {
             return ItemStack.EMPTY;

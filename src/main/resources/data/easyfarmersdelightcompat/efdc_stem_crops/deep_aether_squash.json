@@ -1,0 +1,11 @@
+{
+  "planting": {
+    "item": "deep_aether:squash_seeds"
+  },
+  "stem_block": "deep_aether:squash_stem",
+  "attached_stem_block": "deep_aether:attached_squash_stem",
+  "fruit_blocks": [
+    "deep_aether:blue_squash",
+    "deep_aether:green_squash"
+  ]
+}

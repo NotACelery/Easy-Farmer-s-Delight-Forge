@@ -1,3 +1,60 @@
+## 1.4.3 — 2026-09-06
+
+### Rich Farmer crop compatibility
+
+- Added a generic fallback for modded planting items that directly expose standard `CropBlock` crops, reducing the need for per-mod hardcoding.
+- Expanded regrowing-crop support for Sweet Berry-style bushes and data-driven custom bushes while preserving each crop's post-harvest age.
+- Added data-driven stem-crop support and corrected mature stem behavior so stems remain planted until their fruit is actually available.
+- Added **Deep Aether Squash** support with Blue/Green Squash fruit selection, attached-stem rendering and fruit-only harvesting.
+- Added **Eternal Starlight Nocturnal Millet** support for its stalk + panicle lifecycle, including the virtual Forgotten conversion required inside a Rich Farmer and fully mature Forgotten Nocturnal Millet harvests.
+- Added **Hearth & Harvest** compatibility for Cotton, Blueberry/Raspberry bushes and compatible standard crops such as Peanut.
+- Added **Regions Unexplored Salmonberry** as a regrowing bush.
+- Added **Twilight Forest** Raspberry, Blueberry, Blackberry, Maloberry, Blightberry, Duskberry, Skyberry and Stingberry to the regrowing/bush family.
+- Improved persisted planting-item identity so similarly named crops from different mods remain distinct and dismantle/tooltips resolve the correct item.
+- Fixed Jade crop naming for modded crops by preferring the actual crop/harvest item display name instead of raw block registry IDs.
+
+### Cutter and integration polish
+
+- Expanded Cutter Cutting Board tool parity to Knife, Pickaxe, Axe, Shovel, Hoe and Shears families.
+- Generalized Cutter tool detection and Jade requirement reporting while retaining Axe transformation fallback behavior.
+- Removed redundant Rich Soil status text from Rich Farmer and Rich Paddy Farmer Jade tooltips.
+- Re-audited Harvest Tool/Fortune routing, Cutter sided automation and crop-specific tool requirements.
+- Integrated the final pixel-grid-aligned Grafting Support base model.
+
+### Release validation
+
+- `1.4.3-dev.7` was validated in-game on the NeoForge line for the final crop compatibility fixes, including Deep Aether Squash harvesting, human-readable crop tooltips, Hearth & Harvest regrowing crops and Eternal Starlight Forgotten Nocturnal Millet.
+- The final `1.4.3` promotion contains no gameplay/runtime changes beyond versioning and release documentation.
+
+## 1.4.3-dev.7
+
+- Fixed Rich Farmer Eternal Starlight Nocturnal Millet so it transitions the real `forgotten` BlockState property after the stalk reaches full maturity instead of repeatedly harvesting ordinary Nocturnal Millet.
+- Forgotten panicles now grow to age 2 before harvest, output Forgotten Nocturnal Millet, return to age 1 after harvest, and keep the Forgotten state for later cycles.
+- Propagated the Forgotten property into the virtual panicle renderer and crop/Jade display.
+- Full Gradle compilation remains pending; this source snapshot is intentionally preserved before QA.
+
+## 1.4.3-dev.6
+
+- Fixed modded `StemBlock` harvesting so mature stems remain planted until a fruit exists instead of being reset as ordinary crops.
+- Deep Aether Squash now mirrors Melon/Pumpkin behavior, including off-center stem rendering, attached stem state, persisted Blue/Green Squash choice and fruit-only harvesting.
+- Added a direct Deep Aether Squash fallback in code in addition to its data-driven stem definition.
+- Added dedicated Eternal Starlight Nocturnal Millet support for the stalk + panicle growth/harvest cycle.
+- Fixed Jade crop names for modded crops by preferring real item names and humanizing registry paths when no display item exists.
+- Added Twilight Forest food berry bushes (Raspberry, Blueberry, Blackberry, Maloberry, Blightberry, Duskberry, Skyberry and Stingberry) to the regrowing/bush crop family.
+- Full Gradle compilation remains pending; this source snapshot is intentionally preserved before QA.
+
+## 1.4.3-dev.5
+
+- Added a Rich Farmer fallback for modded planting items that directly point to standard `CropBlock` crops, avoiding reliance on Easy Villagers seed mappings.
+- Added behavior-based regrowing support for `SweetBerryBushBlock` derivatives, preserving mature loot and resetting bushes to post-harvest age 1.
+- Added data-driven stem-crop definitions with generic single-fruit `StemBlock` fallback and multi-fruit overrides.
+- Added Deep Aether Squash support, including both Blue Squash and Green Squash fruit outcomes.
+- Added Hearth & Harvest Cotton regrowth support (mature age 7, post-harvest age 5) and generic Blueberry/Raspberry bush support.
+- Added Regions Unexplored Salmonberry regrowth support.
+- Persisted the exact planting item for newly configured Rich Farmers so tooltip/dismantle behavior no longer depends on translated crop names.
+- The generic CropBlock fallback also covers compatible crops such as Eternal Starlight Pungency Fruit/Crinoa and Hearth & Harvest Peanut without per-crop hardcoding.
+- Audited custom structural crops; H&H Corn/Grapes and Eternal Starlight Nocturnal Millet remain intentionally outside the generic path until dedicated multi-block/trellis handling is added.
+
 ## 1.4.3-dev.4
 
 - Expanded Cutter parity with Farmer's Delight Cutting Board recipes to support Knife, Pickaxe, Axe, Shovel, Hoe and Shears tool families.

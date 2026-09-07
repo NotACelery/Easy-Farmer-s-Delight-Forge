@@ -94,6 +94,28 @@ does not give them Farmer's Delight-style waterlogging, Rope or trellis requirem
 - Axe durability is consumed only after a successful harvest.
 - Full output never consumes the fruit or damages the Axe.
 
+## Additional modded structural crops
+
+### Deep Aether Squash
+
+**Farmer:** Rich Farmer only; Deep Aether remains optional.
+
+- Plant with `deep_aether:squash_seeds`.
+- The Squash stem follows the Melon/Pumpkin lifecycle and is never harvested as an ordinary mature crop.
+- At maturity it waits for either a Blue Squash or Green Squash, renders the corresponding attached stem, and harvests only the fruit.
+- The selected fruit is persisted so the rendered fruit and harvested output always agree.
+
+### Eternal Starlight Nocturnal Millet
+
+**Farmer:** Rich Farmer only; Eternal Starlight remains optional.
+
+- Plant with `eternal_starlight:nocturnal_millet_seeds`.
+- The stalk grows through age 0..7 first.
+- Because a virtual Rich Farmer has no physical Dusted Gravel/bone-meal interaction, reaching full stalk maturity performs the Forgotten conversion (`forgotten=true`) before the panicle phase begins.
+- The Forgotten panicle then grows through age 0..2.
+- Harvest is allowed only at fully mature panicle age 2 and yields `eternal_starlight:forgotten_nocturnal_millet`.
+- After harvest the panicle returns to age 1 and remains Forgotten for later harvest cycles.
+
 ## Regrowing bushes
 
 Regrowing crops use data files under:
@@ -124,6 +146,14 @@ They are deliberately opt-in. Easy Farmer's Delight does **not** assume every `B
 - The bush resets to age 1 after harvest.
 - Rich Soil can accelerate growth but does not directly increase the harvest count.
 
+
+### Twilight Forest berry bushes
+
+**Farmer:** Rich Farmer only; Twilight Forest remains optional.
+
+- Raspberry, Blueberry, Blackberry, Maloberry, Blightberry, Duskberry, Skyberry and Stingberry use the regrowing/bush path.
+- They mature at age 3 and reset to age 2 after harvest, matching Twilight Forest's native `TFBushBlock` lifecycle.
+- EFDC currently models one bush position and does not simulate Twilight Forest's optional second vertical bush segment.
 
 ## Grafting Support and Orchards
 
