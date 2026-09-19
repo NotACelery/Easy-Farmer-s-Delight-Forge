@@ -88,13 +88,14 @@ An **Axe** is required to harvest the fruit. The stem remains planted for future
 
 #### Additional modded crop support
 
-Easy Farmer's Delight 1.4.3 expands Rich Farmer compatibility with more modded crop structures, including:
+Easy Farmer's Delight 1.4.4 expands Rich Farmer compatibility with more modded crop structures, including:
 
 * **Deep Aether Squash**, with Blue/Green fruit and attached-stem behavior
 * **Eternal Starlight Nocturnal Millet**, including Forgotten Nocturnal Millet
 * **Hearth & Harvest Cotton** and compatible standard crops such as Peanut
 * **Regions Unexplored Salmonberry**
 * **Twilight Forest food berry bushes**
+* **Delightful Cantaloupe** on the Forge 1.20.1 branch, using its native regrowing age 0–3 lifecycle
 
 Compatible standard modded crops that expose a normal Minecraft-style crop/planting-item relationship can also work through the generic Rich Farmer crop fallback without requiring a dedicated hardcoded integration.
 
@@ -403,6 +404,13 @@ Rich Farmers using Log Mode or Orchards can also display their stored farming co
 * Ars Nouveau
 * Argentum
 * Croptopia
+* Fruits Delight 1.1.3+
+* Delightful 3.8.x
+* Hearth & Harvest
+* Regions Unexplored
+* Twilight Forest
+* Deep Aether
+* Eternal Starlight
 * Easy Mob Farm
 
 Optional integrations are only enabled when their corresponding mods are installed.
@@ -415,6 +423,6 @@ Easy Farmer's Delight must be installed on both the **client and server** when p
 
 **Easy Farmer's Delight is an independent and unofficial project.**
 
-It is not affiliated with, endorsed by, sponsored by, or maintained by the authors of Easy Villagers, Farmer's Delight, Easy Mob Farm, Ars Nouveau, Argentum, Croptopia, Jade, JEI, or EMI.
+It is not affiliated with, endorsed by, sponsored by, or maintained by the authors of Easy Villagers, Farmer's Delight, Easy Mob Farm, Ars Nouveau, Argentum, Croptopia, Fruits Delight, Delightful, Hearth & Harvest, Regions Unexplored, Twilight Forest, Deep Aether, Eternal Starlight, Jade, JEI, or EMI.
 
 If you encounter a problem, have a question, or need help with the mod, you can contact me at **[notacelery@gmail.com](mailto:notacelery@gmail.com)** or leave a comment on the CurseForge page.

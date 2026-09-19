@@ -1,0 +1,21 @@
+{
+  "planting": {
+    "item": "delightful:cantaloupe_seeds"
+  },
+  "crop_block": "delightful:cantaloupe_plant",
+  "age": {
+    "property": "age",
+    "min": 0,
+    "max": 3,
+    "harvest": 3,
+    "post_harvest": 0
+  },
+  "harvest": {
+    "strategy": "random_item",
+    "item": "delightful:cantaloupe",
+    "min_count": 1,
+    "max_count": 1,
+    "full_age_bonus": 0
+  },
+  "rich_soil": true
+}

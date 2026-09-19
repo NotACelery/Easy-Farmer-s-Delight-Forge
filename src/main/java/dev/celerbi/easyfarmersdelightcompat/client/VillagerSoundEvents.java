@@ -1,6 +1,9 @@
 package dev.celerbi.easyfarmersdelightcompat.client;
 
 import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
+import dev.celerbi.easyfarmersdelightcompat.block.CompatFarmerBlock;
+import dev.celerbi.easyfarmersdelightcompat.block.CutterBlock;
+import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -22,7 +25,22 @@ public final class VillagerSoundEvents {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onPositionSound(PlayLevelSoundEvent.AtPosition event) {
+        if (shouldMuteEfdMachineAction(event)) {
+            event.setCanceled(true);
+            return;
+        }
         handle(event);
+    }
+
+    private static boolean shouldMuteEfdMachineAction(PlayLevelSoundEvent.AtPosition event) {
+        if (!event.getLevel().isClientSide
+                || !ClientPreferences.villagersMuted()
+                || event.getSource() != SoundSource.BLOCKS) {
+            return false;
+        }
+        BlockPos pos = BlockPos.containing(event.getPosition());
+        var block = event.getLevel().getBlockState(pos).getBlock();
+        return block instanceof CompatFarmerBlock || block instanceof CutterBlock;
     }
 
     private static void handle(PlayLevelSoundEvent event) {

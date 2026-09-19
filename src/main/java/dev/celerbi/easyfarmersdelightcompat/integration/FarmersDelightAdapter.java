@@ -1,5 +1,6 @@
 package dev.celerbi.easyfarmersdelightcompat.integration;
 
+import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
 import java.lang.reflect.Method;
 import java.util.function.Supplier;
 
@@ -56,12 +57,12 @@ public final class FarmersDelightAdapter {
 
     private static void fail(Throwable error) {
         if (!failed) {
-            System.err.println(
-                    "[Easy Farmer's Delight] Could not read Farmer's Delight Rich Soil configuration; "
-                            + "Rich Soil acceleration is disabled."
-            );
-            if (error != null) {
-                error.printStackTrace();
+            if (error == null) {
+                EasyFarmersDelightCompat.LOGGER.warn(
+                        "Could not read Farmer's Delight Rich Soil configuration; acceleration is disabled.");
+            } else {
+                EasyFarmersDelightCompat.LOGGER.warn(
+                        "Could not read Farmer's Delight Rich Soil configuration; acceleration is disabled.", error);
             }
         }
         failed = true;

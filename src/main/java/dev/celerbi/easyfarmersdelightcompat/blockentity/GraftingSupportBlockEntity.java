@@ -52,6 +52,7 @@ public final class GraftingSupportBlockEntity extends BlockEntity {
     private OrchardCropDefinition.RenderStyle renderStyle = OrchardCropDefinition.RenderStyle.BLOCK_AGE;
     private ResourceLocation harvestItemId;
     private int matureAge = 3;
+    private boolean clientCanopyPreview;
 
     public GraftingSupportBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.GRAFTING_SUPPORT.get(), pos, state);
@@ -68,6 +69,18 @@ public final class GraftingSupportBlockEntity extends BlockEntity {
 
     public boolean hasCanopy() { return !canopy.isEmpty(); }
 
+    public boolean hasClientCanopyPreview() { return clientCanopyPreview; }
+
+    public boolean previewCanopy(ItemStack stack) {
+        Level level = getLevel();
+        if (level == null || !level.isClientSide || !canAcceptLeaves(stack)) return false;
+        canopy = stack.copyWithCount(1);
+        OrchardCropDefinition definition = OrchardCropDefinitions.findPlanting(canopy).orElse(null);
+        applyDefinition(definition);
+        clientCanopyPreview = true;
+        return true;
+    }
+
     public ItemStack canopyStack() {
         return canopy.copyWithCount(canopy.isEmpty() ? 0 : 1);
     }
@@ -82,6 +95,7 @@ public final class GraftingSupportBlockEntity extends BlockEntity {
     public boolean insertCanopy(ItemStack stack) {
         if (!canAcceptLeaves(stack)) return false;
         canopy = stack.copyWithCount(1);
+        clientCanopyPreview = false;
         OrchardCropDefinition definition = OrchardCropDefinitions.findPlanting(canopy).orElse(null);
         applyDefinition(definition);
         sync();
@@ -147,7 +161,9 @@ public final class GraftingSupportBlockEntity extends BlockEntity {
         if (definition != null) return definition.renderState(orchardAge);
         if (renderBlockId != null) {
             Block block = BuiltInRegistries.BLOCK.get(renderBlockId);
-            if (block != null && block != Blocks.AIR) return withAgeProperty(block.defaultBlockState(), ageProperty, orchardAge);
+            if (block != null && block != Blocks.AIR) {
+                return withAgeProperty(block.defaultBlockState(), ageProperty, orchardAge);
+            }
         }
         if (canopy.getItem() instanceof BlockItem blockItem) return blockItem.getBlock().defaultBlockState();
         return Blocks.AIR.defaultBlockState();
@@ -187,6 +203,7 @@ public final class GraftingSupportBlockEntity extends BlockEntity {
 
     private void clearCanopy() {
         canopy = ItemStack.EMPTY;
+        clientCanopyPreview = false;
         orchardDefinitionId = null;
         orchardAge = 0;
         renderBlockId = null;
@@ -226,10 +243,17 @@ public final class GraftingSupportBlockEntity extends BlockEntity {
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
-        canopy = tag.contains(KEY_CANOPY, Tag.TAG_COMPOUND) ? ItemStack.of(tag.getCompound(KEY_CANOPY)) : ItemStack.EMPTY;
-        orchardDefinitionId = tag.contains(KEY_DEFINITION) ? ResourceLocation.tryParse(tag.getString(KEY_DEFINITION)) : null;
+        clientCanopyPreview = false;
+        canopy = tag.contains(KEY_CANOPY, Tag.TAG_COMPOUND)
+                ? ItemStack.of(tag.getCompound(KEY_CANOPY))
+                : ItemStack.EMPTY;
+        orchardDefinitionId = tag.contains(KEY_DEFINITION)
+                ? ResourceLocation.tryParse(tag.getString(KEY_DEFINITION))
+                : null;
         orchardAge = orchardDefinitionId == null ? 0 : Math.max(0, tag.getInt(KEY_AGE));
-        renderBlockId = tag.contains(KEY_RENDER_BLOCK) ? ResourceLocation.tryParse(tag.getString(KEY_RENDER_BLOCK)) : null;
+        renderBlockId = tag.contains(KEY_RENDER_BLOCK)
+                ? ResourceLocation.tryParse(tag.getString(KEY_RENDER_BLOCK))
+                : null;
         ageProperty = tag.contains(KEY_AGE_PROPERTY) ? tag.getString(KEY_AGE_PROPERTY) : "";
         if (tag.contains(KEY_RENDER_STYLE)) {
             try {
@@ -240,8 +264,19 @@ public final class GraftingSupportBlockEntity extends BlockEntity {
         } else {
             renderStyle = OrchardCropDefinition.RenderStyle.BLOCK_AGE;
         }
-        harvestItemId = tag.contains(KEY_HARVEST_ITEM) ? ResourceLocation.tryParse(tag.getString(KEY_HARVEST_ITEM)) : null;
+        harvestItemId = tag.contains(KEY_HARVEST_ITEM)
+                ? ResourceLocation.tryParse(tag.getString(KEY_HARVEST_ITEM))
+                : null;
         matureAge = tag.contains(KEY_MATURE_AGE) ? Math.max(1, tag.getInt(KEY_MATURE_AGE)) : 3;
+
+        // Keep decorative canopies while clearing orchard state that is no longer valid.
+        if (OrchardCropDefinitions.isExplicitlyExcludedDefinition(orchardDefinitionId)
+                || OrchardCropDefinitions.isExplicitlyExcludedPlanting(canopy)
+                || OrchardCropDefinitions.isExplicitlyExcludedResource(renderBlockId)
+                || OrchardCropDefinitions.isRuntimeSuppressedDefinition(orchardDefinitionId)
+                || OrchardCropDefinitions.isRuntimeSuppressedPlanting(canopy)) {
+            applyDefinition(null);
+        }
     }
 
     @Override

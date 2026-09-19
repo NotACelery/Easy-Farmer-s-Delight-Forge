@@ -21,7 +21,8 @@ import snownee.jade.api.config.IPluginConfig;
 public enum GraftingSupportJadeProvider implements IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
     INSTANCE;
 
-    private static final ResourceLocation UID = new ResourceLocation(EasyFarmersDelightCompat.MOD_ID, "grafting_support_status");
+    private static final ResourceLocation UID = new ResourceLocation(
+            EasyFarmersDelightCompat.MOD_ID, "grafting_support_status");
     private static final String ROOT = "EfdcGraftingSupport";
     private static final String HAS_CANOPY = "HasCanopy";
     private static final String PRODUCTIVE = "Productive";

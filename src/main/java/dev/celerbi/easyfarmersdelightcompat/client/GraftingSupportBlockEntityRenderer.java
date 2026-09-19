@@ -2,6 +2,7 @@ package dev.celerbi.easyfarmersdelightcompat.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import dev.celerbi.easyfarmersdelightcompat.block.GraftingCanopyBlock;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.GraftingSupportBlockEntity;
 import dev.celerbi.easyfarmersdelightcompat.integration.orchard.OrchardCropDefinition;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlocks;
@@ -12,7 +13,9 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -43,7 +46,14 @@ public final class GraftingSupportBlockEntityRenderer implements BlockEntityRend
             int combinedLight,
             int combinedOverlay
     ) {
-        if (!support.getBlockState().is(ModBlocks.GRAFTING_SUPPORT.get()) || !support.hasCanopy()) {
+        if (!support.getBlockState().is(ModBlocks.GRAFTING_SUPPORT.get())
+                || !support.hasCanopy()
+                || support.getLevel() == null) {
+            return;
+        }
+        BlockState marker = support.getLevel().getBlockState(support.getBlockPos().above());
+        if (!marker.is(ModBlocks.GRAFTING_CANOPY.get())
+                || (!marker.getValue(GraftingCanopyBlock.ACTIVE) && !support.hasClientCanopyPreview())) {
             return;
         }
 
@@ -76,7 +86,14 @@ public final class GraftingSupportBlockEntityRenderer implements BlockEntityRend
         poseStack.translate(0.5D, 0.98D, 0.5D);
         poseStack.scale(0.085F, 0.30F, 0.085F);
         poseStack.translate(-0.5D, 0.0D, -0.5D);
-        renderBlockState(support, net.minecraft.world.level.block.Blocks.STRIPPED_OAK_LOG.defaultBlockState(), poseStack, buffer, light, overlay);
+        renderBlockState(
+                support,
+                net.minecraft.world.level.block.Blocks.STRIPPED_OAK_LOG.defaultBlockState(),
+                poseStack,
+                buffer,
+                light,
+                overlay
+        );
         poseStack.popPose();
     }
 
@@ -168,7 +185,6 @@ public final class GraftingSupportBlockEntityRenderer implements BlockEntityRend
         poseStack.popPose();
     }
 
-
     private void renderBlockState(
             GraftingSupportBlockEntity support,
             BlockState state,
@@ -181,12 +197,42 @@ public final class GraftingSupportBlockEntityRenderer implements BlockEntityRend
         float red = ((color >> 16) & 0xFF) / 255F;
         float green = ((color >> 8) & 0xFF) / 255F;
         float blue = (color & 0xFF) / 255F;
-        RenderType renderType = ItemBlockRenderTypes.getRenderType(state, false);
+        BakedModel model = blockRenderer.getBlockModel(state);
+        boolean rendered = false;
+        long seed = state.getSeed(support.getBlockPos());
+        for (RenderType renderType : model.getRenderTypes(state, RandomSource.create(seed), ModelData.EMPTY)) {
+            renderBlockStateLayer(
+                    state, model, poseStack, buffer, combinedLight, combinedOverlay,
+                    red, green, blue, renderType
+            );
+            rendered = true;
+        }
+        if (!rendered) {
+            RenderType renderType = ItemBlockRenderTypes.getRenderType(state, false);
+            renderBlockStateLayer(
+                    state, model, poseStack, buffer, combinedLight, combinedOverlay,
+                    red, green, blue, renderType
+            );
+        }
+    }
+
+    private void renderBlockStateLayer(
+            BlockState state,
+            BakedModel model,
+            PoseStack poseStack,
+            MultiBufferSource buffer,
+            int combinedLight,
+            int combinedOverlay,
+            float red,
+            float green,
+            float blue,
+            RenderType renderType
+    ) {
         blockRenderer.getModelRenderer().renderModel(
                 poseStack.last(),
                 buffer.getBuffer(renderType),
                 state,
-                blockRenderer.getBlockModel(state),
+                model,
                 red,
                 green,
                 blue,

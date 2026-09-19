@@ -256,5 +256,16 @@
   "jade.easyfarmersdelightcompat.waiting.cutting_tool": "Esperando una herramienta compatible con la Cutting Board",
   "jade.easyfarmersdelightcompat.wrong_tool.pickaxe": "Herramienta incorrecta: se requiere un pico",
   "jade.easyfarmersdelightcompat.wrong_tool.shovel": "Herramienta incorrecta: se requiere una pala",
-  "jade.easyfarmersdelightcompat.wrong_tool.cutting_tool": "Herramienta incorrecta: se requiere una herramienta compatible con la Cutting Board"
+  "jade.easyfarmersdelightcompat.wrong_tool.cutting_tool": "Herramienta incorrecta: se requiere una herramienta compatible con la Cutting Board",
+  "easyfarmersdelightcompat.viewer.guide.tall_definition.title": "Cultivo alto — %s",
+  "easyfarmersdelightcompat.viewer.guide.tall_definition.line1": "%s se maneja como un cultivo virtual de dos bloques de altura dentro del Rich Farmer.",
+  "easyfarmersdelightcompat.viewer.guide.tall_definition.line2": "La definición cargada cosecha en edad %s y devuelve el cultivo a edad %s.",
+  "easyfarmersdelightcompat.viewer.guide.tall_definition.line3": "Las mitades inferior y superior se renderizan juntas y permanecen sincronizadas durante el crecimiento.",
+  "easyfarmersdelightcompat.viewer.guide.tall_definition.line4": "Rich Soil sólo puede acelerar el crecimiento cuando la definición cargada lo permite.",
+  "easyfarmersdelightcompat.viewer.guide.fruits_delight_orchard.title": "Rich Farmer — Huertos de Fruits Delight",
+  "easyfarmersdelightcompat.viewer.guide.fruits_delight_orchard.line1": "Con Fruits Delight instalado, las hojas productivas de sus árboles frutales pueden injertarse en un soporte colocado o dentro de un Rich Farmer.",
+  "easyfarmersdelightcompat.viewer.guide.fruits_delight_orchard.line2": "Los árboles frutales compatibles siguen sus estados reales de hojas → flores → frutos. Durian se excluye intencionalmente porque su fruto se desarrolla como un bloque colgante separado y cae al madurar.",
+  "easyfarmersdelightcompat.viewer.guide.fruits_delight_orchard.line3": "Sobre Rich Soil el injerto crece y produce la fruta correspondiente del mod original; las hojas no productivas siguen siendo decorativas.",
+  "easyfarmersdelightcompat.viewer.guide.fruits_delight_orchard.line4": "En un soporte colocado, la fruta madura requiere Tijeras y clic derecho; dentro de un Rich Farmer la cosecha se automatiza cuando hay Tijeras.",
+  "easyfarmersdelightcompat.viewer.guide.fruits_delight_orchard.line5": "La integración es opcional y sólo se carga cuando existen los registros correspondientes de Fruits Delight."
 }

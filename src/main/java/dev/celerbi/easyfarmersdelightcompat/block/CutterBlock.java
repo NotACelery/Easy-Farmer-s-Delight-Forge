@@ -37,11 +37,27 @@ import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.network.NetworkHooks;
 
 public final class CutterBlock extends Block implements EntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+
+    // Match the hollow cage geometry used by Farmers and Noise Switches.
+    // Leaving Cutter on Block's default full-cube shape makes the light engine
+    // treat the cell differently when a solid block touches one of its faces,
+    // which darkens the corresponding interior face of the cage.
+    private static final VoxelShape CUTTER_SHAPE = Shapes.or(
+            Block.box(0D, 0D, 0D, 16D, 1D, 16D),
+            Block.box(0D, 15D, 0D, 16D, 16D, 16D),
+            Block.box(0D, 0D, 0D, 1D, 16D, 16D),
+            Block.box(15D, 0D, 0D, 16D, 16D, 16D),
+            Block.box(0D, 0D, 0D, 16D, 16D, 1D),
+            Block.box(0D, 0D, 15D, 16D, 16D, 16D)
+    );
     public CutterBlock(Properties properties) {
         super(properties);
         registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
@@ -65,6 +81,11 @@ public final class CutterBlock extends Block implements EntityBlock {
     @Override
     public BlockState mirror(BlockState s, Mirror m) {
         return s.rotate(m.getRotation(s.getValue(FACING)));
+    }
+
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return CUTTER_SHAPE;
     }
 
     @Override

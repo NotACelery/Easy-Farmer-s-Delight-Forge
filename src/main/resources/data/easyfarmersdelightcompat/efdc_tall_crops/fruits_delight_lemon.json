@@ -1,0 +1,28 @@
+{
+  "planting": {
+    "item": "fruitsdelight:lemon_seeds"
+  },
+  "crop_block": "fruitsdelight:lemon_tree",
+  "age": {
+    "property": "age",
+    "min": 0,
+    "max": 4,
+    "harvest": 4,
+    "post_harvest": 2
+  },
+  "halves": {
+    "property": "half",
+    "lower": "lower",
+    "upper": "upper",
+    "upper_from_age": 2
+  },
+  "harvest": {
+    "strategy": "random_item",
+    "item": "fruitsdelight:lemon",
+    "display_item": "fruitsdelight:lemon",
+    "min_count": 1,
+    "max_count": 2,
+    "full_age_bonus": 0
+  },
+  "rich_soil": true
+}

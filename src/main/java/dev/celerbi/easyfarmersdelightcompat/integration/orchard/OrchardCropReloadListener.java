@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.resources.ResourceLocation;
@@ -21,7 +22,11 @@ public final class OrchardCropReloadListener extends SimpleJsonResourceReloadLis
     }
 
     @Override
-    protected void apply(Map<ResourceLocation, JsonElement> resources, ResourceManager manager, ProfilerFiller profiler) {
+    protected void apply(
+            Map<ResourceLocation, JsonElement> resources,
+            ResourceManager manager,
+            ProfilerFiller profiler
+    ) {
         Map<ResourceLocation, OrchardCropDefinition> loaded = new LinkedHashMap<>();
         resources.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(entry -> {
             ResourceLocation id = entry.getKey();
@@ -31,13 +36,23 @@ public final class OrchardCropReloadListener extends SimpleJsonResourceReloadLis
                 }
                 JsonObject json = entry.getValue().getAsJsonObject();
                 OrchardCropDefinition definition = OrchardCropDefinition.parse(id, json);
+                if (definition != null && OrchardCropDefinitions.isExplicitlyExcluded(definition)) {
+                    EasyFarmersDelightCompat.LOGGER.debug(
+                            "Ignoring intentionally excluded orchard definition {}.", id);
+                    return;
+                }
+                if (definition != null && OrchardCropDefinitions.isRuntimeSuppressedDefinition(id)) {
+                    EasyFarmersDelightCompat.LOGGER.debug(
+                            "Using dedicated apple-tree compatibility; ignoring vanilla orchard fallback {}.", id);
+                    return;
+                }
                 if (definition != null) loaded.put(id, definition);
             } catch (RuntimeException exception) {
-                System.err.println("[Easy Farmer's Delight] Skipping invalid orchard definition "
-                        + id + ": " + exception.getMessage());
+                EasyFarmersDelightCompat.LOGGER.warn(
+                                "Skipping invalid orchard definition {}: {}", id, exception.getMessage());
             }
         });
         OrchardCropDefinitions.replace(loaded);
-        System.out.println("[Easy Farmer's Delight] Loaded " + loaded.size() + " orchard definition(s).");
+        EasyFarmersDelightCompat.LOGGER.info("Loaded {} orchard definition(s).", loaded.size());
     }
 }

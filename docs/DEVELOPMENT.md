@@ -1,13 +1,13 @@
-# Easy Farmer's Delight 1.4.3 — Development Reference
+# Easy Farmer's Delight 1.4.4 — Development Reference
 
-This document describes the **current 1.4.3 architecture and invariants**. Straightforward implementation details are
+This document describes the **current 1.4.4 architecture and invariants**. Straightforward implementation details are
 kept in code; cross-class lifecycle rules, persistence contracts, compatibility boundaries and non-obvious behavior
 belong here so Java sources can stay minimally commented.
 
 ## 1. Release identity
 
 - Public name: **Easy Farmer's Delight**.
-- Public version: **1.4.3**.
+- Public version: **1.4.4** (Forge 1.20.1).
 - Technical mod ID / registry namespace: `easyfarmersdelightcompat`.
 - Java package root: `dev.celerbi.easyfarmersdelightcompat`.
 - Artifact stem: `easy-farmers-delight`.
@@ -131,6 +131,10 @@ Actual fruit drops use the vanilla loot path so tool enchantments keep normal me
 
 ### 7.7 Regrowing crops
 
+Forge 1.20.1 includes an optional **Delightful Cantaloupe** definition. It models Delightful 3.8.x as a four-stage
+regrowing crop (`age=0..3`), harvests one Cantaloupe at age 3 and returns the virtual plant to age 0. No Delightful
+Java classes are linked; absent registry entries simply skip the definition.
+
 Definitions live under `data/<namespace>/efdc_regrowing_crops/*.json` and declare planting item/tag, crop block,
 age property/range, harvest age, post-harvest age, harvest strategy/count and Rich Soil eligibility.
 
@@ -174,6 +178,21 @@ mature loot bonus.
 
 Persisted face identity is sufficient to render/dismantle an existing crop even if its datapack definition later
 vanishes.
+
+### 7.9 Data-driven tall and stem crop families
+
+Compatibility that needs more than a normal CropBlock is modeled explicitly instead of being forced through the
+Easy Villagers harvest/replant path. Tall, stem and similar definitions keep their own stage/progression data, render
+state and Rich Soil eligibility. Optional integrations resolve registry IDs at runtime so a missing source mod is
+safe.
+
+### 7.10 Persistent multi-section crop lifecycles
+
+Some external crops grow as multiple persistent sections and are harvested without uprooting the plant. Rich Farmer
+stores those sections independently, applies the source mod's growth gates, harvests only mature sections and resets
+only the harvested section to its native post-harvest stage. Existing one-section saves are migrated forward before
+normal harvesting resumes. This avoids the legacy behavior where the first mature section could cause the whole crop
+to be harvested and replanted too early.
 
 ## 8. Farmer item crop tooltip
 
@@ -338,10 +357,7 @@ A release source tree must pass:
 - no Easy Villagers visual asset references.
 - ZIP CRC verification.
 
-The internal `DEV_1.4.0_ROADMAP.md` is not a public release artifact and must be excluded from final source packages.
-
-
-## 15. Orchard definitions (1.4.2+)
+## 20. Orchard definitions (1.4.2+)
 
 Orchard definitions live under `data/easyfarmersdelightcompat/efdc_orchard_crops/*.json`. The runtime loader resolves
 optional registry IDs without classloading the source mod. A definition supplies a planting item or tag, a render
@@ -378,3 +394,21 @@ Croptopia Cinnamon is intentionally handled as a narrow `AxeActionResolver` comp
 implements the bark drop through its tool-modification event rather than Minecraft's normal Axe stripping map. The
 Cutter therefore resolves Cinnamon Log/Wood to the corresponding stripped block plus one Cinnamon as one atomic
 operation.
+
+## 21. 1.4.4 compatibility and corrections
+
+The 1.4.4 Forge release expands/updates compatibility with **Fruits Delight 1.1.3**, **Delightful 3.8.x**,
+**Hearth & Harvest**, **Regions Unexplored**, **Croptopia**, **Twilight Forest**, **Deep Aether** and
+**Eternal Starlight** through the data-driven crop families and Forge 1.20.1 adapter layer.
+
+The Grafting Support/Orchard path was hardened after earlier implementations exposed transient leaf placement,
+incorrect canopy interaction geometry and inconsistent leaf mining/particle behavior. The final implementation owns
+the canopy interaction cleanly, synchronizes its reserved upper block, uses the corrected selection/collision shape
+and preserves the installed canopy/orchard snapshot for save/load and migration. Apple-provider priority also avoids
+competing vanilla Apple Orchards when a dedicated supported apple-tree provider is installed.
+
+Hearth & Harvest persistent structural crops no longer fall through the normal harvest-and-replant path. Their
+independent sections can finish growing and be harvested/reset without uprooting the whole virtual plant.
+
+Forge additionally retains the loader-specific **Delightful 3.8.x** compatibility definitions and viewer/audit
+coverage that are not shipped on NeoForge 1.21.1.

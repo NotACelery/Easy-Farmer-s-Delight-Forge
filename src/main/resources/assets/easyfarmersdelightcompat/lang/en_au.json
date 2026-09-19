@@ -256,5 +256,16 @@
   "jade.easyfarmersdelightcompat.waiting.cutting_tool": "Waiting for a compatible Cutting Board tool",
   "jade.easyfarmersdelightcompat.wrong_tool.pickaxe": "Wrong tool: Pickaxe required",
   "jade.easyfarmersdelightcompat.wrong_tool.shovel": "Wrong tool: Shovel required",
-  "jade.easyfarmersdelightcompat.wrong_tool.cutting_tool": "Wrong tool: compatible Cutting Board tool required"
+  "jade.easyfarmersdelightcompat.wrong_tool.cutting_tool": "Wrong tool: compatible Cutting Board tool required",
+  "easyfarmersdelightcompat.viewer.guide.tall_definition.title": "Tall Crop — %s",
+  "easyfarmersdelightcompat.viewer.guide.tall_definition.line1": "%s is handled as a two-block-tall virtual crop inside the Rich Farmer.",
+  "easyfarmersdelightcompat.viewer.guide.tall_definition.line2": "The loaded definition harvests at age %s and returns the crop to age %s.",
+  "easyfarmersdelightcompat.viewer.guide.tall_definition.line3": "Both lower and upper halves are rendered together and remain synchronized while the crop grows.",
+  "easyfarmersdelightcompat.viewer.guide.tall_definition.line4": "Rich Soil may accelerate growth only when the loaded definition allows it.",
+  "easyfarmersdelightcompat.viewer.guide.fruits_delight_orchard.title": "Rich Farmer — Fruits Delight Orchards",
+  "easyfarmersdelightcompat.viewer.guide.fruits_delight_orchard.line1": "With Fruits Delight installed, its productive fruit-tree leaves can be grafted onto a placed support or into a Rich Farmer.",
+  "easyfarmersdelightcompat.viewer.guide.fruits_delight_orchard.line2": "Supported fruit trees follow their real leaves → flowers → fruits states. Durian is intentionally excluded because its fruit develops as a separate hanging block and falls when mature.",
+  "easyfarmersdelightcompat.viewer.guide.fruits_delight_orchard.line3": "Above Rich Soil the graft grows and produces the source mod’s matching fruit; non-productive leaves remain decorative.",
+  "easyfarmersdelightcompat.viewer.guide.fruits_delight_orchard.line4": "On a placed support, ripe fruit requires Shears and right-click; inside a Rich Farmer harvesting is automated when Shears are available.",
+  "easyfarmersdelightcompat.viewer.guide.fruits_delight_orchard.line5": "The integration is optional and loads only when the referenced Fruits Delight registry entries exist."
 }

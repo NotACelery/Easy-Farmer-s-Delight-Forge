@@ -1,5 +1,6 @@
 package dev.celerbi.easyfarmersdelightcompat.integration;
 
+import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.VillagerNoiseSwitchBlockEntity;
 import java.lang.reflect.Method;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -104,8 +105,7 @@ public final class NoiseSwitchVillagerAdapter {
 
     private void fail(Throwable error) {
         if (!failed) {
-            System.err.println("[Easy Farmer's Delight] Easy Villagers VillagerItem adapter failed.");
-            error.printStackTrace();
+            EasyFarmersDelightCompat.LOGGER.error("Easy Villagers VillagerItem adapter failed.", error);
         }
         failed = true;
         if (cachedVillager != null) {

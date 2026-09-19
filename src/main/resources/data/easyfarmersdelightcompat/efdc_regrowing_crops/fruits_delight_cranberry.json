@@ -1,0 +1,21 @@
+{
+  "planting": {
+    "item": "fruitsdelight:cranberry"
+  },
+  "crop_block": "fruitsdelight:cranberry_bush",
+  "age": {
+    "property": "age",
+    "min": 0,
+    "max": 4,
+    "harvest": 4,
+    "post_harvest": 2
+  },
+  "harvest": {
+    "strategy": "random_item",
+    "item": "fruitsdelight:cranberry",
+    "min_count": 1,
+    "max_count": 2,
+    "full_age_bonus": 0
+  },
+  "rich_soil": true
+}

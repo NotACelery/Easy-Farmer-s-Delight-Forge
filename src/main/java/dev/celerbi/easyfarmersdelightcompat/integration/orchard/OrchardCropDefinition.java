@@ -1,7 +1,14 @@
 package dev.celerbi.easyfarmersdelightcompat.integration.orchard;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -39,6 +46,7 @@ public final class OrchardCropDefinition {
     private final int maxAge;
     private final int matureAge;
     private final int postHarvestAge;
+    private final List<Map<String, String>> stages;
     private final ResourceLocation harvestItemId;
     private final int minCount;
     private final int maxCount;
@@ -57,6 +65,7 @@ public final class OrchardCropDefinition {
             int maxAge,
             int matureAge,
             int postHarvestAge,
+            List<Map<String, String>> stages,
             ResourceLocation harvestItemId,
             int minCount,
             int maxCount,
@@ -74,6 +83,7 @@ public final class OrchardCropDefinition {
         this.maxAge = maxAge;
         this.matureAge = matureAge;
         this.postHarvestAge = postHarvestAge;
+        this.stages = stages;
         this.harvestItemId = harvestItemId;
         this.minCount = minCount;
         this.maxCount = maxCount;
@@ -92,15 +102,44 @@ public final class OrchardCropDefinition {
         }
 
         ResourceLocation renderBlockId = requiredLocation(json, "render_block");
-        JsonObject age = requireObject(json, "age");
-        String ageProperty = age.has("property") ? age.get("property").getAsString() : "";
-        int minAge = requiredInt(age, "min");
-        int maxAge = requiredInt(age, "max");
-        int matureAge = requiredInt(age, "mature");
-        int postHarvestAge = requiredInt(age, "post_harvest");
+        Block renderBlock = BuiltInRegistries.BLOCK.getOptional(renderBlockId)
+                .filter(block -> block != Blocks.AIR)
+                .orElse(null);
+        if (renderBlock == null) {
+            return null;
+        }
+
+        boolean hasLegacyAge = json.has("age");
+        boolean hasStages = json.has("stages");
+        if (hasLegacyAge == hasStages) {
+            throw new JsonParseException("orchard definition must define exactly one of age or stages");
+        }
+
+        String ageProperty = "";
+        int minAge;
+        int maxAge;
+        int matureAge;
+        int postHarvestAge;
+        List<Map<String, String>> stages = List.of();
+
+        if (hasStages) {
+            stages = parseStages(json.get("stages"), renderBlockId, renderBlock);
+            minAge = 0;
+            maxAge = stages.size() - 1;
+            matureAge = json.has("mature_stage") ? json.get("mature_stage").getAsInt() : maxAge;
+            postHarvestAge = json.has("post_harvest_stage") ? json.get("post_harvest_stage").getAsInt() : minAge;
+        } else {
+            JsonObject age = requireObject(json, "age");
+            ageProperty = age.has("property") ? age.get("property").getAsString() : "";
+            minAge = requiredInt(age, "min");
+            maxAge = requiredInt(age, "max");
+            matureAge = requiredInt(age, "mature");
+            postHarvestAge = requiredInt(age, "post_harvest");
+        }
+
         if (minAge < 0 || maxAge < minAge || matureAge < minAge || matureAge > maxAge
                 || postHarvestAge < minAge || postHarvestAge > maxAge) {
-            throw new JsonParseException("invalid orchard age range");
+            throw new JsonParseException("invalid orchard age/stage range");
         }
 
         JsonObject harvest = requireObject(json, "harvest");
@@ -123,23 +162,18 @@ public final class OrchardCropDefinition {
                 .isEmpty()) {
             return null;
         }
-        Block renderBlock = BuiltInRegistries.BLOCK.getOptional(renderBlockId)
-                .filter(block -> block != Blocks.AIR)
-                .orElse(null);
-        if (renderBlock == null) {
-            return null;
-        }
         if (BuiltInRegistries.ITEM.getOptional(harvestItemId).filter(item -> item != Items.AIR).isEmpty()) {
             return null;
         }
 
         if (!ageProperty.isBlank()) {
+            final String validatedAgeProperty = ageProperty;
             BlockState defaultState = renderBlock.defaultBlockState();
             Property<?> raw = defaultState.getProperties().stream()
-                    .filter(property -> property.getName().equals(ageProperty))
+                    .filter(property -> property.getName().equals(validatedAgeProperty))
                     .findFirst()
                     .orElseThrow(() -> new JsonParseException(
-                            "render block " + renderBlockId + " has no age property '" + ageProperty + "'"));
+                            "render block " + renderBlockId + " has no age property '" + validatedAgeProperty + "'"));
             if (!(raw instanceof IntegerProperty integerProperty)) {
                 throw new JsonParseException("age property '" + ageProperty + "' is not integer-valued");
             }
@@ -154,13 +188,14 @@ public final class OrchardCropDefinition {
         TagKey<Item> plantingTag = plantingTagId == null ? null : TagKey.create(Registries.ITEM, plantingTagId);
         return new OrchardCropDefinition(
                 id, plantingItemId, plantingTag, renderBlockId, ageProperty,
-                minAge, maxAge, matureAge, postHarvestAge,
+                minAge, maxAge, matureAge, postHarvestAge, stages,
                 harvestItemId, minCount, maxCount, bonusChance, bonusCount,
                 richSoil, renderStyle
         );
     }
 
     public ResourceLocation id() { return id; }
+    public ResourceLocation plantingItemId() { return plantingItemId; }
     public ResourceLocation renderBlockId() { return renderBlockId; }
     public String ageProperty() { return ageProperty; }
     public int minAge() { return minAge; }
@@ -170,6 +205,7 @@ public final class OrchardCropDefinition {
     public boolean richSoil() { return richSoil; }
     public RenderStyle renderStyle() { return renderStyle; }
     public ResourceLocation harvestItemId() { return harvestItemId; }
+    public boolean usesPropertyStages() { return !stages.isEmpty(); }
 
     public boolean matchesPlanting(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
@@ -189,12 +225,16 @@ public final class OrchardCropDefinition {
         Block block = BuiltInRegistries.BLOCK.get(renderBlockId);
         if (block == null || block == Blocks.AIR) return Blocks.AIR.defaultBlockState();
         BlockState state = block.defaultBlockState();
-        if (ageProperty.isBlank()) return state;
-        Property<?> raw = state.getProperties().stream()
-                .filter(property -> property.getName().equals(ageProperty))
-                .findFirst().orElse(null);
-        if (!(raw instanceof IntegerProperty integerProperty)) return state;
         int safe = Math.max(minAge, Math.min(maxAge, age));
+        if (!stages.isEmpty()) {
+            for (Map.Entry<String, String> entry : stages.get(safe).entrySet()) {
+                state = setSerializedProperty(state, entry.getKey(), entry.getValue(), false);
+            }
+            return state;
+        }
+        if (ageProperty.isBlank()) return state;
+        Property<?> raw = findProperty(state, ageProperty);
+        if (!(raw instanceof IntegerProperty integerProperty)) return state;
         return state.setValue(integerProperty, safe);
     }
 
@@ -214,6 +254,78 @@ public final class OrchardCropDefinition {
     public ItemStack harvestDisplayStack() {
         Item item = BuiltInRegistries.ITEM.get(harvestItemId);
         return item == null || item == Items.AIR ? ItemStack.EMPTY : new ItemStack(item);
+    }
+
+    private static List<Map<String, String>> parseStages(
+            JsonElement element, ResourceLocation renderBlockId, Block renderBlock
+    ) {
+        if (element == null || !element.isJsonArray()) {
+            throw new JsonParseException("stages must be a JSON array");
+        }
+        JsonArray array = element.getAsJsonArray();
+        if (array.size() == 0) {
+            throw new JsonParseException("stages must contain at least one stage");
+        }
+        List<Map<String, String>> parsed = new ArrayList<>();
+        for (int index = 0; index < array.size(); index++) {
+            JsonElement stageElement = array.get(index);
+            if (!stageElement.isJsonObject()) {
+                throw new JsonParseException("stage " + index + " must be an object");
+            }
+            JsonObject stage = stageElement.getAsJsonObject();
+            JsonObject properties = requireObject(stage, "properties");
+            if (properties.entrySet().isEmpty()) {
+                throw new JsonParseException("stage " + index + " has no properties");
+            }
+            Map<String, String> values = new LinkedHashMap<>();
+            BlockState validationState = renderBlock.defaultBlockState();
+            for (Map.Entry<String, JsonElement> entry : properties.entrySet()) {
+                if (!entry.getValue().isJsonPrimitive()) {
+                    throw new JsonParseException("stage property '" + entry.getKey() + "' must be a primitive value");
+                }
+                String serialized = entry.getValue().getAsString();
+                validationState = setSerializedProperty(validationState, entry.getKey(), serialized, true);
+                values.put(entry.getKey(), serialized);
+            }
+            parsed.add(Map.copyOf(values));
+        }
+        return List.copyOf(parsed);
+    }
+
+    private static Property<?> findProperty(BlockState state, String name) {
+        return state.getProperties().stream()
+                .filter(property -> property.getName().equals(name))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private static BlockState setSerializedProperty(BlockState state, String name, String value, boolean strict) {
+        Property<?> property = findProperty(state, name);
+        if (property == null) {
+            if (strict) {
+                throw new JsonParseException("block " + BuiltInRegistries.BLOCK.getKey(state.getBlock())
+                        + " has no property '" + name + "'");
+            }
+            return state;
+        }
+        return setSerializedProperty(state, property, value, strict);
+    }
+
+    private static <T extends Comparable<T>> BlockState setSerializedProperty(
+            BlockState state,
+            Property<T> property,
+            String value,
+            boolean strict
+    ) {
+        Optional<T> parsed = property.getValue(value);
+        if (parsed.isEmpty()) {
+            if (strict) {
+                throw new JsonParseException(
+                    "property '" + property.getName() + "' does not accept value '" + value + "'");
+            }
+            return state;
+        }
+        return state.setValue(property, parsed.get());
     }
 
     private static JsonObject requireObject(JsonObject parent, String key) {

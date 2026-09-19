@@ -13,6 +13,8 @@ import dev.celerbi.easyfarmersdelightcompat.integration.regrowing.RegrowingCropD
 import dev.celerbi.easyfarmersdelightcompat.integration.regrowing.RegrowingCropDefinitions;
 import dev.celerbi.easyfarmersdelightcompat.integration.stem.StemCropDefinition;
 import dev.celerbi.easyfarmersdelightcompat.integration.stem.StemCropDefinitions;
+import dev.celerbi.easyfarmersdelightcompat.integration.tall.TallCropDefinition;
+import dev.celerbi.easyfarmersdelightcompat.integration.tall.TallCropDefinitions;
 import dev.celerbi.easyfarmersdelightcompat.integration.orchard.OrchardCropDefinition;
 import dev.celerbi.easyfarmersdelightcompat.integration.orchard.OrchardCropDefinitions;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlockEntities;
@@ -93,8 +95,11 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
     private static final String KEY_REGROWING_PLANTING_ITEM = "EfdcRegrowingPlantingItem";
     private static final String KEY_SELECTED_PLANTING_ITEM = "EfdcSelectedPlantingItem";
     private static final String KEY_STEM_DEFINITION = "EfdcStemDefinition";
+    private static final String KEY_TALL_DEFINITION = "EfdcTallDefinition";
     private static final String KEY_STEM_FRUIT = "EfdcStemFruit";
     private static final String KEY_NOCTURNAL_MILLET_PANICLE_AGE = "EfdcNocturnalMilletPanicleAge";
+    private static final String KEY_HEARTH_CORN_MIDDLE_AGE = "EfdcHearthCornMiddleAge";
+    private static final String KEY_HEARTH_CORN_TOP_AGE = "EfdcHearthCornTopAge";
     private static final String KEY_GRAFTING_SUPPORT = "EfdcGraftingSupport";
     private static final String KEY_ORCHARD_DEFINITION = "EfdcOrchardDefinition";
     private static final String KEY_ORCHARD_PLANTING_ITEM = "EfdcOrchardPlantingItem";
@@ -138,6 +143,10 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             "eternal_starlight", "nocturnal_millet_panicle");
     private static final ResourceLocation NOCTURNAL_MILLET_ITEM_ID = new ResourceLocation(
             "eternal_starlight", "nocturnal_millet");
+    private static final ResourceLocation HEARTH_CORN_STALK_ID = new ResourceLocation("hearthandharvest", "corn_stalk");
+    private static final ResourceLocation HEARTH_CORN_ITEM_ID = new ResourceLocation("hearthandharvest", "corn");
+    private static final ResourceLocation HEARTH_CORN_KERNELS_ID = new ResourceLocation(
+            "hearthandharvest", "corn_kernels");
     private static final ResourceLocation FORGOTTEN_NOCTURNAL_MILLET_ITEM_ID = new ResourceLocation(
             "eternal_starlight", "forgotten_nocturnal_millet");
     private static final ResourceLocation DEEP_AETHER_SQUASH_STEM_ID = new ResourceLocation(
@@ -194,8 +203,11 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
     private ResourceLocation regrowingPlantingItemId;
     private ResourceLocation selectedPlantingItemId;
     private ResourceLocation stemDefinitionId;
+    private ResourceLocation tallDefinitionId;
     private ResourceLocation stemFruitId;
     private int nocturnalMilletPanicleAge = -1;
+    private int hearthCornMiddleAge = -1;
+    private int hearthCornTopAge = -1;
     private boolean graftingSupport;
     private ResourceLocation orchardDefinitionId;
     private ResourceLocation orchardPlantingItemId;
@@ -347,7 +359,8 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
                 .filter(property -> property.getName().equals(orchardAgeProperty))
                 .findFirst()
                 .orElse(null);
-        if (raw instanceof IntegerProperty integerProperty && integerProperty.getPossibleValues().contains(orchardAge)) {
+        if (raw instanceof IntegerProperty integerProperty
+                && integerProperty.getPossibleValues().contains(orchardAge)) {
             return state.setValue(integerProperty, orchardAge);
         }
         return state;
@@ -779,6 +792,14 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         return nocturnalMilletPanicleAge;
     }
 
+    public int hearthCornMiddleAge() {
+        return hearthCornMiddleAge;
+    }
+
+    public int hearthCornTopAge() {
+        return hearthCornTopAge;
+    }
+
     public Block nocturnalMilletPanicleBlock() {
         Block block = BuiltInRegistries.BLOCK.get(NOCTURNAL_MILLET_PANICLE_ID);
         return block == null ? Blocks.AIR : block;
@@ -835,6 +856,13 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
                     : NOCTURNAL_MILLET_ITEM_ID;
             Item millet = BuiltInRegistries.ITEM.get(harvestId);
             return millet == null || millet == Items.AIR ? ItemStack.EMPTY : new ItemStack(millet);
+        }
+        TallCropDefinition tall = currentTallDefinition(crop);
+        if (tall != null) {
+            ItemStack harvest = tall.harvestDisplayStack();
+            if (!harvest.isEmpty()) {
+                return harvest;
+            }
         }
         RegrowingCropDefinition regrowing = currentRegrowingDefinition(crop);
         if (regrowing != null) {
@@ -1010,6 +1038,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
     }
 
     public void selectRice(RegistryAccess registries) {
+        tallDefinitionId = null;
         fruitReady = false;
         paddySand = false;
         sugarCaneHeight = 0;
@@ -1021,6 +1050,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
     }
 
     public void selectTomato(RegistryAccess registries) {
+        tallDefinitionId = null;
         fruitReady = false;
         Block buddingTomato = BuiltInRegistries.BLOCK.get(BUDDING_TOMATO_ID);
         easyVillagers.setCropState(withAge(buddingTomato.defaultBlockState(), 0), registries);
@@ -1048,6 +1078,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             return false;
         }
 
+        tallDefinitionId = null;
         easyVillagers.setCropState(withAge(colony.defaultBlockState(), 0), registries);
         fruitReady = false;
         baseProgress = 0;
@@ -1099,9 +1130,50 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         selectedPlantingItemId = itemId(seedStack);
         regrowingDefinitionId = null;
         regrowingPlantingItemId = null;
+        tallDefinitionId = null;
         resetCropProgress();
         setChanged();
         return true;
+    }
+
+    public boolean canSelectTallCrop(ItemStack stack) {
+        if (!variant().isRich() || variant().isAquatic() || hasAttachedSetup()
+                || stack == null || stack.isEmpty() || level == null) {
+            return false;
+        }
+        if (easyVillagers.getCrop(level.registryAccess()) != null) {
+            return false;
+        }
+        return TallCropDefinitions.findPlanting(stack).isPresent();
+    }
+
+    public boolean selectTallCrop(ItemStack stack, RegistryAccess registries) {
+        if (!variant().isRich() || variant().isAquatic() || hasAttachedSetup()
+                || stack == null || stack.isEmpty() || easyVillagers.getCrop(registries) != null) {
+            return false;
+        }
+        TallCropDefinition definition = TallCropDefinitions.findPlanting(stack).orElse(null);
+        if (definition == null) {
+            return false;
+        }
+        BlockState crop = definition.initialState();
+        if (crop == null || crop.isAir()) {
+            return false;
+        }
+        easyVillagers.setCropState(crop, registries);
+        tallDefinitionId = definition.id();
+        selectedPlantingItemId = itemId(stack);
+        regrowingDefinitionId = null;
+        regrowingPlantingItemId = null;
+        stemDefinitionId = null;
+        resetCropProgress();
+        setChanged();
+        return true;
+    }
+
+    public BlockState tallCropUpperState(BlockState lowerState) {
+        TallCropDefinition definition = currentTallDefinition(lowerState);
+        return definition == null ? Blocks.AIR.defaultBlockState() : definition.upperState(lowerState);
     }
 
     public boolean canSelectRegrowingCrop(ItemStack stack) {
@@ -1136,6 +1208,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         regrowingPlantingItemId = itemId(stack);
         selectedPlantingItemId = regrowingPlantingItemId;
         stemDefinitionId = null;
+        tallDefinitionId = null;
         resetCropProgress();
         setChanged();
         return true;
@@ -1163,6 +1236,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         easyVillagers.setCropState(crop, registries);
         selectedPlantingItemId = itemId(stack);
         stemDefinitionId = null;
+        tallDefinitionId = null;
         regrowingDefinitionId = null;
         regrowingPlantingItemId = null;
         resetCropProgress();
@@ -1176,7 +1250,14 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
 
     public void onNormalCropSelected(ItemStack plantingStack) {
         selectedPlantingItemId = itemId(plantingStack);
+        if (selectedPlantingItemId == null && level != null) {
+            BlockState selected = easyVillagers.getCrop(level.registryAccess());
+            if (isHearthCornState(selected)) {
+                selectedPlantingItemId = HEARTH_CORN_KERNELS_ID;
+            }
+        }
         stemDefinitionId = null;
+        tallDefinitionId = null;
         regrowingDefinitionId = null;
         regrowingPlantingItemId = null;
         resetCropProgress();
@@ -1187,6 +1268,8 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         fruitReady = false;
         stemFruitId = null;
         nocturnalMilletPanicleAge = -1;
+        hearthCornMiddleAge = -1;
+        hearthCornTopAge = -1;
         baseProgress = 0;
         ropeOneProgress = 0;
         ropeTwoProgress = 0;
@@ -1249,6 +1332,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
 
     public ItemStack removeSelectedCrop(RegistryAccess registries) {
         BlockState selected = easyVillagers.getCrop(registries);
+        TallCropDefinition tallDefinition = selected == null ? null : currentTallDefinition(selected);
         RegrowingCropDefinition regrowingDefinition = selected == null ? null : currentRegrowingDefinition(selected);
         StemCropDefinition stemDefinition = selected == null ? null : currentStemDefinition(selected);
         ResourceLocation storedRegrowingPlantingItem = regrowingPlantingItemId;
@@ -1261,6 +1345,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         }
         boolean rice = selected != null && RICE_CROP_ID.equals(BuiltInRegistries.BLOCK.getKey(selected.getBlock()));
         boolean tomato = isTomatoState(selected);
+        boolean hearthCorn = isHearthCornState(selected);
         Item stemSeedItem = seedItemForStem(selected);
         ResourceLocation mushroomItemId = mushroomItemForColony(selected);
         ItemStack removed = easyVillagers.removeCrop(registries);
@@ -1273,12 +1358,21 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         fruitReady = false;
         stemFruitId = null;
         nocturnalMilletPanicleAge = -1;
+        hearthCornMiddleAge = -1;
+        hearthCornTopAge = -1;
         regrowingDefinitionId = null;
         regrowingPlantingItemId = null;
         selectedPlantingItemId = null;
         stemDefinitionId = null;
+        tallDefinitionId = null;
         setChanged();
 
+        if (tallDefinition != null && storedSelectedPlantingItem == null) {
+            ItemStack canonical = tallDefinition.canonicalPlantingStack();
+            if (!canonical.isEmpty()) {
+                return canonical;
+            }
+        }
         if (regrowingDefinition != null) {
             if (storedRegrowingPlantingItem != null) {
                 Item planting = BuiltInRegistries.ITEM.get(storedRegrowingPlantingItem);
@@ -1298,6 +1392,12 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         if (tomato) {
             Item tomatoSeeds = BuiltInRegistries.ITEM.get(TOMATO_SEEDS_ID);
             return new ItemStack(tomatoSeeds);
+        }
+        if (hearthCorn) {
+            Item kernels = BuiltInRegistries.ITEM.get(HEARTH_CORN_KERNELS_ID);
+            if (kernels != null && kernels != Items.AIR) {
+                return new ItemStack(kernels);
+            }
         }
         if (mushroomItemId != null) {
             Item mushroom = BuiltInRegistries.ITEM.get(mushroomItemId);
@@ -1399,6 +1499,10 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         }
         if (isTomatoState(selected)) {
             return new ItemStack(BuiltInRegistries.ITEM.get(TOMATO_SEEDS_ID));
+        }
+        if (isHearthCornState(selected)) {
+            Item kernels = BuiltInRegistries.ITEM.get(HEARTH_CORN_KERNELS_ID);
+            return kernels == null || kernels == Items.AIR ? ItemStack.EMPTY : new ItemStack(kernels);
         }
 
         ResourceLocation mushroomId = mushroomItemForColony(selected);
@@ -1569,9 +1673,14 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
 
         if (!farmer.isBaseHarvestReady(crop) && level.random.nextInt(farmSpeed) == 0) {
             boolean changed;
+            TallCropDefinition tallDefinition = farmer.currentTallDefinition(crop);
             RegrowingCropDefinition regrowingDefinition = farmer.currentRegrowingDefinition(crop);
-            if (farmer.isNocturnalMilletState(crop)) {
+            if (farmer.isHearthCornState(crop)) {
+                changed = farmer.ageHearthCorn(level, registries, crop);
+            } else if (farmer.isNocturnalMilletState(crop)) {
                 changed = farmer.ageNocturnalMillet(registries, crop);
+            } else if (tallDefinition != null) {
+                changed = farmer.ageTallCrop(registries, tallDefinition, crop);
             } else if (regrowingDefinition != null) {
                 changed = farmer.ageRegrowingCrop(registries, regrowingDefinition, crop);
             } else if (farmer.isGenericRegrowingCrop(crop)) {
@@ -1635,12 +1744,20 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             return false;
         }
 
+        if (isHearthCornState(crop)) {
+            return hasHarvestReadyHearthCorn(crop);
+        }
+
         if (isNocturnalMilletState(crop)) {
             return isForgottenNocturnalMillet(crop)
                     && getAge(crop) >= maxAge(crop)
                     && nocturnalMilletPanicleAge >= 2;
         }
 
+        TallCropDefinition tallDefinition = currentTallDefinition(crop);
+        if (tallDefinition != null && tallDefinition.age(crop) >= tallDefinition.harvestAge()) {
+            return true;
+        }
         RegrowingCropDefinition regrowingDefinition = currentRegrowingDefinition(crop);
         if (regrowingDefinition != null
                 && regrowingDefinition.age(crop) >= regrowingDefinition.harvestAge()) {
@@ -1670,10 +1787,17 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         if (crop == null) {
             return false;
         }
+        if (isHearthCornState(crop)) {
+            return hasHarvestReadyHearthCorn(crop);
+        }
         if (isNocturnalMilletState(crop)) {
             return isForgottenNocturnalMillet(crop)
                     && getAge(crop) >= maxAge(crop)
                     && nocturnalMilletPanicleAge >= 2;
+        }
+        TallCropDefinition tallDefinition = currentTallDefinition(crop);
+        if (tallDefinition != null) {
+            return tallDefinition.age(crop) >= tallDefinition.harvestAge();
         }
         RegrowingCropDefinition regrowingDefinition = currentRegrowingDefinition(crop);
         if (regrowingDefinition != null) {
@@ -1754,8 +1878,23 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
                 return;
             }
 
+            if (isHearthCornState(crop)) {
+                if (hasHarvestReadyHearthCorn(crop) && harvestHearthCorn(level, registries, crop)) {
+                    setChanged();
+                }
+                return;
+            }
+
             if (isNocturnalMilletState(crop)) {
                 if (nocturnalMilletPanicleAge >= 2 && harvestNocturnalMillet(registries)) {
+                    setChanged();
+                }
+                return;
+            }
+
+            TallCropDefinition tallDefinition = currentTallDefinition(crop);
+            if (tallDefinition != null && tallDefinition.age(crop) >= tallDefinition.harvestAge()) {
+                if (harvestTallCrop(level, registries, tallDefinition, crop)) {
                     setChanged();
                 }
                 return;
@@ -1822,6 +1961,80 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             harvestWaitingForAdultVillager = true;
         }
         return ready;
+    }
+
+    private TallCropDefinition currentTallDefinition(BlockState crop) {
+        if (!variant().isRich() || variant().isAquatic() || crop == null) {
+            return null;
+        }
+        TallCropDefinition stored = TallCropDefinitions.get(tallDefinitionId).orElse(null);
+        if (stored != null && stored.matchesCrop(crop)) {
+            return stored;
+        }
+        return TallCropDefinitions.findCrop(crop).orElse(null);
+    }
+
+    private boolean ageTallCrop(
+            RegistryAccess registries,
+            TallCropDefinition definition,
+            BlockState crop
+    ) {
+        int age = definition.age(crop);
+        if (age >= definition.harvestAge()) {
+            return false;
+        }
+        BlockState next = definition.lowerState(definition.withAge(crop, Math.min(definition.harvestAge(), age + 1)));
+        easyVillagers.setCropState(next, registries);
+        return true;
+    }
+
+    private boolean harvestTallCrop(
+            ServerLevel level,
+            RegistryAccess registries,
+            TallCropDefinition definition,
+            BlockState crop
+    ) {
+        if (!hasAdultFarmerVillager(registries)) {
+            return false;
+        }
+        int age = definition.age(crop);
+        if (age < definition.harvestAge()) {
+            return false;
+        }
+        Container output = easyVillagers.getOutputInventory(registries);
+        if (output == null) {
+            return false;
+        }
+
+        List<ItemStack> drops;
+        if (definition.usesBlockLoot()) {
+            BlockState harvestState = definition.lowerState(definition.withAge(crop, definition.harvestAge()));
+            LootParams.Builder context = new LootParams.Builder(level)
+                    .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(worldPosition))
+                    .withParameter(LootContextParams.BLOCK_STATE, harvestState)
+                    .withParameter(LootContextParams.TOOL, normalCropHarvestTool());
+            drops = harvestState.getDrops(context);
+        } else {
+            ItemStack harvest = definition.rollHarvest(level.random, age);
+            drops = harvest.isEmpty() ? List.of() : List.of(harvest);
+        }
+
+        if (!canFitAll(output, drops)) {
+            return false;
+        }
+        for (ItemStack drop : drops) {
+            if (!drop.isEmpty()) {
+                insertIntoOutput(output, drop.copy());
+            }
+        }
+        if (!drops.isEmpty()) {
+            output.setChanged();
+        }
+        BlockState reset = definition.lowerState(definition.withAge(crop, definition.postHarvestAge()));
+        easyVillagers.setCropState(reset, registries);
+        level.playSound(null, worldPosition, SoundEvents.VILLAGER_WORK_FARMER,
+                SoundSource.BLOCKS, 1.0F, 0.9F + level.random.nextFloat() * 0.2F);
+        return true;
     }
 
     private RegrowingCropDefinition currentRegrowingDefinition(BlockState crop) {
@@ -2215,6 +2428,31 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             return;
         }
 
+        if (isHearthCornState(crop)) {
+            if (hasHarvestReadyHearthCorn(crop)) {
+                return;
+            }
+            double boostChance = farmersDelight.richSoilBoostChance();
+            if (boostChance > 0.0D && level.random.nextDouble() <= boostChance
+                    && ageHearthCorn(level, registries, crop)) {
+                setChanged();
+            }
+            return;
+        }
+
+        TallCropDefinition tallDefinition = currentTallDefinition(crop);
+        if (tallDefinition != null) {
+            if (!tallDefinition.richSoil() || tallDefinition.age(crop) >= tallDefinition.harvestAge()) {
+                return;
+            }
+            double boostChance = farmersDelight.richSoilBoostChance();
+            if (boostChance > 0.0D && level.random.nextDouble() <= boostChance
+                    && ageTallCrop(registries, tallDefinition, crop)) {
+                setChanged();
+            }
+            return;
+        }
+
         RegrowingCropDefinition regrowingDefinition = currentRegrowingDefinition(crop);
         if (regrowingDefinition != null) {
             if (!regrowingDefinition.richSoil()
@@ -2277,6 +2515,10 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         BlockState crop = easyVillagers.getCrop(registries);
         if (crop == null || crop.is(UNAFFECTED_BY_RICH_SOIL)) {
             return false;
+        }
+
+        if (isHearthCornState(crop) && level instanceof ServerLevel serverLevel) {
+            return ageHearthCorn(serverLevel, registries, crop);
         }
 
         if (BUDDING_TOMATO_ID.equals(BuiltInRegistries.BLOCK.getKey(crop.getBlock()))) {
@@ -2407,6 +2649,9 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         BlockState crop = easyVillagers.getCrop(registries);
         if (crop == null) {
             return false;
+        }
+        if (isHearthCornState(crop)) {
+            return ageHearthCorn(level, registries, crop);
         }
 
         Optional<Property<?>> ageProperty = crop.getProperties().stream()
@@ -2757,6 +3002,130 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
                 && state.getValue(booleanProperty);
     }
 
+    private static boolean isHearthCornState(BlockState state) {
+        return state != null && HEARTH_CORN_STALK_ID.equals(BuiltInRegistries.BLOCK.getKey(state.getBlock()));
+    }
+
+    private boolean hasHarvestReadyHearthCorn(BlockState bottom) {
+        if (!isHearthCornState(bottom)) {
+            return false;
+        }
+        // Lower sections may mature only after the top reaches age 2.
+        boolean structureUnlocked = hearthCornTopAge >= 2;
+        return hearthCornTopAge >= 4
+                || (structureUnlocked && (getAge(bottom) >= 4 || hearthCornMiddleAge >= 4));
+    }
+
+    private boolean ageHearthCorn(ServerLevel level, RegistryAccess registries, BlockState bottom) {
+        if (!isHearthCornState(bottom) || hasHarvestReadyHearthCorn(bottom)) {
+            return false;
+        }
+
+        int bottomAge = getAge(bottom);
+        if (bottomAge < 3) {
+            int nextAge = bottomAge + 1;
+            easyVillagers.setCropState(
+                    withSerializedProperty(withAge(bottom, nextAge), "section", "bottom"), registries);
+            if (nextAge == 3 && hearthCornMiddleAge < 0) {
+                hearthCornMiddleAge = 0;
+            }
+            return true;
+        }
+
+        // Repair old one-block Corn saves by rebuilding the missing upper sections first.
+        if (hearthCornMiddleAge < 0) {
+            hearthCornMiddleAge = 0;
+            return true;
+        }
+        if (hearthCornMiddleAge < 3) {
+            hearthCornMiddleAge++;
+            if (hearthCornMiddleAge == 3 && hearthCornTopAge < 0) {
+                hearthCornTopAge = 0;
+            }
+            return true;
+        }
+        if (hearthCornTopAge < 0) {
+            hearthCornTopAge = 0;
+            return true;
+        }
+        if (hearthCornTopAge < 2) {
+            hearthCornTopAge++;
+            return true;
+        }
+
+        // After top age 2, advance one random unfinished section per growth pulse.
+        int candidates = 0;
+        if (bottomAge < 5) candidates++;
+        if (hearthCornMiddleAge < 5) candidates++;
+        if (hearthCornTopAge < 5) candidates++;
+        if (candidates == 0) {
+            return false;
+        }
+        int pick = level.random.nextInt(candidates);
+        if (bottomAge < 5) {
+            if (pick == 0) {
+                easyVillagers.setCropState(
+                        withSerializedProperty(withAge(bottom, bottomAge + 1), "section", "bottom"), registries);
+                return true;
+            }
+            pick--;
+        }
+        if (hearthCornMiddleAge < 5) {
+            if (pick == 0) {
+                hearthCornMiddleAge++;
+                return true;
+            }
+            pick--;
+        }
+        if (hearthCornTopAge < 5) {
+            hearthCornTopAge++;
+            return true;
+        }
+        return false;
+    }
+
+    private boolean harvestHearthCorn(ServerLevel level, RegistryAccess registries, BlockState bottom) {
+        if (!isHearthCornState(bottom) || !hasAdultFarmerVillager(registries)) {
+            return false;
+        }
+        boolean structureUnlocked = hearthCornTopAge >= 2;
+        boolean harvestBottom = structureUnlocked && getAge(bottom) >= 4;
+        boolean harvestMiddle = structureUnlocked && hearthCornMiddleAge >= 4;
+        boolean harvestTop = hearthCornTopAge >= 4;
+        if (!harvestBottom && !harvestMiddle && !harvestTop) {
+            return false;
+        }
+
+        int count = 0;
+        if (harvestBottom) count += getAge(bottom) >= 5 ? 2 : 1;
+        if (harvestMiddle) count += hearthCornMiddleAge >= 5 ? 2 : 1;
+        if (harvestTop) count += hearthCornTopAge >= 5 ? 2 : 1;
+
+        Item corn = BuiltInRegistries.ITEM.get(HEARTH_CORN_ITEM_ID);
+        if (corn == null || corn == Items.AIR) {
+            return false;
+        }
+        Container output = easyVillagers.getOutputInventory(registries);
+        if (output == null) {
+            return false;
+        }
+        ItemStack harvest = new ItemStack(corn, count);
+        if (!canFitAll(output, List.of(harvest))) {
+            return false;
+        }
+        insertIntoOutput(output, harvest);
+        output.setChanged();
+
+        // Each harvested section returns independently to age 3.
+        if (harvestBottom) {
+            easyVillagers.setCropState(withSerializedProperty(withAge(bottom, 3), "section", "bottom"), registries);
+        }
+        if (harvestMiddle) hearthCornMiddleAge = 3;
+        if (harvestTop) hearthCornTopAge = 3;
+        level.playSound(null, worldPosition, SoundEvents.VILLAGER_WORK_FARMER, SoundSource.BLOCKS, 1.0F, 1.0F);
+        return true;
+    }
+
     private boolean ageNocturnalMillet(RegistryAccess registries, BlockState crop) {
         if (!isNocturnalMilletState(crop)) {
             return false;
@@ -3026,6 +3395,21 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         return state;
     }
 
+    private static <T extends Comparable<T>> BlockState setSerializedProperty(
+            BlockState state, Property<T> property, String serializedValue
+    ) {
+        return property.getValue(serializedValue)
+                .map(value -> state.setValue(property, value))
+                .orElse(state);
+    }
+
+    private static BlockState withSerializedProperty(BlockState state, String name, String serializedValue) {
+        Optional<Property<?>> property = state.getProperties().stream()
+                .filter(candidate -> candidate.getName().equals(name))
+                .findFirst();
+        return property.map(candidate -> setSerializedProperty(state, candidate, serializedValue)).orElse(state);
+    }
+
     private static BlockState withDirectionProperty(BlockState state, String name, Direction value) {
         Optional<Property<?>> property = state.getProperties().stream()
                 .filter(candidate -> candidate.getName().equals(name))
@@ -3224,11 +3608,20 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         stemDefinitionId = tag.contains(KEY_STEM_DEFINITION)
                 ? ResourceLocation.tryParse(tag.getString(KEY_STEM_DEFINITION))
                 : null;
+        tallDefinitionId = tag.contains(KEY_TALL_DEFINITION)
+                ? ResourceLocation.tryParse(tag.getString(KEY_TALL_DEFINITION))
+                : null;
         stemFruitId = tag.contains(KEY_STEM_FRUIT)
                 ? ResourceLocation.tryParse(tag.getString(KEY_STEM_FRUIT))
                 : null;
         nocturnalMilletPanicleAge = tag.contains(KEY_NOCTURNAL_MILLET_PANICLE_AGE)
                 ? Math.max(-1, Math.min(2, tag.getInt(KEY_NOCTURNAL_MILLET_PANICLE_AGE)))
+                : -1;
+        hearthCornMiddleAge = tag.contains(KEY_HEARTH_CORN_MIDDLE_AGE)
+                ? Math.max(-1, Math.min(5, tag.getInt(KEY_HEARTH_CORN_MIDDLE_AGE)))
+                : -1;
+        hearthCornTopAge = tag.contains(KEY_HEARTH_CORN_TOP_AGE)
+                ? Math.max(-1, Math.min(5, tag.getInt(KEY_HEARTH_CORN_TOP_AGE)))
                 : -1;
         graftingSupport = supportsOrchard() && tag.getBoolean(KEY_GRAFTING_SUPPORT);
         orchardDefinitionId = graftingSupport && tag.contains(KEY_ORCHARD_DEFINITION)
@@ -3257,9 +3650,22 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         int orchardMax = loadedOrchard == null ? Math.max(orchardMatureAge, 3) : loadedOrchard.maxAge();
         orchardAge = orchardDefinitionId == null ? 0
                 : Math.max(orchardMin, Math.min(orchardMax, tag.getInt(KEY_ORCHARD_AGE)));
-        orchardPendingHarvest = orchardDefinitionId != null && tag.contains(KEY_ORCHARD_PENDING_HARVEST, Tag.TAG_COMPOUND)
+        orchardPendingHarvest = orchardDefinitionId != null
+                && tag.contains(KEY_ORCHARD_PENDING_HARVEST, Tag.TAG_COMPOUND)
                 ? ItemStack.of(tag.getCompound(KEY_ORCHARD_PENDING_HARVEST))
                 : ItemStack.EMPTY;
+
+        // Remove orchard states that are no longer productive under the current compatibility set.
+        // The Grafting Support itself remains installed. Durian is structurally unsupported, while
+        // vanilla Oak/Dark Oak Apple orchards are only a fallback when no dedicated Apple mod is loaded.
+        if (OrchardCropDefinitions.isExplicitlyExcludedDefinition(orchardDefinitionId)
+                || OrchardCropDefinitions.isExplicitlyExcludedResource(orchardPlantingItemId)
+                || OrchardCropDefinitions.isExplicitlyExcludedResource(orchardRenderBlockId)
+                || OrchardCropDefinitions.isRuntimeSuppressedDefinition(orchardDefinitionId)
+                || OrchardCropDefinitions.isRuntimeSuppressedResource(orchardPlantingItemId)
+                || OrchardCropDefinitions.isRuntimeSuppressedResource(orchardRenderBlockId)) {
+            clearOrchardCropState();
+        }
         harvestRetryRequested = true;
         harvestStateChanged = false;
         harvestWaitingForOutputSpace = false;
@@ -3279,7 +3685,7 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         stripAddonKeys(preserved);
         tag.merge(preserved);
 
-        tag.putInt(KEY_SCHEMA, 12);
+        tag.putInt(KEY_SCHEMA, 14);
         tag.putInt(KEY_PADDY_GROWTH, paddyGrowth);
         tag.putInt(KEY_BASE_PROGRESS, baseProgress);
         tag.putInt(KEY_ROPE_ONE_PROGRESS, ropeOneProgress);
@@ -3311,6 +3717,11 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         } else {
             tag.remove(KEY_STEM_DEFINITION);
         }
+        if (variant().isRich() && !variant().isAquatic() && tallDefinitionId != null) {
+            tag.putString(KEY_TALL_DEFINITION, tallDefinitionId.toString());
+        } else {
+            tag.remove(KEY_TALL_DEFINITION);
+        }
         if (variant().isRich() && !variant().isAquatic() && stemFruitId != null) {
             tag.putString(KEY_STEM_FRUIT, stemFruitId.toString());
         } else {
@@ -3322,6 +3733,13 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
             tag.putInt(KEY_NOCTURNAL_MILLET_PANICLE_AGE, nocturnalMilletPanicleAge);
         } else {
             tag.remove(KEY_NOCTURNAL_MILLET_PANICLE_AGE);
+        }
+        if (variant().isRich() && !variant().isAquatic() && isHearthCornState(persistedCrop)) {
+            tag.putInt(KEY_HEARTH_CORN_MIDDLE_AGE, hearthCornMiddleAge);
+            tag.putInt(KEY_HEARTH_CORN_TOP_AGE, hearthCornTopAge);
+        } else {
+            tag.remove(KEY_HEARTH_CORN_MIDDLE_AGE);
+            tag.remove(KEY_HEARTH_CORN_TOP_AGE);
         }
         if (supportsOrchard() && graftingSupport) {
             tag.putBoolean(KEY_GRAFTING_SUPPORT, true);
@@ -3548,8 +3966,11 @@ public final class CompatFarmerBlockEntity extends BlockEntity {
         tag.remove(KEY_REGROWING_PLANTING_ITEM);
         tag.remove(KEY_SELECTED_PLANTING_ITEM);
         tag.remove(KEY_STEM_DEFINITION);
+        tag.remove(KEY_TALL_DEFINITION);
         tag.remove(KEY_STEM_FRUIT);
         tag.remove(KEY_NOCTURNAL_MILLET_PANICLE_AGE);
+        tag.remove(KEY_HEARTH_CORN_MIDDLE_AGE);
+        tag.remove(KEY_HEARTH_CORN_TOP_AGE);
         tag.remove(KEY_GRAFTING_SUPPORT);
         tag.remove(KEY_ORCHARD_DEFINITION);
         tag.remove(KEY_ORCHARD_PLANTING_ITEM);

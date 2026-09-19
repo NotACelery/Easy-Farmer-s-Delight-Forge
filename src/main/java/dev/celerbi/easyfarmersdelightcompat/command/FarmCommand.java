@@ -7,6 +7,7 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
 import dev.celerbi.easyfarmersdelightcompat.block.CompatFarmerBlock;
 import dev.celerbi.easyfarmersdelightcompat.block.FarmerVariant;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.CompatFarmerBlockEntity;
@@ -14,6 +15,9 @@ import dev.celerbi.easyfarmersdelightcompat.integration.attached.AttachedCropDef
 import dev.celerbi.easyfarmersdelightcompat.integration.attached.AttachedCropDefinitions;
 import dev.celerbi.easyfarmersdelightcompat.integration.regrowing.RegrowingCropDefinition;
 import dev.celerbi.easyfarmersdelightcompat.integration.regrowing.RegrowingCropDefinitions;
+import dev.celerbi.easyfarmersdelightcompat.integration.stem.StemCropDefinitions;
+import dev.celerbi.easyfarmersdelightcompat.integration.tall.TallCropDefinition;
+import dev.celerbi.easyfarmersdelightcompat.integration.tall.TallCropDefinitions;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -113,9 +117,7 @@ public final class FarmCommand {
         var cropNode = villagerNode == null ? null : villagerNode.getChild("crop");
 
         if (cropNode == null) {
-            System.err.println(
-                    "[Easy Farmer's Delight] Failed to register the /farm command branch."
-            );
+            EasyFarmersDelightCompat.LOGGER.error("Failed to register the /farm command branch.");
         }
     }
 
@@ -242,7 +244,9 @@ public final class FarmCommand {
                         .filter(definition -> definition.matchesPlanting(crop))
                         .findFirst()
                         .orElse(null);
+                TallCropDefinition tallDefinition = TallCropDefinitions.findPlanting(crop).orElse(null);
                 RegrowingCropDefinition regrowingDefinition = RegrowingCropDefinitions.findPlanting(crop).orElse(null);
+                boolean customStem = StemCropDefinitions.findPlanting(crop).isPresent();
 
                 if (attachedDefinition != null) {
                     mode = CropMode.ATTACHED;
@@ -254,13 +258,15 @@ public final class FarmCommand {
                                 attachedDefinition.id().toString()
                         ));
                     }
+                } else if (tallDefinition != null) {
+                    mode = CropMode.TALL;
                 } else if (regrowingDefinition != null) {
                     mode = CropMode.REGROWING;
                 } else if (TOMATO_SEEDS_ID.equals(cropItemId)) {
                     mode = CropMode.TOMATO;
                 } else if (RED_MUSHROOM_ID.equals(cropItemId) || BROWN_MUSHROOM_ID.equals(cropItemId)) {
                     mode = CropMode.MUSHROOM;
-                } else if (MELON_SEEDS_ID.equals(cropItemId) || PUMPKIN_SEEDS_ID.equals(cropItemId)) {
+                } else if (MELON_SEEDS_ID.equals(cropItemId) || PUMPKIN_SEEDS_ID.equals(cropItemId) || customStem) {
                     mode = CropMode.STEM;
                 } else {
                     CompatFarmerBlockEntity probe = new CompatFarmerBlockEntity(
@@ -382,6 +388,7 @@ public final class FarmCommand {
             }
             case MUSHROOM -> farmer.selectMushroom(crop, level.registryAccess());
             case STEM -> farmer.selectStem(crop, level.registryAccess());
+            case TALL -> farmer.selectTallCrop(crop, level.registryAccess());
             case REGROWING -> farmer.selectRegrowingCrop(crop, level.registryAccess());
             case NORMAL -> {
                 boolean selected = farmer.easyVillagers().setCropFromSeed(crop, level.registryAccess());
@@ -441,6 +448,14 @@ public final class FarmCommand {
         for (AttachedCropDefinition definition : AttachedCropDefinitions.all()) {
             if (definition.cropBlockId().equals(requested)) {
                 ItemStack planting = canonicalPlanting(definition);
+                if (!planting.isEmpty()) {
+                    return planting;
+                }
+            }
+        }
+        for (TallCropDefinition definition : TallCropDefinitions.all()) {
+            if (definition.cropBlockId().equals(requested)) {
+                ItemStack planting = definition.canonicalPlantingStack();
                 if (!planting.isEmpty()) {
                     return planting;
                 }
@@ -552,6 +567,12 @@ public final class FarmCommand {
                 values.add(BuiltInRegistries.ITEM.getKey(planting.getItem()).toString());
             }
         }
+        for (TallCropDefinition definition : TallCropDefinitions.all()) {
+            ItemStack planting = definition.canonicalPlantingStack();
+            if (!planting.isEmpty()) {
+                values.add(BuiltInRegistries.ITEM.getKey(planting.getItem()).toString());
+            }
+        }
         for (RegrowingCropDefinition definition : RegrowingCropDefinitions.all()) {
             ItemStack planting = definition.canonicalPlantingStack();
             if (!planting.isEmpty()) {
@@ -632,6 +653,7 @@ public final class FarmCommand {
         TOMATO,
         MUSHROOM,
         STEM,
+        TALL,
         REGROWING,
         NORMAL,
         ATTACHED

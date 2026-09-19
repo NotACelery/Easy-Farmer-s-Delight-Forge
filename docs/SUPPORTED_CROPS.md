@@ -1,6 +1,6 @@
-# Supported Crops and Farming Rules — Easy Farmer's Delight 1.4.3
+# Supported Crops and Farming Rules — Easy Farmer's Delight 1.4.4
 
-This document is the user-facing source of truth for crop support in **Easy Farmer's Delight 1.4.3**.
+This document is the user-facing source of truth for crop support in **Easy Farmer's Delight 1.4.4**.
 The public project name changed in 1.4.0, but the technical registry namespace remains
 `easyfarmersdelightcompat` so existing worlds and saved machine items keep their identity.
 
@@ -57,6 +57,17 @@ Tea, Tomatillo, Tomato, Turmeric, Turnip, Vanilla, Yam and Zucchini.
 
 Croptopia Rice, Tomato, Grape, Hops and similar crops remain **normal farmland crops** here because Croptopia itself
 does not give them Farmer's Delight-style waterlogging, Rope or trellis requirements.
+
+### Hearth & Harvest
+
+Hearth & Harvest remains optional and is resolved through registry IDs rather than a hard Java dependency.
+
+- **Corn:** where the installed H&H build exposes `hearthandharvest:corn_stalk`, EFD uses the dedicated three-section lifecycle instead of the normal one-block crop fallback. Each section is harvestable at age 4, yields 1 Corn at age 4 or 2 at age 5, and returns independently to age 3.
+- **Cotton:** mature age 7, persistent post-harvest age 5.
+- **Blueberry / Raspberry:** persistent SweetBerryBush-style regrowth.
+- **Peanut:** ordinary CropBlock behavior.
+- **Red / Green Grapes:** remain outside normal crop handling because their native lifecycle is structural/trellis-based.
+- **Sunflower Seeds:** place a two-block vanilla Sunflower rather than a staged harvest crop.
 
 ## Farmer's Delight Tomatoes and Rope
 
@@ -146,6 +157,41 @@ They are deliberately opt-in. Easy Farmer's Delight does **not** assume every `B
 - The bush resets to age 1 after harvest.
 - Rich Soil can accelerate growth but does not directly increase the harvest count.
 
+### Delightful Cantaloupe — Forge 1.20.1 only
+
+With **Delightful 3.8.x** installed, `delightful:cantaloupe_seeds` configure the Rich Farmer through the
+regrowing-crop path. Easy Farmer's Delight uses Delightful's real `delightful:cantaloupe_plant` block states:
+
+- age range: `0..3`;
+- mature/harvest age: `3`;
+- harvest output: exactly `1x delightful:cantaloupe`;
+- post-harvest age: `0`;
+- Rich Soil acceleration: enabled;
+- the crop is harvested without destroying/replanting the virtual plant.
+
+This definition is registry/data-driven. If Delightful is not installed, its missing registry entries cause the
+definition to be skipped cleanly. This compatibility is specific to the **Forge 1.20.1** branch because Delightful
+3.8.1 does not provide the corresponding NeoForge 1.21.1 build.
+
+### Fruits Delight field crops — Forge 1.20.1
+
+With **Fruits Delight 1.1.3** installed, EFD loads dedicated definitions for crop shapes that do not fit the generic
+`CropBlock` fallback:
+
+| Planting item | Virtual crop | Lifecycle | Mature harvest | Post-harvest |
+| --- | --- | --- | --- | --- |
+| `fruitsdelight:blueberry` | `fruitsdelight:blueberry_bush` | age `0..4` | 1–2 Blueberries | age `2` |
+| `fruitsdelight:cranberry` | `fruitsdelight:cranberry_bush` | age `0..4` | 1–2 Cranberries | age `2` |
+| `fruitsdelight:pineapple_sapling` | `fruitsdelight:pineapple` | age `0..4` | 1 Pineapple | age `0` |
+| `fruitsdelight:lemon_seeds` | `fruitsdelight:lemon_tree` | age `0..4`, lower/upper halves | 1–2 Lemons | age `2` |
+
+Lemon begins as a single visible lower block at ages 0–1. Its upper half appears from age 2 onward, matching the
+source crop's two-block structure instead of rendering a full mature-height plant immediately. Rich Soil may
+accelerate these configured crops without multiplying their harvest amounts.
+
+**Hamimelon** uses the stem-crop path: `fruitsdelight:hamimelon_seeds` grow
+`fruitsdelight:hamimelon_stem`, transition to the native attached stem when a fruit is present, and harvest the
+`fruitsdelight:hamimelon` fruit while retaining the stem lifecycle.
 
 ### Twilight Forest berry bushes
 
@@ -187,15 +233,25 @@ support through another destruction path preserves both the support and its inst
 A full output does not reset the fruit, reroll the harvest or damage the Shears. Rich Soil accelerates configured
 Orchard growth but does not alter the harvest roll.
 
-### Vanilla Apple Orchard
+### Vanilla Apple Orchard fallback
 
 - `minecraft:oak_leaves` → Apples
 - `minecraft:dark_oak_leaves` → Apples
 
-The normal vanilla leaf blocks are not modified globally. Their Orchard age exists only while grafted into a
-productive Grafting Support / Rich Farmer setup. The visual lifecycle mirrors Croptopia's four-stage fruit language:
-bud, flower, young fruit and mature fruit. A vanilla Apple Orchard yields **2 Apples**, with a **30% chance** for a third Apple. Without Rich Soil, a newly placed standalone Oak/Dark Oak canopy remains visually ordinary and does not begin
-the fruit lifecycle.
+These two productive definitions are a **fallback only**. If **Regions Unexplored**, **Croptopia** or **Fruits Delight**
+is installed, Oak and Dark Oak leaves remain valid decorative Grafting canopies but do **not** produce Apples in
+Grafting Support / Rich Farmer Orchard mode. This avoids duplicating Apple production when a dedicated modded Apple
+tree is already available. If none of those three mods is installed, the vanilla fallback remains active: it yields
+**2 Apples**, with a **30% chance** for a third Apple.
+
+The normal vanilla leaf blocks are never modified globally; this rule only affects EFD's Orchard/Grafting systems.
+
+### Regions Unexplored Apple Oak Orchard
+
+- `regions_unexplored:apple_oak_leaves` → `minecraft:apple`
+
+When Regions Unexplored is present, Apple Oak Leaves are productive rather than decorative-only. Their Orchard uses
+the block's native `age=0..4` lifecycle, matures at age `4`, yields **1 Apple**, and resets to age `0` after harvest.
 
 ### Optional Croptopia Orchards
 
@@ -208,6 +264,24 @@ Lime, Mango, Nectarine, Nutmeg, Orange, Peach, Pear, Pecan, Persimmon, Plum, Sta
 Each integration uses Croptopia's real `*_crop` block with its native age property `0..3`. Harvest output matches the
 ripe fruit item from Croptopia's own 4.0.1 crop-leaf behavior; Croptopia Apple correctly produces the vanilla
 `minecraft:apple`.
+
+### Optional Fruits Delight Orchards — Forge 1.20.1
+
+Fruits Delight 1.1.3 is optional and is resolved through registry IDs/data definitions. These 12 leaves can become
+productive Grafting Support / Rich Farmer Orchards:
+
+Pear, Hawberry, Lychee, Mango, Persimmon, Peach, Orange, Apple, Mangosteen, Bayberry, Kiwi and Fig.
+
+Unlike Croptopia's numeric-age fruit leaves, these definitions use Fruits Delight's real serialized states:
+`type=leaves -> type=flowers -> type=fruits`. A mature cycle yields the matching Fruits Delight fruit; its Apple
+leaves yield the vanilla `minecraft:apple`. This is also the compatibility path that exercises the Orchard schema's
+property-stage support while preserving the older numeric-age definitions.
+
+**Durian is deliberately not a productive Orchard.** `fruitsdelight:durian_leaves` can still be installed on a
+standalone Grafting Support as a decorative canopy, but EFD strips/rejects any productive Durian Orchard definition
+and does not allow Durian to configure a Rich Farmer with Grafting Support. Fruits Delight's Durian develops as a
+separate hanging block below the leaves and later falls under gravity; rotating or flattening that lifecycle into the
+EFD Orchard display would not preserve the source mechanic.
 
 ## Attached log crops — Rich Farmer Log Mode
 
@@ -320,7 +394,7 @@ for every occupied face.
 
 ## Deliberate exclusions
 
-**Bamboo is not treated as a Farmer crop in 1.4.3.** Its vertical structural growth is outside the crop families
+**Bamboo is not treated as a Farmer crop in 1.4.4.** Its vertical structural growth is outside the crop families
 implemented by Easy Farmer's Delight.
 
 This does not prevent Bamboo Block from participating in unrelated Cutter Axe/log behavior when Minecraft exposes

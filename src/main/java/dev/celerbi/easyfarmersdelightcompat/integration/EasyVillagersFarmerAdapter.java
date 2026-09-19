@@ -1,5 +1,6 @@
 package dev.celerbi.easyfarmersdelightcompat.integration;
 
+import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.CompatFarmerBlockEntity;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -481,12 +482,13 @@ public final class EasyVillagersFarmerAdapter {
         if (farmSpeedFallbackWarned)
             return;
         farmSpeedFallbackWarned = true;
-        System.err.println(
-                "[Easy Farmer's Delight] Could not read Easy Villagers farmer.farm_speed; "
-                        + "using default 10 without disabling the Farmer adapter."
-        );
-        if (e != null)
-            e.printStackTrace();
+        if (e == null) {
+            EasyFarmersDelightCompat.LOGGER.warn(
+                    "Could not read Easy Villagers farmer.farm_speed; using default 10.");
+        } else {
+            EasyFarmersDelightCompat.LOGGER.warn(
+                    "Could not read Easy Villagers farmer.farm_speed; using default 10.", e);
+        }
     }
 
     public CompoundTag snapshot(CompoundTag fallback, RegistryAccess registries) {
@@ -728,11 +730,8 @@ public final class EasyVillagersFarmerAdapter {
 
     private void fail(Throwable e) {
         if (!failed) {
-            System.err.println(
-                    "[Easy Farmer's Delight] Easy Villagers Farmer adapter failed; "
-                            + "Paddy Farmer integration is disabled for this block entity."
-            );
-            e.printStackTrace();
+            EasyFarmersDelightCompat.LOGGER.error(
+                    "Easy Villagers Farmer adapter failed; integration is disabled for this block entity.", e);
         }
         failed = true;
     }

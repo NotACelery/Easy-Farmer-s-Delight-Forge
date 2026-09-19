@@ -5,6 +5,8 @@ import com.mojang.math.Axis;
 import dev.celerbi.easyfarmersdelightcompat.block.CutterBlock;
 import dev.celerbi.easyfarmersdelightcompat.blockentity.CutterBlockEntity;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -12,6 +14,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.entity.VillagerRenderer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -21,6 +24,7 @@ import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
@@ -58,11 +62,16 @@ public final class CutterBlockEntityRenderer implements BlockEntityRenderer<Cutt
         Direction facing = cutter.getBlockState().hasProperty(CutterBlock.FACING) ? cutter.getBlockState()
                 .getValue(CutterBlock.FACING) : Direction.SOUTH;
         ItemStack shown = cutter.displayInput();
-        renderVillager(cutter, facing, pose, buffer, light);
+        Level level = cutter.getLevel();
+        int interiorLight = cutter.isItemPreview() || level == null
+                ? light
+                : resolveInteriorLight(level, cutter.getBlockPos(), light);
+
+        renderVillager(cutter, facing, pose, buffer, interiorLight);
         if (cutter.isItemPreview())
-            renderPreviewContents(cutter, shown, facing, pose, buffer, light, overlay);
+            renderPreviewContents(cutter, shown, facing, pose, buffer, interiorLight, overlay);
         else
-            renderWorkstation(cutter, shown, facing, pose, buffer, light, overlay);
+            renderWorkstation(cutter, shown, facing, pose, buffer, interiorLight, overlay);
     }
 
     private void renderVillager(CutterBlockEntity cutter, Direction facing, PoseStack pose, MultiBufferSource buffer,
@@ -131,6 +140,25 @@ public final class CutterBlockEntityRenderer implements BlockEntityRenderer<Cutt
         itemRenderer.renderStatic(shown, ItemDisplayContext.FIXED, light, overlay, pose, buffer, cutter.getLevel(),
                 cutter.getBlockPos().hashCode());
         pose.popPose();
+    }
+
+    private static int resolveInteriorLight(Level level, BlockPos pos, int fallback) {
+        int block = LightTexture.block(fallback);
+        int sky = LightTexture.sky(fallback);
+
+        for (Direction direction : Direction.values()) {
+            int sample = LevelRenderer.getLightColor(level, pos.relative(direction));
+            block = Math.max(block, LightTexture.block(sample));
+            sky = Math.max(sky, LightTexture.sky(sample));
+        }
+
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            int sample = LevelRenderer.getLightColor(level, pos.relative(direction).above());
+            block = Math.max(block, LightTexture.block(sample));
+            sky = Math.max(sky, LightTexture.sky(sample));
+        }
+
+        return LightTexture.pack(block, sky);
     }
 
     private static void applyWorkTransform(PoseStack pose, Direction facing) {

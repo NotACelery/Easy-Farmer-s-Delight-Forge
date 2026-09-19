@@ -1,6 +1,9 @@
 {
   "variants": {
-    "": {
+    "active=false": {
+      "model": "easyfarmersdelightcompat:block/grafting_canopy"
+    },
+    "active=true": {
       "model": "easyfarmersdelightcompat:block/grafting_canopy"
     }
   }

@@ -1,5 +1,6 @@
 package dev.celerbi.easyfarmersdelightcompat.client;
 
+import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -92,7 +93,7 @@ public final class ClientPreferences {
             villagersMuted = false;
             ironFarmSoundsMuted = false;
             easyMobFarmSoundsMuted = false;
-            System.err.println("[Easy Farmer's Delight] Failed to load client preferences: " + e.getMessage());
+            EasyFarmersDelightCompat.LOGGER.error("Failed to load client preferences.", e);
         }
     }
 
@@ -116,7 +117,7 @@ public final class ClientPreferences {
                 Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (IOException e) {
-            System.err.println("[Easy Farmer's Delight] Failed to save client preferences: " + e.getMessage());
+            EasyFarmersDelightCompat.LOGGER.error("Failed to save client preferences.", e);
             try {
                 Files.deleteIfExists(temp);
             } catch (IOException ignoredAgain) {

@@ -233,6 +233,15 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
             }
         }
         if (variant.isRich() && !variant.isAquatic()
+                && !farmer.hasGraftingSupport() && farmer.canSelectTallCrop(heldItem)) {
+            if (!level.isClientSide && farmer.selectTallCrop(heldItem, registries)) {
+                consumeOne(heldItem, player);
+                level.playSound(null, pos, SoundEvents.CROP_PLANTED, SoundSource.BLOCKS, 1.0F, 1.0F);
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        }
+
+        if (variant.isRich() && !variant.isAquatic()
                 && !farmer.hasGraftingSupport() && farmer.canSelectRegrowingCrop(heldItem)) {
             if (!level.isClientSide && farmer.selectRegrowingCrop(heldItem, registries)) {
                 consumeOne(heldItem, player);
@@ -241,7 +250,9 @@ public final class CompatFarmerBlock extends Block implements EntityBlock {
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
 
-        if (farmer.easyVillagers().getCrop(registries) == null && !farmer.hasAttachedSetup() && !farmer.hasGraftingSupport()) {
+        if (farmer.easyVillagers().getCrop(registries) == null
+                && !farmer.hasAttachedSetup()
+                && !farmer.hasGraftingSupport()) {
             boolean validCrop = variant.isAquatic() ? (!farmer.hasPaddySand() && isRice(heldItem)) : (variant.isRich()
                     && (isTomatoSeeds(heldItem) || isMushroom(heldItem)
                     || farmer.canSelectStem(heldItem) || farmer.canSelectGenericCrop(heldItem))) || farmer

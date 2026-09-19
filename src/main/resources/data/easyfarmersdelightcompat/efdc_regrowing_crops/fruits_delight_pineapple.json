@@ -1,0 +1,21 @@
+{
+  "planting": {
+    "item": "fruitsdelight:pineapple_sapling"
+  },
+  "crop_block": "fruitsdelight:pineapple",
+  "age": {
+    "property": "age",
+    "min": 0,
+    "max": 4,
+    "harvest": 4,
+    "post_harvest": 0
+  },
+  "harvest": {
+    "strategy": "random_item",
+    "item": "fruitsdelight:pineapple",
+    "min_count": 1,
+    "max_count": 1,
+    "full_age_bonus": 0
+  },
+  "rich_soil": true
+}

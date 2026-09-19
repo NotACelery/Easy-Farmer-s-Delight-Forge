@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.resources.ResourceLocation;
@@ -41,12 +42,11 @@ public final class AttachedCropReloadListener extends SimpleJsonResourceReloadLi
                             loaded.put(id, definition);
                         }
                     } catch (RuntimeException exception) {
-                        System.err.println("[Easy Farmer's Delight] Skipping invalid attached-crop definition "
-                                + id + ": " + exception.getMessage());
+                        EasyFarmersDelightCompat.LOGGER.warn(
+                                "Skipping invalid attached-crop definition {}: {}", id, exception.getMessage());
                     }
                 });
         AttachedCropDefinitions.replace(loaded);
-        System.out.println("[Easy Farmer's Delight] Loaded " + loaded.size()
-                + " attached-crop definition(s).");
+        EasyFarmersDelightCompat.LOGGER.info("Loaded {} attached-crop definition(s).", loaded.size());
     }
 }

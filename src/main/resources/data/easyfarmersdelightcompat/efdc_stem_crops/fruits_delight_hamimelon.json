@@ -1,0 +1,10 @@
+{
+  "planting": {
+    "item": "fruitsdelight:hamimelon_seeds"
+  },
+  "stem_block": "fruitsdelight:hamimelon_stem",
+  "attached_stem_block": "fruitsdelight:attached_hamimelon_stem",
+  "fruit_blocks": [
+    "fruitsdelight:hamimelon"
+  ]
+}

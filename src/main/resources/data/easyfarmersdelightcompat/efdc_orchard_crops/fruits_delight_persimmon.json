@@ -1,0 +1,32 @@
+{
+  "planting": {
+    "item": "fruitsdelight:persimmon_leaves"
+  },
+  "render_block": "fruitsdelight:persimmon_leaves",
+  "stages": [
+    {
+      "properties": {
+        "type": "leaves"
+      }
+    },
+    {
+      "properties": {
+        "type": "flowers"
+      }
+    },
+    {
+      "properties": {
+        "type": "fruits"
+      }
+    }
+  ],
+  "mature_stage": 2,
+  "post_harvest_stage": 0,
+  "harvest": {
+    "item": "fruitsdelight:persimmon",
+    "min": 1,
+    "max": 1
+  },
+  "render_style": "block_age",
+  "rich_soil": true
+}

@@ -19,11 +19,13 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.VillagerRenderer;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -56,6 +58,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
             "rich_soil");
     private static final ResourceLocation NOCTURNAL_MILLET_STALK_ID = new ResourceLocation(
             "eternal_starlight", "nocturnal_millet_stalk");
+    private static final ResourceLocation HEARTH_CORN_STALK_ID = new ResourceLocation("hearthandharvest", "corn_stalk");
 
     private static final float FARM_SCALE = 0.45F;
     private static final float PADDY_VILLAGER_SCALE = 0.90F;
@@ -69,6 +72,7 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
     private static final float PADDY_SUPPORT_LOCAL_Z = -3.0F / 16.0F;
     private static final float PADDY_SAND_LOCAL_Z = 3.0F / 16.0F;
     private static final float TOMATO_STACK_SCALE = 0.28F;
+    private static final float HEARTH_CORN_STACK_SCALE = 0.28F;
     private static final float STEM_SCALE = 0.28F;
     private static final float SUGAR_CANE_SCALE = 0.22F;
     private static final float STEM_LEFT_CENTER = -1.0F / 6.0F;
@@ -211,7 +215,9 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
                 ORCHARD_SUPPORT_SCALE,
                 ORCHARD_SUPPORT_SCALE
         );
-        renderBlockState(ModBlocks.GRAFTING_SUPPORT.get().defaultBlockState(), poseStack, buffer, combinedLight, combinedOverlay);
+        renderBlockState(
+                ModBlocks.GRAFTING_SUPPORT.get().defaultBlockState(),
+                poseStack, buffer, combinedLight, combinedOverlay);
         poseStack.popPose();
 
         if (!farmer.hasOrchardCrop()) {
@@ -259,7 +265,8 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
                 0.28F,
                 0.080F
         );
-        renderBlockState(Blocks.STRIPPED_OAK_LOG.defaultBlockState(), poseStack, buffer, combinedLight, combinedOverlay);
+        renderBlockState(
+                Blocks.STRIPPED_OAK_LOG.defaultBlockState(), poseStack, buffer, combinedLight, combinedOverlay);
         poseStack.popPose();
     }
 
@@ -382,8 +389,12 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
             renderRice(farmer, direction, poseStack, buffer, combinedLight, combinedOverlay, crop);
         } else if (isTomatoState(crop)) {
             renderTomato(farmer, direction, poseStack, buffer, combinedLight, combinedOverlay, crop);
+        } else if (isHearthCornState(crop)) {
+            renderHearthCorn(farmer, direction, poseStack, buffer, combinedLight, combinedOverlay, crop);
         } else if (isNocturnalMilletState(crop)) {
             renderNocturnalMillet(farmer, direction, poseStack, buffer, combinedLight, combinedOverlay, crop);
+        } else if (!farmer.tallCropUpperState(crop).isAir()) {
+            renderTallCrop(farmer, direction, poseStack, buffer, combinedLight, combinedOverlay, crop);
         } else if (isStemState(crop)) {
             renderStem(farmer, direction, poseStack, buffer, combinedLight, combinedOverlay, crop);
         } else {
@@ -392,6 +403,58 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
             renderBlockState(crop, poseStack, buffer, combinedLight, combinedOverlay);
             poseStack.popPose();
         }
+    }
+
+    private void renderHearthCorn(
+            CompatFarmerBlockEntity farmer,
+            Direction direction,
+            PoseStack poseStack,
+            MultiBufferSource buffer,
+            int combinedLight,
+            int combinedOverlay,
+            BlockState bottomState
+    ) {
+        poseStack.pushPose();
+        applyCropTransform(poseStack, direction, HEARTH_CORN_STACK_SCALE);
+        BlockState bottom = withSerializedProperty(bottomState, "section", "bottom");
+        renderBlockState(bottom, poseStack, buffer, combinedLight, combinedOverlay);
+
+        if (farmer.hearthCornMiddleAge() >= 0) {
+            poseStack.pushPose();
+            poseStack.translate(0D, 1D, 0D);
+            BlockState middle = withAge(
+                withSerializedProperty(bottomState, "section", "middle"), farmer.hearthCornMiddleAge());
+            renderBlockState(middle, poseStack, buffer, combinedLight, combinedOverlay);
+            poseStack.popPose();
+        }
+        if (farmer.hearthCornTopAge() >= 0) {
+            poseStack.pushPose();
+            poseStack.translate(0D, 2D, 0D);
+            BlockState top = withAge(withSerializedProperty(bottomState, "section", "top"), farmer.hearthCornTopAge());
+            renderBlockState(top, poseStack, buffer, combinedLight, combinedOverlay);
+            poseStack.popPose();
+        }
+        poseStack.popPose();
+    }
+
+    private void renderTallCrop(
+            CompatFarmerBlockEntity farmer,
+            Direction direction,
+            PoseStack poseStack,
+            MultiBufferSource buffer,
+            int combinedLight,
+            int combinedOverlay,
+            BlockState lowerState
+    ) {
+        BlockState upperState = farmer.tallCropUpperState(lowerState);
+        poseStack.pushPose();
+        applyCropTransform(poseStack, direction, FARM_SCALE);
+        renderBlockState(lowerState, poseStack, buffer, combinedLight, combinedOverlay);
+        if (!upperState.isAir()) {
+            poseStack.translate(0D, 1D, 0D);
+            renderBlockState(upperState, poseStack, buffer, combinedLight, combinedOverlay);
+        }
+        poseStack.popPose();
     }
 
     private void renderRice(
@@ -741,12 +804,41 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         float red = ((color >> 16) & 0xFF) / 255F;
         float green = ((color >> 8) & 0xFF) / 255F;
         float blue = (color & 0xFF) / 255F;
-        RenderType renderType = ItemBlockRenderTypes.getRenderType(state, false);
+        BakedModel model = blockRenderer.getBlockModel(state);
+        boolean rendered = false;
+        for (RenderType renderType : model.getRenderTypes(state, RandomSource.create(42L), ModelData.EMPTY)) {
+            renderBlockStateLayer(
+                    state, model, poseStack, buffer, combinedLight, combinedOverlay,
+                    red, green, blue, renderType
+            );
+            rendered = true;
+        }
+        if (!rendered) {
+            RenderType renderType = ItemBlockRenderTypes.getRenderType(state, false);
+            renderBlockStateLayer(
+                    state, model, poseStack, buffer, combinedLight, combinedOverlay,
+                    red, green, blue, renderType
+            );
+        }
+    }
+
+    private void renderBlockStateLayer(
+            BlockState state,
+            BakedModel model,
+            PoseStack poseStack,
+            MultiBufferSource buffer,
+            int combinedLight,
+            int combinedOverlay,
+            float red,
+            float green,
+            float blue,
+            RenderType renderType
+    ) {
         blockRenderer.getModelRenderer().renderModel(
                 poseStack.last(),
                 buffer.getBuffer(renderType),
                 state,
-                blockRenderer.getBlockModel(state),
+                model,
                 red,
                 green,
                 blue,
@@ -759,6 +851,10 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
 
     private static boolean isStemState(BlockState state) {
         return state != null && state.getBlock() instanceof net.minecraft.world.level.block.StemBlock;
+    }
+
+    private static boolean isHearthCornState(BlockState state) {
+        return state != null && HEARTH_CORN_STALK_ID.equals(BuiltInRegistries.BLOCK.getKey(state.getBlock()));
     }
 
     private static boolean isNocturnalMilletState(BlockState state) {
@@ -777,6 +873,21 @@ public final class CompatFarmerBlockEntityRenderer implements BlockEntityRendere
         return property.isPresent()
                 && property.get() instanceof BooleanProperty booleanProperty
                 && state.getValue(booleanProperty);
+    }
+
+    private static <T extends Comparable<T>> BlockState setSerializedProperty(
+            BlockState state, Property<T> property, String serializedValue
+    ) {
+        return property.getValue(serializedValue)
+                .map(value -> state.setValue(property, value))
+                .orElse(state);
+    }
+
+    private static BlockState withSerializedProperty(BlockState state, String propertyName, String serializedValue) {
+        Optional<Property<?>> property = state.getProperties().stream()
+                .filter(candidate -> candidate.getName().equals(propertyName))
+                .findFirst();
+        return property.map(candidate -> setSerializedProperty(state, candidate, serializedValue)).orElse(state);
     }
 
     private static BlockState withBooleanProperty(BlockState state, String propertyName, boolean value) {

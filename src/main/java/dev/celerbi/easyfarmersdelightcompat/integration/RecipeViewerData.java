@@ -3,9 +3,12 @@ package dev.celerbi.easyfarmersdelightcompat.integration;
 import dev.celerbi.easyfarmersdelightcompat.EasyFarmersDelightCompat;
 import dev.celerbi.easyfarmersdelightcompat.compat.easymobfarm.EasyMobFarmCompat;
 import dev.celerbi.easyfarmersdelightcompat.integration.attached.AttachedCropDefinition;
+import dev.celerbi.easyfarmersdelightcompat.integration.orchard.OrchardCropDefinitions;
 import dev.celerbi.easyfarmersdelightcompat.integration.attached.AttachedCropDefinitions;
 import dev.celerbi.easyfarmersdelightcompat.integration.regrowing.RegrowingCropDefinition;
 import dev.celerbi.easyfarmersdelightcompat.integration.regrowing.RegrowingCropDefinitions;
+import dev.celerbi.easyfarmersdelightcompat.integration.tall.TallCropDefinition;
+import dev.celerbi.easyfarmersdelightcompat.integration.tall.TallCropDefinitions;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlockEntities;
 import dev.celerbi.easyfarmersdelightcompat.registry.ModBlocks;
 import java.util.ArrayList;
@@ -364,26 +367,49 @@ public final class RecipeViewerData {
         addCinnamonGuide(guides);
         addAttachedDefinitionGuides(guides);
         addRegrowingDefinitionGuides(guides);
+        addTallDefinitionGuides(guides);
         return List.copyOf(guides);
     }
 
     private static void addOrchardGuides(List<BlockGuideInfo> guides) {
-        guides.add(new BlockGuideInfo(
-                id("block_guide/orchard/apple"),
-                Component.translatable("easyfarmersdelightcompat.viewer.guide.orchard.title"),
-                List.of(
-                        catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()),
-                                "easyfarmersdelightcompat.viewer.label.machine"),
-                        input(Ingredient.of(ModBlocks.GRAFTING_SUPPORT_ITEM.get()),
-                                "easyfarmersdelightcompat.viewer.label.grafting_support"),
-                        input(Ingredient.of(Items.OAK_LEAVES, Items.DARK_OAK_LEAVES),
-                                "easyfarmersdelightcompat.viewer.label.orchard_leaves"),
-                        tool(Ingredient.of(Items.SHEARS),
-                                "easyfarmersdelightcompat.viewer.label.shears"),
-                        output(Ingredient.of(Items.APPLE), new ItemStack(Items.APPLE).getHoverName())
-                ),
-                lines("easyfarmersdelightcompat.viewer.guide.orchard", 6)
-        ));
+        if (!OrchardCropDefinitions.hasDedicatedAppleProvider()) {
+            guides.add(new BlockGuideInfo(
+                    id("block_guide/orchard/apple"),
+                    Component.translatable("easyfarmersdelightcompat.viewer.guide.orchard.title"),
+                    List.of(
+                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.machine"),
+                            input(Ingredient.of(ModBlocks.GRAFTING_SUPPORT_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.grafting_support"),
+                            input(Ingredient.of(Items.OAK_LEAVES, Items.DARK_OAK_LEAVES),
+                                    "easyfarmersdelightcompat.viewer.label.orchard_leaves"),
+                            tool(Ingredient.of(Items.SHEARS),
+                                    "easyfarmersdelightcompat.viewer.label.shears"),
+                            output(Ingredient.of(Items.APPLE), new ItemStack(Items.APPLE).getHoverName())
+                    ),
+                    lines("easyfarmersdelightcompat.viewer.guide.orchard", 6)
+            ));
+        }
+
+        ItemStack regionsUnexploredAppleLeaves = stack("regions_unexplored", "apple_oak_leaves");
+        if (!regionsUnexploredAppleLeaves.isEmpty()) {
+            guides.add(new BlockGuideInfo(
+                    id("block_guide/orchard/regions_unexplored_apple"),
+                    Component.translatable("easyfarmersdelightcompat.viewer.guide.orchard.title"),
+                    List.of(
+                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.machine"),
+                            input(Ingredient.of(ModBlocks.GRAFTING_SUPPORT_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.grafting_support"),
+                            input(Ingredient.of(regionsUnexploredAppleLeaves),
+                                    "easyfarmersdelightcompat.viewer.label.orchard_leaves"),
+                            tool(Ingredient.of(Items.SHEARS),
+                                    "easyfarmersdelightcompat.viewer.label.shears"),
+                            output(Ingredient.of(Items.APPLE), new ItemStack(Items.APPLE).getHoverName())
+                    ),
+                    lines("easyfarmersdelightcompat.viewer.guide.orchard", 6)
+            ));
+        }
 
         List<ItemStack> croptopiaLeaves = new ArrayList<>();
         List<ItemStack> croptopiaFruit = new ArrayList<>();
@@ -412,6 +438,40 @@ public final class RecipeViewerData {
                                     Component.translatable("easyfarmersdelightcompat.viewer.label.orchard_fruit"))
                     ),
                     lines("easyfarmersdelightcompat.viewer.guide.croptopia_orchard", 5)
+            ));
+        }
+        List<ItemStack> fruitsDelightLeaves = new ArrayList<>();
+        List<ItemStack> fruitsDelightFruit = new ArrayList<>();
+        for (String fruit : List.of(
+                "pear", "hawberry", "lychee", "mango", "persimmon", "peach", "orange",
+                "apple", "mangosteen", "bayberry", "kiwi", "fig"
+        )) {
+            ItemStack leaves = stack("fruitsdelight", fruit + "_leaves");
+            ItemStack output = "apple".equals(fruit)
+                    ? new ItemStack(Items.APPLE)
+                    : stack("fruitsdelight", fruit);
+            if (!leaves.isEmpty() && !output.isEmpty()) {
+                fruitsDelightLeaves.add(leaves);
+                fruitsDelightFruit.add(output);
+            }
+        }
+        if (!fruitsDelightLeaves.isEmpty() && !fruitsDelightFruit.isEmpty()) {
+            guides.add(new BlockGuideInfo(
+                    id("block_guide/orchard/fruits_delight"),
+                    Component.translatable("easyfarmersdelightcompat.viewer.guide.fruits_delight_orchard.title"),
+                    List.of(
+                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.machine"),
+                            input(Ingredient.of(ModBlocks.GRAFTING_SUPPORT_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.grafting_support"),
+                            input(Ingredient.of(fruitsDelightLeaves.stream()),
+                                    "easyfarmersdelightcompat.viewer.label.orchard_leaves"),
+                            tool(Ingredient.of(Items.SHEARS),
+                                    "easyfarmersdelightcompat.viewer.label.shears"),
+                            output(Ingredient.of(fruitsDelightFruit.stream()),
+                                    Component.translatable("easyfarmersdelightcompat.viewer.label.orchard_fruit"))
+                    ),
+                    lines("easyfarmersdelightcompat.viewer.guide.fruits_delight_orchard", 5)
             ));
         }
     }
@@ -501,6 +561,44 @@ public final class RecipeViewerData {
         }
     }
 
+    private static void addTallDefinitionGuides(List<BlockGuideInfo> guides) {
+        for (TallCropDefinition definition : viewerTallDefinitions()) {
+            List<ItemStack> planting = matchingItems(definition::matchesPlanting, 16);
+            Block crop = BuiltInRegistries.BLOCK.get(definition.cropBlockId());
+            if (planting.isEmpty() || crop == null || crop == Blocks.AIR) {
+                continue;
+            }
+            ItemStack harvest = definition.harvestDisplayStack();
+            Ingredient outputIngredient = harvest.isEmpty()
+                    ? Ingredient.of(planting.stream())
+                    : Ingredient.of(harvest);
+            Component outputLabel = harvest.isEmpty() ? crop.getName() : harvest.getHoverName();
+
+            guides.add(new BlockGuideInfo(
+                    id("block_guide/tall/" + safeViewerPath(definition.id())),
+                    Component.translatable(
+                            "easyfarmersdelightcompat.viewer.guide.tall_definition.title",
+                            crop.getName()
+                    ),
+                    List.of(
+                            catalyst(Ingredient.of(ModBlocks.RICH_FARMER_ITEM.get()),
+                                    "easyfarmersdelightcompat.viewer.label.machine"),
+                            input(Ingredient.of(planting.stream()),
+                                    "easyfarmersdelightcompat.viewer.label.planting_item"),
+                            output(outputIngredient, outputLabel)
+                    ),
+                    List.of(
+                            Component.translatable("easyfarmersdelightcompat.viewer.guide.tall_definition.line1",
+                                    crop.getName()),
+                            Component.translatable("easyfarmersdelightcompat.viewer.guide.tall_definition.line2",
+                                    definition.harvestAge(), definition.postHarvestAge()),
+                            Component.translatable("easyfarmersdelightcompat.viewer.guide.tall_definition.line3"),
+                            Component.translatable("easyfarmersdelightcompat.viewer.guide.tall_definition.line4")
+                    )
+            ));
+        }
+    }
+
     private static void addRegrowingDefinitionGuides(List<BlockGuideInfo> guides) {
         for (RegrowingCropDefinition definition : viewerRegrowingDefinitions()) {
             List<ItemStack> planting = matchingItems(definition::matchesPlanting, 16);
@@ -553,6 +651,19 @@ public final class RecipeViewerData {
             definitions.put(definition.id(), definition);
         }
         loadBundledRegrowingDefinition(definitions, "ars_sourceberry");
+        loadBundledRegrowingDefinition(definitions, "delightful_cantaloupe");
+        loadBundledRegrowingDefinition(definitions, "fruits_delight_blueberry");
+        loadBundledRegrowingDefinition(definitions, "fruits_delight_cranberry");
+        loadBundledRegrowingDefinition(definitions, "fruits_delight_pineapple");
+        return List.copyOf(definitions.values());
+    }
+
+    private static List<TallCropDefinition> viewerTallDefinitions() {
+        LinkedHashMap<ResourceLocation, TallCropDefinition> definitions = new LinkedHashMap<>();
+        for (TallCropDefinition definition : TallCropDefinitions.all()) {
+            definitions.put(definition.id(), definition);
+        }
+        loadBundledTallDefinition(definitions, "fruits_delight_lemon");
         return List.copyOf(definitions.values());
     }
 
@@ -576,6 +687,33 @@ public final class RecipeViewerData {
                 return;
             }
             AttachedCropDefinition definition = AttachedCropDefinition.parse(id, root.getAsJsonObject());
+            if (definition != null) {
+                definitions.put(id, definition);
+            }
+        } catch (java.io.IOException | RuntimeException ignored) {
+        }
+    }
+
+    private static void loadBundledTallDefinition(
+            Map<ResourceLocation, TallCropDefinition> definitions,
+            String path
+    ) {
+        ResourceLocation id = id(path);
+        if (definitions.containsKey(id)) {
+            return;
+        }
+        String resourcePath = "data/" + EasyFarmersDelightCompat.MOD_ID + "/efdc_tall_crops/" + path + ".json";
+        try (java.io.InputStream stream = RecipeViewerData.class.getClassLoader().getResourceAsStream(resourcePath)) {
+            if (stream == null) {
+                return;
+            }
+            com.google.gson.JsonElement root = com.google.gson.JsonParser.parseReader(
+                    new java.io.InputStreamReader(stream, java.nio.charset.StandardCharsets.UTF_8)
+            );
+            if (!root.isJsonObject()) {
+                return;
+            }
+            TallCropDefinition definition = TallCropDefinition.parse(id, root.getAsJsonObject());
             if (definition != null) {
                 definitions.put(id, definition);
             }
